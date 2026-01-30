@@ -1,336 +1,1058 @@
-# InitKit Question Flow Design
+# InitKit - Interactive Question Flow
 
-## Complete User Prompt Flow
+> **Complete decision tree and prompt flow for the InitKit CLI**
 
-```
-┌─────────────────────────────────────────┐
-│   START: InitKit CLI                    │
-│   $ initkit [project-name] [options]    │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q1: Project Name                         │
-│ Type: input                              │
-│ Validation: npm package name rules       │
-│ Skip if: provided as CLI argument        │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q2: Project Type                         │
-│ Type: list                               │
-│ Options:                                 │
-│   • Frontend Only                        │
-│   • Backend Only                         │
-│   • Full Stack                           │
-│   • Node.js Library/Package              │
-└──────────────┬───────────────────────────┘
-               │
-       ┌───────┴────────┬────────────┬───────────┐
-       ▼                ▼            ▼           ▼
-   Frontend         Backend      Full Stack   Library
-       │                │            │           │
-       │                │            │           ▼
-       │                │            │      ┌─────────────┐
-       │                │            │      │ Skip to Q6  │
-       │                │            │      │ (TypeScript)│
-       │                │            │      └─────────────┘
-       │                │            │
-       ▼                ▼            ▼
-┌──────────────────────────────────────────┐
-│ Q3: Frontend Framework                   │
-│ Type: list                               │
-│ When: projectType === 'frontend' ||      │
-│       projectType === 'fullstack'        │
-│ Options:                                 │
-│   • React                                │
-│   • Vue.js                               │
-│   • Angular                              │
-│   • Svelte                               │
-│   • Next.js (React)                      │
-│   • Nuxt.js (Vue)                        │
-│   • Vanilla JavaScript                   │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q4: Backend Framework                    │
-│ Type: list                               │
-│ When: projectType === 'backend' ||       │
-│       projectType === 'fullstack'        │
-│ Options:                                 │
-│   • Express.js                           │
-│   • Fastify                              │
-│   • Koa                                  │
-│   • NestJS                               │
-│   • Hapi                                 │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q5: Database                             │
-│ Type: list                               │
-│ When: projectType === 'backend' ||       │
-│       projectType === 'fullstack'        │
-│ Options:                                 │
-│   • PostgreSQL                           │
-│   • MySQL                                │
-│   • MongoDB                              │
-│   • SQLite                               │
-│   • None                                 │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q6: TypeScript                           │
-│ Type: confirm                            │
-│ Default: true                            │
-│ When: always                             │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q7: Styling Solution                     │
-│ Type: list                               │
-│ When: projectType === 'frontend' ||      │
-│       projectType === 'fullstack'        │
-│ Options:                                 │
-│   • Tailwind CSS                         │
-│   • CSS Modules                          │
-│   • Styled Components                    │
-│   • Sass/SCSS                            │
-│   • Plain CSS                            │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q8: Additional Features                  │
-│ Type: checkbox (multi-select)            │
-│ When: always                             │
-│ Options:                                 │
-│   ☑ ESLint (Code linting)                │
-│   ☑ Prettier (Code formatting)           │
-│   ☐ Husky (Git hooks)                    │
-│   ☐ Jest (Testing)                       │
-│   ☐ Docker configuration                 │
-│   ☐ GitHub Actions CI/CD                 │
-│   ☑ Environment variables (.env)         │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q9: Package Manager                      │
-│ Type: list                               │
-│ Default: npm                             │
-│ When: always                             │
-│ Options:                                 │
-│   • npm                                  │
-│   • yarn                                 │
-│   • pnpm                                 │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│ Q10: Initialize Git                      │
-│ Type: confirm                            │
-│ Default: true                            │
-│ When: always                             │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────┐
-│   PROCESSING                             │
-│   • Create directory structure           │
-│   • Generate files from templates        │
-│   • Install dependencies                 │
-│   • Initialize Git repository            │
-│   • Show success message                 │
-└──────────────┬───────────────────────────┘
-               │
-               ▼
-         ┌─────────┐
-         │   END   │
-         └─────────┘
-```
+This document outlines the 13-question interactive flow that adapts based on your project type. The CLI uses intelligent conditional logic to show only relevant questions.
 
-## Detailed Path Examples
+---
 
-### Path 1: Frontend React Project
+## Flow Overview
 
 ```
-Project Name: "my-react-app"
-  ↓
-Project Type: "Frontend Only"
-  ↓
-Frontend Framework: "React"
-  ↓
-[Skip Backend & Database]
-  ↓
-TypeScript: Yes
-  ↓
-Styling: "Tailwind CSS"
-  ↓
-Features: [ESLint, Prettier, Jest]
-  ↓
-Package Manager: "npm"
-  ↓
-Git: Yes
-  ↓
-RESULT: React + TypeScript + Tailwind project
+START: $ initkit [project-name] [options]
+         │
+         ├─ Q1: Project Type (Frontend/Backend/Full Stack/Library)
+         │      │
+         │      ├─ Frontend/Full Stack → Q2: Frontend Framework
+         │      ├─ Backend/Full Stack  → Q3: Backend Framework
+         │      └─ Backend/Full Stack  → Q4: Database
+         │
+         ├─ Q5: Project Name (with real-time validation)
+         ├─ Q6: Language (TypeScript/JavaScript)
+         │      │
+         │      └─ If TypeScript → Q7: TypeScript Strictness
+         │
+         ├─ Q8: Folder Structure (if Frontend/Full Stack)
+         ├─ Q9: Styling Solution (if Frontend/Full Stack)
+         ├─ Q10: Additional Libraries (context-aware)
+         ├─ Q11: Development Features (ESLint, Prettier, etc.)
+         ├─ Q12: Package Manager (npm/yarn/pnpm)
+         └─ Q13: Git Initialization
+                 │
+                 ▼
+            PROCESSING
+                 │
+         ┌───────┴───────┐
+         │ Success Flow  │
+         │               │
+         │ 1. Create dir │
+         │ 2. Generate   │
+         │ 3. Init git   │
+         │ 4. Install    │
+         │ 5. Summary    │
+         └───────────────┘
 ```
 
-### Path 2: Full Stack MERN Project
+---
 
-```
-Project Name: "mern-app"
-  ↓
-Project Type: "Full Stack"
-  ↓
-Frontend Framework: "React"
-  ↓
-Backend Framework: "Express.js"
-  ↓
-Database: "MongoDB"
-  ↓
-TypeScript: Yes
-  ↓
-Styling: "CSS Modules"
-  ↓
-Features: [ESLint, Prettier, Docker, Jest]
-  ↓
-Package Manager: "pnpm"
-  ↓
-Git: Yes
-  ↓
-RESULT: Full stack MERN with TypeScript
-        client/ (React) + server/ (Express)
+## Question Details
+
+### Q1: Project Type
+**Purpose:** Determines the entire flow and which subsequent questions to ask
+
+```javascript
+Type: list (single choice)
+Message: "What type of project do you want to create?"
+Always shown: Yes
+Skip condition: None
 ```
 
-### Path 3: Backend API Only
+**Options:**
+- `Frontend Only` → Skip backend/database questions
+- `Backend Only` → Skip frontend/styling questions
+- `Full Stack` → Show all framework questions
+- `Node.js Library/Package` → Skip frontend, backend, database, styling
 
-```
-Project Name: "api-service"
-  ↓
-Project Type: "Backend Only"
-  ↓
-[Skip Frontend]
-  ↓
-Backend Framework: "Fastify"
-  ↓
-Database: "PostgreSQL"
-  ↓
-TypeScript: Yes
-  ↓
-[Skip Styling]
-  ↓
-Features: [ESLint, Prettier, Jest, Docker]
-  ↓
-Package Manager: "yarn"
-  ↓
-Git: Yes
-  ↓
-RESULT: Fastify API with PostgreSQL
+**Default project names by type:**
+- Frontend: `my-frontend-app`
+- Backend: `my-backend-api`
+- Full Stack: `my-fullstack-app`
+- Library: `my-package`
+
+---
+
+### Q2: Frontend Framework
+**Purpose:** Select the frontend technology stack
+
+```javascript
+Type: list
+Message: "Choose your frontend framework:"
+When: projectType === 'frontend' || projectType === 'fullstack'
 ```
 
-### Path 4: Node.js Library
+**Options:**
+| Framework | Value | Description |
+|-----------|-------|-------------|
+| React | `react` | Component-based UI library |
+| Vue.js | `vue` | Progressive JavaScript framework |
+| Angular | `angular` | Full-featured framework |
+| Svelte | `svelte` | Compiled framework |
+| Next.js (React) | `nextjs` | React framework with SSR |
+| Nuxt.js (Vue) | `nuxtjs` | Vue framework with SSR |
+| Vanilla JavaScript | `vanilla` | Plain ES6+ JavaScript |
 
+---
+
+### Q3: Backend Framework
+**Purpose:** Select the backend/API framework
+
+```javascript
+Type: list
+Message: "Choose your backend framework:"
+When: projectType === 'backend' || projectType === 'fullstack'
 ```
-Project Name: "my-awesome-lib"
-  ↓
-Project Type: "Node.js Library/Package"
-  ↓
-[Skip Frontend, Backend, Database, Styling]
-  ↓
-TypeScript: Yes
-  ↓
-Features: [ESLint, Prettier, Jest]
-  ↓
-Package Manager: "npm"
-  ↓
-Git: Yes
-  ↓
-RESULT: Published npm package structure
-        with build configuration
+
+**Options:**
+| Framework | Value | Description |
+|-----------|-------|-------------|
+| Express.js | `express` | Minimalist & flexible |
+| Fastify | `fastify` | High performance |
+| Koa | `koa` | Next-gen Express |
+| NestJS | `nestjs` | Enterprise TypeScript |
+| Hapi | `hapi` | Configuration-centric |
+
+---
+
+### Q4: Database
+**Purpose:** Select database system for data persistence
+
+```javascript
+Type: list
+Message: "Choose your database:"
+When: projectType === 'backend' || projectType === 'fullstack'
 ```
 
-## Conditional Logic Rules
+**Options:**
+| Database | Value | Use Case |
+|----------|-------|----------|
+| PostgreSQL | `postgresql` | Relational, ACID compliant |
+| MySQL | `mysql` | Popular relational DB |
+| MongoDB | `mongodb` | NoSQL document store |
+| SQLite | `sqlite` | Embedded, serverless |
+| None | `none` | No database needed |
 
-| Question      | Condition                    | Action       |
-| ------------- | ---------------------------- | ------------ |
-| Q3 (Frontend) | `projectType === 'backend'`  | Skip         |
-| Q3 (Frontend) | `projectType === 'library'`  | Skip         |
-| Q4 (Backend)  | `projectType === 'frontend'` | Skip         |
-| Q4 (Backend)  | `projectType === 'library'`  | Skip         |
-| Q5 (Database) | `projectType === 'frontend'` | Skip         |
-| Q5 (Database) | `projectType === 'library'`  | Skip         |
-| Q7 (Styling)  | `projectType === 'backend'`  | Skip         |
-| Q7 (Styling)  | `projectType === 'library'`  | Skip         |
-| All Questions | `--yes` flag present         | Use defaults |
+---
 
-## CLI Flags Override
+### Q5: Project Name
+**Purpose:** Define the project directory name with validation
+
+```javascript
+Type: input
+Message: "What is your project name?"
+When: !initialProjectName (skip if provided as CLI arg)
+Validation: npm package name rules
+Real-time: Color feedback (green = valid, red = invalid)
+```
+
+**Validation Rules:**
+- Lowercase only (no uppercase letters)
+- No spaces (use hyphens instead)
+- Cannot start with `.` or `_`
+- Max 214 characters
+- Valid URL-safe characters only
+- Cannot use reserved npm package names
+
+**Interactive Features:**
+- Real-time color feedback as you type
+- Automatic suggestion if invalid (e.g., "My App" → "my-app")
+- Directory existence check
+- Uses `validate-npm-package-name` library
+
+**Example Validation Flow:**
+```
+Input: "My Cool App"
+Error: "Name cannot contain spaces"
+Suggestion: "my-cool-app"
+
+Input: "my-cool-app"
+Status: ✓ Valid (shown in green)
+```
+
+---
+
+### Q6: Language
+**Purpose:** Choose between TypeScript and JavaScript
+
+```javascript
+Type: list
+Message: "Choose your programming language:"
+Always shown: Yes
+Default: 'typescript'
+```
+
+**Options:**
+| Choice | Value | Recommendation |
+|--------|-------|----------------|
+| TypeScript (Recommended) | `typescript` | Type safety, better DX |
+| JavaScript | `javascript` | Simpler, no compilation |
+
+**Impact:**
+- Affects file extensions (`.ts`/`.tsx` vs `.js`/`.jsx`)
+- Generates `tsconfig.json` if TypeScript
+- Installs type definitions (`@types/*`)
+- Configures build tools accordingly
+
+---
+
+### Q7: TypeScript Strictness
+**Purpose:** Configure TypeScript compiler strictness level
+
+```javascript
+Type: list
+Message: "TypeScript strictness level:"
+When: language === 'typescript'
+Default: 'strict'
+```
+
+**Options:**
+| Level | Value | Configuration |
+|-------|-------|---------------|
+| Strict (Recommended) | `strict` | All strict flags enabled |
+| Moderate | `moderate` | Balanced type checking |
+| Relaxed | `relaxed` | Minimal type checking |
+
+**Generated `tsconfig.json` settings:**
+```json
+// Strict
+{
+  "strict": true,
+  "noImplicitAny": true,
+  "strictNullChecks": true,
+  "strictFunctionTypes": true
+}
+
+// Moderate
+{
+  "strict": false,
+  "noImplicitAny": true,
+  "strictNullChecks": false
+}
+
+// Relaxed
+{
+  "strict": false,
+  "noImplicitAny": false
+}
+```
+
+---
+
+### Q8: Folder Structure
+**Purpose:** Choose code organization pattern
+
+```javascript
+Type: list
+Message: "Choose your folder structure preference:"
+When: projectType === 'frontend' || projectType === 'fullstack'
+Default: 'feature-based'
+```
+
+**Options:**
+
+| Structure | Value | Organization | Best For |
+|-----------|-------|--------------|----------|
+| **Feature-based** | `feature-based` | Group by feature/module | Scalable apps |
+| **Type-based** | `type-based` | Group by file type | Small-medium projects |
+| **Domain-driven** | `domain-driven` | Group by business domain | Enterprise apps |
+| **Flat** | `flat` | Minimal nesting | Prototypes, simple apps |
+
+**Structure Examples:**
+
+**Feature-based:**
+```
+src/
+├── features/
+│   ├── auth/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   └── auth.types.ts
+│   ├── dashboard/
+│   └── profile/
+└── shared/
+```
+
+**Type-based:**
+```
+src/
+├── components/
+├── hooks/
+├── services/
+├── utils/
+└── types/
+```
+
+**Domain-driven:**
+```
+src/
+├── domains/
+│   ├── user/
+│   ├── product/
+│   └── order/
+└── infrastructure/
+```
+
+**Flat:**
+```
+src/
+├── App.tsx
+├── Header.tsx
+├── Footer.tsx
+└── utils.ts
+```
+
+---
+
+### Q9: Styling Solution
+**Purpose:** Select CSS framework or preprocessor
+
+```javascript
+Type: list
+Message: "Choose your styling solution:"
+When: projectType === 'frontend' || projectType === 'fullstack'
+```
+
+**Options:**
+| Solution | Value | Description | Setup Complexity |
+|----------|-------|-------------|------------------|
+| Tailwind CSS | `tailwind` | Utility-first CSS | PostCSS config |
+| CSS Modules | `css-modules` | Scoped CSS | Bundler config |
+| Styled Components | `styled-components` | CSS-in-JS | Install package |
+| Emotion | `emotion` | Performant CSS-in-JS | Install package |
+| Sass/SCSS | `sass` | CSS preprocessor | Install sass |
+| Plain CSS | `css` | Standard CSS files | None |
+
+---
+
+### Q10: Additional Libraries
+**Purpose:** Select optional utility libraries
+
+```javascript
+Type: checkbox (multi-select)
+Message: "Select additional libraries to include:"
+Dynamic choices: Based on project type
+```
+
+**Common Libraries (All Projects):**
+- `Axios` - HTTP client for API calls
+- `Lodash` - Utility function library
+- `Date-fns` - Date manipulation
+- `Zod` - Schema validation
+
+**Frontend-Specific Libraries:**
+- `React Query` - Data fetching & caching
+- `Zustand` - Lightweight state management
+- `React Hook Form` - Performant form handling
+- `Framer Motion` - Animation library
+
+**Backend-Specific Libraries:**
+- `Prisma` - Type-safe ORM
+- `JWT` - Token-based authentication
+- `Bcrypt` - Password hashing
+- `Winston` - Structured logging
+
+**Conditional Logic:**
+```javascript
+if (projectType === 'frontend' || projectType === 'fullstack') {
+  choices = [...commonChoices, ...frontendChoices]
+}
+if (projectType === 'backend' || projectType === 'fullstack') {
+  choices = [...commonChoices, ...backendChoices]
+}
+```
+
+---
+
+### Q11: Development Features
+**Purpose:** Select development tools and configurations
+
+```javascript
+Type: checkbox (multi-select)
+Message: "Select development tools and features:"
+Always shown: Yes
+Pre-checked: ESLint, Prettier, dotenv, EditorConfig
+```
+
+**Options:**
+| Feature | Value | Pre-checked | Description |
+|---------|-------|-------------|-------------|
+| ESLint | `eslint` | ✓ Yes | Code linting |
+| Prettier | `prettier` | ✓ Yes | Code formatting |
+| Husky | `husky` | No | Git hooks |
+| Lint-staged | `lint-staged` | No | Pre-commit linting |
+| Jest | `jest` | No | Unit testing |
+| Vitest | `vitest` | No | Fast unit testing |
+| Docker | `docker` | No | Containerization |
+| GitHub Actions | `github-actions` | No | CI/CD pipelines |
+| .env support | `dotenv` | ✓ Yes | Environment variables |
+| EditorConfig | `editorconfig` | ✓ Yes | Editor consistency |
+
+**Generated Files by Feature:**
+- `eslint` → `.eslintrc.cjs`, `.eslintignore`
+- `prettier` → `.prettierrc`, `.prettierignore`
+- `husky` → `.husky/pre-commit`
+- `jest` → `jest.config.js`, `__tests__/`
+- `docker` → `Dockerfile`, `docker-compose.yml`, `.dockerignore`
+- `github-actions` → `.github/workflows/ci.yml`
+- `dotenv` → `.env.example`, `.env`
+- `editorconfig` → `.editorconfig`
+
+---
+
+### Q12: Package Manager
+**Purpose:** Choose which package manager to use
+
+```javascript
+Type: list
+Message: "Choose your package manager:"
+Always shown: Yes
+Default: 'npm'
+```
+
+**Options:**
+| Manager | Value | Install Command | Run Script |
+|---------|-------|----------------|------------|
+| npm | `npm` | `npm install` | `npm run dev` |
+| yarn | `yarn` | `yarn` | `yarn dev` |
+| pnpm | `pnpm` | `pnpm install` | `pnpm dev` |
+
+**Impact:**
+- Lock file type (package-lock.json, yarn.lock, pnpm-lock.yaml)
+- Installation speed and disk usage
+- Workspaces configuration (if monorepo)
+- CI/CD pipeline commands
+
+---
+
+### Q13: Git Initialization
+**Purpose:** Initialize Git repository with .gitignore
+
+```javascript
+Type: confirm (yes/no)
+Message: "Initialize Git repository?"
+Always shown: Yes
+Default: true
+```
+
+**If Yes:**
+- Runs `git init`
+- Creates `.gitignore` with common patterns
+- Makes initial commit (optional)
+
+**Generated `.gitignore` includes:**
+```
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+.DS_Store
+coverage/
+```
+
+---
+
+## Conditional Logic Matrix
+
+| Question | Frontend | Backend | Full Stack | Library |
+|----------|----------|---------|------------|---------|
+| Q1: Project Type | ✓ | ✓ | ✓ | ✓ |
+| Q2: Frontend Framework | ✓ | ✗ | ✓ | ✗ |
+| Q3: Backend Framework | ✗ | ✓ | ✓ | ✗ |
+| Q4: Database | ✗ | ✓ | ✓ | ✗ |
+| Q5: Project Name | ✓ | ✓ | ✓ | ✓ |
+| Q6: Language | ✓ | ✓ | ✓ | ✓ |
+| Q7: TS Strictness | If TS | If TS | If TS | If TS |
+| Q8: Folder Structure | ✓ | ✗ | ✓ | ✗ |
+| Q9: Styling | ✓ | ✗ | ✓ | ✗ |
+| Q10: Libraries | ✓ | ✓ | ✓ | ✓ |
+| Q11: Features | ✓ | ✓ | ✓ | ✓ |
+| Q12: Package Manager | ✓ | ✓ | ✓ | ✓ |
+| Q13: Git | ✓ | ✓ | ✓ | ✓ |
+
+---
+
+## Complete Flow Examples
+
+
+## Complete Flow Examples
+
+### Example 1: React + TypeScript + Tailwind (Frontend)
+
+**User Journey:**
+```
+$ initkit my-react-app
+
+Q1: Project Type → "Frontend Only"
+Q2: Frontend Framework → "React"
+Q3: Project Name → "my-react-app" ✓ valid
+Q4: Language → "TypeScript"
+Q5: TS Strictness → "Strict"
+Q6: Folder Structure → "Feature-based"
+Q7: Styling → "Tailwind CSS"
+Q8: Libraries → [React Query, Zustand]
+Q9: Features → [ESLint, Prettier, Jest, EditorConfig, dotenv]
+Q10: Package Manager → "npm"
+Q11: Git → "Yes"
+
+⏳ Creating project...
+✓ Project structure created
+✓ Files generated
+✓ Git initialized
+✓ Dependencies installed
+✨ Success!
+```
+
+**Generated Structure:**
+```
+my-react-app/
+├── src/
+│   ├── features/
+│   │   └── example/
+│   ├── shared/
+│   ├── App.tsx
+│   └── main.tsx
+├── public/
+├── .eslintrc.cjs
+├── .prettierrc
+├── .editorconfig
+├── .env.example
+├── .gitignore
+├── jest.config.js
+├── tailwind.config.js
+├── tsconfig.json
+├── vite.config.ts
+└── package.json
+
+Dependencies:
+- react, react-dom
+- @tanstack/react-query
+- zustand
+- tailwindcss, postcss, autoprefixer
+- typescript, @types/react
+- eslint, prettier, jest
+```
+
+---
+
+### Example 2: Express API + PostgreSQL (Backend)
+
+**User Journey:**
+```
+$ initkit api-service
+
+Q1: Project Type → "Backend Only"
+Q2: Backend Framework → "Express.js"
+Q3: Database → "PostgreSQL"
+Q4: Project Name → "api-service" ✓ valid
+Q5: Language → "TypeScript"
+Q6: TS Strictness → "Moderate"
+Q7: Libraries → [Prisma, JWT, Bcrypt, Winston]
+Q8: Features → [ESLint, Prettier, Docker, GitHub Actions, dotenv]
+Q9: Package Manager → "pnpm"
+Q10: Git → "Yes"
+
+⏳ Creating project...
+✓ Project structure created
+✓ Docker configuration added
+✓ CI/CD pipeline configured
+✓ Git initialized
+✓ Dependencies installed
+✨ Success!
+```
+
+**Generated Structure:**
+```
+api-service/
+├── src/
+│   ├── routes/
+│   ├── controllers/
+│   ├── services/
+│   ├── middleware/
+│   ├── config/
+│   └── app.ts
+├── prisma/
+│   └── schema.prisma
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── tsconfig.json
+└── package.json
+
+Dependencies:
+- express, @types/express
+- @prisma/client, prisma
+- jsonwebtoken, bcrypt
+- winston
+- typescript
+- eslint, prettier
+```
+
+---
+
+### Example 3: Full Stack MERN (Next.js + Express)
+
+**User Journey:**
+```
+$ initkit mern-app
+
+Q1: Project Type → "Full Stack"
+Q2: Frontend Framework → "Next.js (React)"
+Q3: Backend Framework → "Express.js"
+Q4: Database → "MongoDB"
+Q5: Project Name → "mern-app" ✓ valid
+Q6: Language → "TypeScript"
+Q7: TS Strictness → "Strict"
+Q8: Folder Structure → "Type-based"
+Q9: Styling → "CSS Modules"
+Q10: Libraries → [Axios, React Query, Zod]
+Q11: Features → [ESLint, Prettier, Husky, Jest, Docker, dotenv]
+Q12: Package Manager → "yarn"
+Q13: Git → "Yes"
+
+⏳ Creating project...
+✓ Monorepo structure created
+✓ Client (Next.js) configured
+✓ Server (Express) configured
+✓ Docker setup complete
+✓ Git initialized with Husky
+✓ Dependencies installed
+✨ Success!
+```
+
+**Generated Structure:**
+```
+mern-app/
+├── client/                    # Next.js frontend
+│   ├── app/
+│   ├── components/
+│   ├── styles/
+│   ├── next.config.js
+│   ├── tsconfig.json
+│   └── package.json
+├── server/                    # Express backend
+│   ├── src/
+│   │   ├── routes/
+│   │   ├── controllers/
+│   │   ├── models/
+│   │   └── app.ts
+│   ├── tsconfig.json
+│   └── package.json
+├── .github/
+│   └── workflows/
+├── .husky/
+│   └── pre-commit
+├── docker-compose.yml
+├── .env.example
+├── .gitignore
+├── .eslintrc.cjs
+├── .prettierrc
+└── package.json               # Root package.json for workspaces
+
+Workspace Dependencies:
+Client:
+- next, react, react-dom
+- axios, @tanstack/react-query
+- zod
+
+Server:
+- express, @types/express
+- mongoose, @types/mongoose
+- zod
+```
+
+---
+
+### Example 4: Node.js Library/Package
+
+**User Journey:**
+```
+$ initkit my-utility-lib
+
+Q1: Project Type → "Node.js Library/Package"
+Q2: Project Name → "my-utility-lib" ✓ valid
+Q3: Language → "TypeScript"
+Q4: TS Strictness → "Strict"
+Q5: Libraries → [Lodash, Date-fns]
+Q6: Features → [ESLint, Prettier, Jest, GitHub Actions, EditorConfig]
+Q7: Package Manager → "npm"
+Q8: Git → "Yes"
+
+⏳ Creating project...
+✓ Library structure created
+✓ Build configuration added
+✓ Test setup complete
+✓ Git initialized
+✓ Dependencies installed
+✨ Success!
+```
+
+**Generated Structure:**
+```
+my-utility-lib/
+├── src/
+│   ├── index.ts
+│   └── utils.ts
+├── dist/                      # Build output
+├── __tests__/
+│   └── index.test.ts
+├── .github/
+│   └── workflows/
+│       └── publish.yml
+├── .eslintrc.cjs
+├── .prettierrc
+├── .editorconfig
+├── .gitignore
+├── .npmignore
+├── jest.config.js
+├── tsconfig.json
+└── package.json
+
+package.json extras:
+- "main": "dist/index.js"
+- "types": "dist/index.d.ts"
+- "files": ["dist"]
+- Build scripts configured
+```
+
+---
+
+### Example 5: Quick Start with --yes Flag
+
+**User Journey:**
+```
+$ initkit my-app --yes
+
+Uses defaults:
+- Project Type: Full Stack
+- Frontend: React
+- Backend: Express
+- Database: None (can be added later)
+- Language: TypeScript (strict)
+- Folder Structure: Feature-based
+- Styling: Tailwind CSS
+- Features: [ESLint, Prettier, dotenv]
+- Package Manager: npm
+- Git: Yes
+
+⏳ Creating project...
+✓ All done in 45 seconds!
+```
+
+---
+
+## CLI Flag Overrides
+
+CLI flags can override or skip prompts:
 
 ```bash
-# Skip all prompts
+# Skip ALL prompts
 initkit my-app --yes
 
 # Force TypeScript
 initkit my-app --typescript
 
+# Force JavaScript instead
+initkit my-app --javascript
+
 # Skip Git initialization
 initkit my-app --no-git
 
-# Use specific template
+# Skip dependency installation
+initkit my-app --no-install
+
+# Specify package manager
+initkit my-app --package-manager pnpm
+
+# Use specific template (skips framework prompts)
 initkit my-app --template react
+
+# Verbose output for debugging
+initkit my-app --verbose
+
+# Combine flags
+initkit my-app --yes --javascript --no-git --package-manager yarn
 ```
 
-## Validation Rules
+**Flag Priority:**
+1. CLI flags override prompt answers
+2. If `--yes` is used, remaining flags can still override defaults
+3. If `--template` is specified, it overrides framework selections
 
-### Project Name (Q1)
+---
 
-- Must be valid npm package name
-- Lowercase only
-- No spaces (use hyphens)
-- Can't start with . or \_
-- Max 214 characters
-- No uppercase letters
+## Error Handling & Validation
 
-### All Questions
+### Project Name Validation
 
-- Required fields cannot be empty
-- Invalid choices trigger re-prompt
-- Default values provided where sensible
+**Invalid Inputs & Suggestions:**
+```
+Input: "My Cool App"
+❌ Error: Name cannot contain spaces
+💡 Suggestion: my-cool-app
 
-## User Experience Flow
+Input: "my_cool_app"
+❌ Error: Name cannot contain underscores
+💡 Suggestion: my-cool-app
 
-1. **Welcome Message**: Colorful ASCII art or branded message
-2. **Progressive Disclosure**: Only show relevant questions
-3. **Visual Feedback**: Spinners during file operations
-4. **Clear Success Messages**: Show next steps
-5. **Error Handling**: Graceful failures with helpful messages
-6. **Exit Points**: Allow Ctrl+C at any time
+Input: "MyCoolApp"
+❌ Error: Name cannot contain uppercase
+💡 Suggestion: my-cool-app
+
+Input: "123app"
+❌ Error: Name cannot start with a number
+💡 Suggestion: app-123
+
+Input: "react"
+❌ Error: Name conflicts with popular package
+💡 Suggestion: my-react-app
+```
+
+### Directory Existence Check
+
+```
+Input: "existing-folder"
+❌ Error: Directory "existing-folder" already exists
+   Please choose a different name.
+
+Options:
+1. Choose a different name
+2. Delete existing directory manually
+3. Use --force flag (not recommended)
+```
+
+### Interrupt Handling (Ctrl+C)
+
+```
+User presses Ctrl+C during:
+- Prompts: Clean exit, no files created
+- File generation: Rollback initiated
+- Dependency installation: Cleanup partial files
+
+Rollback Process:
+1. Display: "Operation interrupted"
+2. Remove created directory
+3. Display: "Cleanup complete"
+4. Exit with code 130
+```
+
+---
 
 ## Template Generation Logic
 
 ```javascript
+// Pseudocode for template generation
+
 if (projectType === 'fullstack') {
   createDirectory('client/');
   createDirectory('server/');
-  generateFrontend('client/', answers);
-  generateBackend('server/', answers);
+  
+  generateFrontend('client/', {
+    framework: answers.frontend,
+    language: answers.language,
+    styling: answers.styling,
+    folderStructure: answers.folderStructure,
+  });
+  
+  generateBackend('server/', {
+    framework: answers.backend,
+    database: answers.database,
+    language: answers.language,
+  });
+  
+  generateRootFiles({
+    packageManager: answers.packageManager,
+    workspaces: true,
+  });
+  
 } else if (projectType === 'frontend') {
   generateFrontend('src/', answers);
+  
 } else if (projectType === 'backend') {
   generateBackend('src/', answers);
+  
 } else if (projectType === 'library') {
-  generateLibrary('src/', answers);
+  generateLibrary('src/', {
+    language: answers.language,
+    buildTool: 'rollup',
+  });
 }
 
+// Add optional features
 if (answers.features.includes('docker')) {
   generateDockerfile(answers);
+  generateDockerCompose(answers);
 }
 
 if (answers.features.includes('github-actions')) {
   generateGitHubWorkflow(answers);
 }
+
+if (answers.features.includes('husky')) {
+  setupGitHooks(answers);
+}
+
+// Add selected libraries
+installAdditionalLibraries(answers.additionalLibraries);
+
+// Initialize Git if requested
+if (answers.useGit) {
+  await initGit(projectPath);
+}
+
+// Install dependencies
+if (answers.installDependencies !== false) {
+  await installDependencies(
+    projectPath,
+    answers.packageManager
+  );
+}
 ```
+
+---
+
+## Success Output & Next Steps
+
+After successful project creation:
+
+```
+✨ Project created successfully!
+
+Next steps:
+
+  1. Navigate to your project:
+     cd my-app
+
+  2. Start development server:
+     npm run dev
+
+  3. Open your browser:
+     http://localhost:3000 (frontend)
+     http://localhost:5000 (backend)
+
+Additional commands:
+
+  npm run build       Build for production
+  npm run test        Run tests
+  npm run lint        Lint code
+  npm run format      Format code
+
+Documentation:
+
+  README.md          Project overview
+  CONTRIBUTING.md    How to contribute
+  .env.example       Environment variables
+
+Happy coding!
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Problem:** "Directory already exists"
+```bash
+Solution 1: Choose a different name
+Solution 2: Remove the directory first
+  rm -rf existing-folder
+Solution 3: Navigate elsewhere
+  cd ~/projects
+```
+
+**Problem:** "Invalid project name"
+```bash
+Check: Use lowercase letters and hyphens only
+Example: my-project-name
+Avoid: My Project Name, my_project_name
+```
+
+**Problem:** "npm install failed"
+```bash
+Causes:
+- Network issues
+- Registry timeout
+- Disk space
+
+Solutions:
+1. Check internet connection
+2. Clear npm cache: npm cache clean --force
+3. Try different registry: npm config set registry https://registry.npmjs.org/
+4. Free up disk space
+```
+
+**Problem:** "Git initialization failed"
+```bash
+Check: Git is installed
+  git --version
+
+Install Git:
+- Windows: https://git-scm.com/download/win
+- Mac: brew install git
+- Linux: sudo apt install git
+```
+
+---
+
+## Advanced Usage
+
+### Programmatic API
+
+You can use InitKit programmatically in your Node.js scripts:
+
+```javascript
+import { createProject } from 'initkit';
+
+const answers = {
+  projectName: 'my-app',
+  projectType: 'frontend',
+  frontend: 'react',
+  language: 'typescript',
+  styling: 'tailwind',
+  features: ['eslint', 'prettier'],
+  packageManager: 'npm',
+  useGit: true,
+};
+
+await createProject(answers, {
+  verbose: true,
+  projectPath: '/path/to/project',
+});
+```
+
+### Custom Templates (Coming Soon)
+
+```bash
+# Use custom template from GitHub
+initkit my-app --template https://github.com/user/template
+
+# Use local template
+initkit my-app --template ./my-custom-template
+```
+
+---
+
+## References
+
+- [Main README](./README.md) - Project overview
+- [User Guide](./docs/user-guide.md) - Detailed usage instructions
+- [API Reference](./docs/api-reference.md) - Programmatic API
+- [Architecture](./docs/architecture.md) - Technical design
+- [Examples](./docs/examples.md) - Real-world examples
+
+---
+
+<div align="center">
+
+**InitKit** - Built by developers, for developers
+
+[GitHub](https://github.com/shirishshrestha/initkit) | [npm](https://www.npmjs.com/package/initkit) | [Issues](https://github.com/shirishshrestha/initkit/issues)
+
+</div>
