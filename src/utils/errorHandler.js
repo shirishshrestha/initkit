@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import fs from 'fs-extra';
-import path from 'path';
+
 
 /**
  * Custom error class for CLI operations
