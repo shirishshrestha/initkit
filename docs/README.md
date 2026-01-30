@@ -29,6 +29,15 @@ Welcome to the InitKit CLI documentation! InitKit is a powerful command-line too
    - Vue + Vite template system
    - Framework support details
 
+4. **[Phase 4: Backend Template Implementation](./PHASE_4.md)**
+   - Express.js comprehensive templates
+   - Multiple architectures (MVC, Clean, Feature-based, Layered)
+   - Complete configuration files
+   - Database integration (Prisma, MongoDB, PostgreSQL, MySQL)
+   - Middleware & utilities (Auth, Validation, Logging, CORS, Rate Limiting)
+   - API documentation (Swagger/OpenAPI)
+   - Docker support
+
 ### 📝 Changelog & Updates
 
 4. **[Template Refactoring Summary](./TEMPLATE_REFACTORING.md)**
@@ -93,6 +102,11 @@ InitKit generates **organized folder structures** for your projects. It does NOT
 - **Frameworks:** Next.js, React + Vite, Vue + Vite
 - **Status:** Production ready
 
+### Phase 4: Backend Templates
+- **Achievement:** Express.js templates with 4 architectural patterns
+- **Features:** Complete backend scaffolding with middleware, database, Docker
+- **Status:** Production ready
+
 ---
 
 ## 🎯 Key Concepts
@@ -131,6 +145,7 @@ docs/
 ├── PHASE_1.md                     # Template examination & refactoring
 ├── PHASE_2.md                     # Tailwind v4 & framework updates
 ├── PHASE_3_IMPLEMENTATION.md      # Frontend template implementation
+├── PHASE_4.md                     # Backend template implementation
 ├── TEMPLATE_REFACTORING.md        # v2.0 refactoring summary
 └── DOCUMENTATION_IMPROVEMENTS.md  # Documentation changelog
 ```
@@ -142,6 +157,7 @@ docs/
 - **Phase 1** → [Template Refactoring Details](./PHASE_1.md)
 - **Phase 2** → [Version Updates & Tailwind v4](./PHASE_2.md)
 - **Phase 3** → [Frontend Implementation](./PHASE_3_IMPLEMENTATION.md)
+- **Phase 4** → [Backend Implementation](./PHASE_4.md)
 - **Refactoring** → [Complete Refactoring Summary](./TEMPLATE_REFACTORING.md)
 - **Docs** → [Documentation Improvements](./DOCUMENTATION_IMPROVEMENTS.md)
 

@@ -5,6 +5,7 @@ import { dirname } from 'path';
 import { generateNextjsTemplate } from '../templates/nextjs.js';
 import { generateReactTemplate } from '../templates/react.js';
 import { generateVueTemplate } from '../templates/vue.js';
+import generateExpressTemplate from '../templates/express.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -128,6 +129,37 @@ Built with InitKit
 }
 
 async function generateBackendFiles(projectPath, config) {
+  const backend = config.backend;
+
+  switch (backend) {
+    case 'express':
+      await generateExpressTemplate(projectPath, config);
+      break;
+    case 'fastify':
+      await generateFastifyTemplate(projectPath, config);
+      break;
+    case 'nestjs':
+      await generateNestjsTemplate(projectPath, config);
+      break;
+    default:
+      // Fallback to basic structure
+      await generateBasicBackend(projectPath, config);
+  }
+}
+
+async function generateFastifyTemplate(projectPath, config) {
+  // TODO: Implement Fastify template
+  console.log('Fastify template generation - coming soon');
+  await generateBasicBackend(projectPath, config);
+}
+
+async function generateNestjsTemplate(projectPath, config) {
+  // TODO: Implement NestJS template
+  console.log('NestJS template generation - coming soon');
+  await generateBasicBackend(projectPath, config);
+}
+
+async function generateBasicBackend(projectPath, config) {
   // Create backend-specific files based on chosen framework
   const srcPath = path.join(projectPath, 'src');
   await fs.ensureDir(srcPath);

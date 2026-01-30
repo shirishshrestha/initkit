@@ -116,7 +116,7 @@ function getQuestions(initialProjectName) {
       ],
       default: 'typescript',
     },
-    // Folder Structure Preference
+    // Folder Structure Preference - Frontend
     {
       type: 'list',
       name: 'folderStructure',
@@ -127,20 +127,42 @@ function getQuestions(initialProjectName) {
           value: 'feature-based',
         },
         {
-          name: 'Type-based (Organize by file type: components, utils, etc.)',
-          value: 'type-based',
+          name: 'Component-based (Organize by component type)',
+          value: 'component-based',
         },
         {
-          name: 'Domain-driven (Organize by business domain)',
-          value: 'domain-driven',
-        },
-        {
-          name: 'Flat (Simple, minimal structure)',
-          value: 'flat',
+          name: 'Atomic Design (atoms, molecules, organisms)',
+          value: 'atomic',
         },
       ],
       default: 'feature-based',
-      when: (answers) => ['frontend', 'fullstack'].includes(answers.projectType),
+      when: (answers) => ['frontend'].includes(answers.projectType),
+    },
+    // Folder Structure Preference - Backend
+    {
+      type: 'list',
+      name: 'folderStructure',
+      message: 'Choose your backend architecture:',
+      choices: [
+        {
+          name: 'MVC (Model-View-Controller)',
+          value: 'mvc',
+        },
+        {
+          name: 'Clean Architecture (Domain-driven layers)',
+          value: 'clean-architecture',
+        },
+        {
+          name: 'Feature-based (Organize by feature/module)',
+          value: 'feature-based',
+        },
+        {
+          name: 'Layered (Controller-Service-Repository)',
+          value: 'layered',
+        },
+      ],
+      default: 'mvc',
+      when: (answers) => ['backend'].includes(answers.projectType),
     },
     // TypeScript Configuration Level (if TypeScript selected)
     {
@@ -191,10 +213,12 @@ function getQuestions(initialProjectName) {
         ];
 
         const backendChoices = [
-          { name: 'Prisma (ORM)', value: 'prisma', checked: false },
-          { name: 'JWT (Authentication)', value: 'jsonwebtoken', checked: false },
+          { name: 'JWT (Authentication)', value: 'jwt', checked: false },
           { name: 'Bcrypt (Password hashing)', value: 'bcrypt', checked: false },
           { name: 'Winston (Logging)', value: 'winston', checked: false },
+          { name: 'Swagger/OpenAPI (API docs)', value: 'swagger', checked: false },
+          { name: 'Rate Limiting', value: 'rate-limit', checked: false },
+          { name: 'Docker Setup', value: 'docker', checked: false },
         ];
 
         let choices = [...commonChoices];
