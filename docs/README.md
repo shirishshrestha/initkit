@@ -4,57 +4,44 @@ Welcome to the InitKit CLI documentation! InitKit is a powerful command-line too
 
 ---
 
-## Table of Contents
+## 📋 Table of Contents
 
-### 🚀 Getting Started
+### 🚀 Project Phases
 
-1. **[User Guide](./user-guide.md)**
-   - Installation & setup
-   - Command reference
-   - Interactive prompts
-   - Usage examples
-   - Troubleshooting
+1. **[Phase 1: Template Examination & Core Refactoring](./PHASE_1.md)**
+   - Initial template analysis
+   - Problem identification
+   - Config and boilerplate removal
+   - Template simplification
+   - 74% code reduction
 
-2. **[Examples & Use Cases](./examples.md)**
-   - Quick start examples
-   - Frontend/Backend/Fullstack projects
-   - Library scaffolding
-   - CI/CD integration
+2. **[Phase 2: Tailwind v4 & Framework Updates](./PHASE_2.md)**
+   - Tailwind CSS v3 → v4 migration
+   - Next.js 14 → 15 update
+   - React 18 → 19 update
+   - Vite 5 → 6 update
+   - Vue 3.4 → 3.5 update
 
-### 🔧 Technical Documentation
-
-3. **[Architecture](./architecture.md)**
-   - Project structure
-   - Core components
-   - Data flow diagrams
-   - Module responsibilities
-   - Error handling strategy
-
-4. **[API Reference](./api-reference.md)**
-   - Programmatic API
-   - Validation utilities
-   - Error handling classes
-   - Type definitions
-
-### 📋 Changelog & Updates
-
-5. **[Template Refactoring](./TEMPLATE_REFACTORING.md)**
-   - v2.0 template system changes
-   - Migration guide
-   - Tailwind v4 update
-
-6. **[Phase 3 Implementation](./PHASE_3_IMPLEMENTATION.md)**
+3. **[Phase 3: Frontend Implementation](./PHASE_3_IMPLEMENTATION.md)**
    - Frontend template generators
+   - Next.js template system
+   - React + Vite template system
+   - Vue + Vite template system
    - Framework support details
 
-7. **[Build Summary](./BUILD_SUMMARY.md)**
-   - Initial implementation notes
-   - Feature completion status
+### 📝 Changelog & Updates
 
-8. **[Documentation Improvements](./DOCUMENTATION_IMPROVEMENTS.md)**
-   - Documentation changelog
-   - Content enhancements
+4. **[Template Refactoring Summary](./TEMPLATE_REFACTORING.md)**
+   - v2.0 template system overview
+   - Before/after comparison
+   - Migration guide
+   - File size metrics
 
+5. **[Documentation Improvements](./DOCUMENTATION_IMPROVEMENTS.md)**
+   - Documentation restructuring
+   - Format standardization
+   - Content quality improvements
+   - Metrics and statistics
 ---
 
 ## 🚀 Quick Start
@@ -69,110 +56,176 @@ npm install -g initkit
 
 ```bash
 # Interactive mode (recommended)
-initkit
+initkit create
 
-# Quick start with defaults
-initkit create my-project --yes
+# Create with project name
+initkit create my-project
 
-# Specific project type
-initkit create my-app --template react
+# Follow the prompts to configure your project
 ```
 
-### Commands
-- `initkit create [project-name]` - Create a new project
-- `initkit list` - Show available templates
-- `initkit info` - Display CLI information
-- `initkit --version` - Show version number
-- `initkit --help` - Show help information
+### What InitKit Does
 
-## 📖 Documentation Sections
+InitKit generates **organized folder structures** for your projects. It does NOT generate config files or boilerplate code - that's handled by framework CLIs.
 
-### For End Users
+**Workflow:**
+1. Run `initkit create my-app` → Creates folder structure + package.json
+2. Follow README instructions → Run framework CLI to generate configs
+3. Install dependencies → `npm install`
+4. Start developing → `npm run dev`
 
-#### [User Guide](./user-guide.md)
-Start here if you want to use InitKit to create projects. Covers:
-- All CLI commands and options
-- Step-by-step interactive prompts
-- Configuration options
-- Examples and troubleshooting
+---
 
-#### [Examples & Use Cases](./examples.md)
-Real-world examples for:
-- Different project types (React, Vue, Express, etc.)
-- Advanced usage scenarios
-- CI/CD integration
-- Batch project creation
-- Team setups
+## 📚 Phase Documentation Overview
 
-### For Developers
+### Phase 1: Core Refactoring
+- **Problem:** Templates generated too much code (configs, boilerplate)
+- **Solution:** Removed all config/code generation (74% code reduction)
+- **Result:** Templates now only create folder structures
 
-#### [Architecture](./architecture.md)
-Understanding InitKit's internals:
-- How the CLI is structured
-- Component relationships
-- Error handling mechanisms
-- How to extend InitKit
-- Best practices
+### Phase 2: Modernization
+- **Problem:** Using outdated Tailwind v3 and older framework versions
+- **Solution:** Updated to Tailwind v4, Next.js 15, React 19, Vite 6, Vue 3.5
+- **Result:** Modern dependencies with better performance
 
-#### [API Reference](./api-reference.md)
-Using InitKit programmatically:
-- Public API methods
-- Validation functions
-- Error classes and codes
-- Utility functions
-- Type definitions
+### Phase 3: Implementation
+- **Achievement:** Frontend templates fully implemented
+- **Frameworks:** Next.js, React + Vite, Vue + Vite
+- **Status:** Production ready
 
-## 🌟 Key Features
+---
 
-### Comprehensive Project Templates
--  Frontend frameworks (React, Vue, Angular, Svelte, etc.)
--  Backend frameworks (Express, Fastify, NestJS, etc.)
--  Full-stack combinations
--  Node.js library scaffolding
+## 🎯 Key Concepts
 
-### Smart Configuration
--  TypeScript or JavaScript
--  Multiple folder structures
--  CSS frameworks (Tailwind, Sass, etc.)
--  Database integration
--  Package manager choice (npm, yarn, pnpm)
+### Design Philosophy
 
-### Development Tools
--  ESLint & Prettier
--  Testing frameworks (Jest, Vitest)
--  Git hooks (Husky)
--  Docker configuration
--  CI/CD workflows
--  EditorConfig
+**Separation of Concerns:**
+- **InitKit** → Creates organized folder structures
+- **Framework CLIs** → Generate configs and boilerplate
+- **Package Managers** → Install dependencies
 
-### Developer Experience
--  Interactive prompts with validation
--  Real-time input feedback
--  Helpful error messages
--  Automatic rollback on failure
--  Verbose mode for debugging
--  Non-interactive mode for automation
+**Why This Approach?**
+- Framework CLIs generate optimal, up-to-date configs
+- No maintenance burden for config files
+- Simpler codebase (74% less code)
+- Users get best practices from framework maintainers
 
-## 🎯 Use Cases
+### What Gets Generated
 
-### Learning & Experimentation
-- Quickly spin up projects to learn new frameworks
-- Experiment with different tech stacks
-- Follow tutorials with proper setup
+✅ **Folder Structure** - Organized directories (feature-based, component-based, etc.)  
+✅ **Package.json** - Dependencies and scripts  
+✅ **README.md** - Setup instructions and next steps  
+✅ **Index Files** - Barrel exports with TODO comments  
 
-### Production Projects
-- Start new projects with best practices
-- Consistent team setup
-- Enterprise-ready configurations
+❌ **Config Files** - Let framework CLIs handle this  
+❌ **Boilerplate Code** - Let framework CLIs handle this  
+❌ **App Files** - Let framework CLIs handle this  
 
-### Microservices
-- Create multiple services quickly
-- Consistent architecture across services
-- Docker and CI/CD ready
+---
 
-### Open Source
-- Library scaffolding with testing
-- Proper documentation structure
+## 📁 Documentation Structure
+
+```
+docs/
+├── README.md                      # This file - Documentation index
+├── PHASE_1.md                     # Template examination & refactoring
+├── PHASE_2.md                     # Tailwind v4 & framework updates
+├── PHASE_3_IMPLEMENTATION.md      # Frontend template implementation
+├── TEMPLATE_REFACTORING.md        # v2.0 refactoring summary
+└── DOCUMENTATION_IMPROVEMENTS.md  # Documentation changelog
+```
+
+---
+
+## 🔗 Quick Links
+
+- **Phase 1** → [Template Refactoring Details](./PHASE_1.md)
+- **Phase 2** → [Version Updates & Tailwind v4](./PHASE_2.md)
+- **Phase 3** → [Frontend Implementation](./PHASE_3_IMPLEMENTATION.md)
+- **Refactoring** → [Complete Refactoring Summary](./TEMPLATE_REFACTORING.md)
+- **Docs** → [Documentation Improvements](./DOCUMENTATION_IMPROVEMENTS.md)
+
+---
+
+## 📊 Project Metrics
+
+### Template Size Reduction (Phase 1)
+| Template | Before | After | Reduction |
+|----------|--------|-------|-----------|
+| Next.js  | 613 lines | 176 lines | 71% ↓ |
+| React    | 600 lines | 156 lines | 74% ↓ |
+| Vue      | 612 lines | 140 lines | 77% ↓ |
+| **Total** | **1,825 lines** | **472 lines** | **74% ↓** |
+
+### Version Updates (Phase 2)
+- Tailwind CSS: v3.4.1 → v4.0.0
+- Next.js: v14.2.0 → v15.1.4
+- React: v18.3.1 → v19.0.0
+- Vite: v5.2.0 → v6.0.7
+- Vue: v3.4.21 → v3.5.13
+- TypeScript: v5.4.5 → v5.7.3
+
+---
+
+## 🎓 Learning Resources
+
+### Understanding the Refactoring
+
+1. **Read Phase 1** - Understand why configs were removed
+2. **Read Phase 2** - Learn about version updates
+3. **Read Phase 3** - See implementation details
+4. **Review Commits** - See actual code changes
+
+### Key Takeaways
+
+- Let framework CLIs handle configuration
+- Focus on folder organization, not implementation
+- Simpler templates = easier maintenance
+- User guidance > automation in some cases
+
+---
+
+## 🔄 Development Workflow
+
+### For Template Development
+
+1. Modify template in `src/templates/`
+2. Test with `node bin/index.js create test-app`
+3. Verify folder structure
+4. Check package.json
+5. Test framework CLI integration
+
+### For Documentation
+
+1. Update relevant phase documentation
+2. Keep metrics up to date
+3. Add examples when needed
+4. Maintain consistency across docs
+
+---
+
+## 💡 Contributing
+
+Interested in contributing? Check out the main repository README for:
+- Development setup
+- Contribution guidelines
+- Code style standards
+- Testing requirements
+
+---
+
+## 📞 Support
+
+- **Issues:** Report bugs or request features on GitHub
+- **Questions:** Open a discussion on GitHub Discussions
+- **Documentation:** This comprehensive documentation
+
+---
+
+**Version:** 2.0.0  
+**Last Updated:** January 2026  
+**Status:** Production Ready ✅
+
 - Publishing-ready configuration
 
 ## 🔧 Core Concepts
