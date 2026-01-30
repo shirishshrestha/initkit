@@ -41,24 +41,35 @@ function getQuestions(initialProjectName) {
         const validation = validateProjectName(input);
         if (!validation.valid) {
           const suggestion = suggestProjectName(input);
-          return `${validation.errors[0]}\n   ${chalk.cyan(`Suggestion: ${suggestion}`)}`;
+          return `${chalk.red('✗')} ${validation.errors[0]}\n   ${chalk.cyan('💡 Try:')} ${chalk.green(suggestion)}`;
         }
 
         // Check if directory exists
         const dirCheck = checkDirectoryExists(input);
         if (dirCheck.exists) {
-          return `Directory "${input}" already exists. Please choose a different name.`;
+          return `${chalk.red('✗')} Directory "${input}" already exists.\n   ${chalk.cyan('💡 Try:')} Choose a different name or remove the existing folder`;
         }
 
         return true;
       },
       transformer: (input) => {
-        // Show real-time validation feedback
-        const validation = validateProjectName(input);
-        if (validation.valid) {
-          return chalk.green(input);
+        // Show real-time validation feedback with icons
+        if (!input || input.trim() === '') {
+          return chalk.gray(input);
         }
-        return chalk.red(input);
+        
+        const validation = validateProjectName(input);
+        const dirCheck = checkDirectoryExists(input);
+        
+        if (validation.valid && !dirCheck.exists) {
+          return chalk.green('✓ ') + chalk.green(input);
+        } else if (!validation.valid) {
+          return chalk.red('✗ ') + chalk.red(input);
+        } else if (dirCheck.exists) {
+          return chalk.yellow('⚠ ') + chalk.yellow(input) + chalk.gray(' (exists)');
+        }
+        
+        return input;
       },
     },
     // Frontend framework selection
@@ -77,6 +88,40 @@ function getQuestions(initialProjectName) {
       ],
       when: (answers) => ['frontend', 'fullstack'].includes(answers.projectType),
     },
+    // Full-stack architecture type
+    {
+      type: 'list',
+      name: 'fullstackType',
+      message: 'Choose your full-stack architecture:',
+      choices: [
+        { name: 'Monorepo (apps/ + packages/)', value: 'monorepo' },
+        { name: 'Traditional (separate client/ + server/)', value: 'traditional' },
+      ],
+      when: (answers) => answers.projectType === 'fullstack',
+    },
+    // Full-stack stack selection
+    {
+      type: 'list',
+      name: 'stack',
+      message: 'Choose your full-stack:',
+      choices: (answers) => {
+        if (answers.fullstackType === 'monorepo') {
+          return [
+            { name: 'Next.js + Express + MongoDB', value: 'Next.js + Express + MongoDB' },
+            { name: 'Next.js + Express + PostgreSQL', value: 'Next.js + Express + PostgreSQL' },
+            { name: 'React + Express + MongoDB', value: 'React + Express + MongoDB' },
+            { name: 'React + Express + PostgreSQL', value: 'React + Express + PostgreSQL' },
+          ];
+        }
+        return [
+          { name: 'MERN (MongoDB + Express + React + Node)', value: 'MERN' },
+          { name: 'PERN (PostgreSQL + Express + React + Node)', value: 'PERN' },
+          { name: 'Next.js + Express', value: 'Next.js + Express' },
+          { name: 'Laravel + React', value: 'Laravel + React' },
+        ];
+      },
+      when: (answers) => answers.projectType === 'fullstack',
+    },
     // Backend framework selection
     {
       type: 'list',
@@ -89,21 +134,21 @@ function getQuestions(initialProjectName) {
         { name: 'NestJS', value: 'nestjs' },
         { name: 'Hapi', value: 'hapi' },
       ],
-      when: (answers) => ['backend', 'fullstack'].includes(answers.projectType),
+      when: (answers) => answers.projectType === 'backend',
     },
-    // Database selection
+    // Database selection (for backend only)
     {
       type: 'list',
       name: 'database',
       message: 'Choose your database:',
       choices: [
+        { name: 'Prisma (PostgreSQL/MySQL)', value: 'prisma' },
+        { name: 'MongoDB', value: 'mongodb' },
         { name: 'PostgreSQL', value: 'postgresql' },
         { name: 'MySQL', value: 'mysql' },
-        { name: 'MongoDB', value: 'mongodb' },
-        { name: 'SQLite', value: 'sqlite' },
         { name: 'None', value: 'none' },
       ],
-      when: (answers) => ['backend', 'fullstack'].includes(answers.projectType),
+      when: (answers) => answers.projectType === 'backend',
     },
     // Language Choice - TypeScript or JavaScript
     {
@@ -190,7 +235,7 @@ function getQuestions(initialProjectName) {
         { name: 'Sass/SCSS', value: 'sass' },
         { name: 'Plain CSS', value: 'css' },
       ],
-      when: (answers) => ['frontend', 'fullstack'].includes(answers.projectType),
+      when: (answers) => answers.projectType === 'frontend',
     },
     // Additional Libraries (Multi-select)
     {

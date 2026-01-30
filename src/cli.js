@@ -17,17 +17,17 @@ const packageJson = require('../package.json');
 
 // Display banner
 function displayBanner() {
-  console.log(chalk.cyan.bold(`
-╔═══════════════════════════════════════════╗
-║                                           ║
-║        Welcome to InitKit CLI            ║
-║                                           ║
-║   Scaffold modern web projects with      ║
-║   best practices and lightning speed     ║
-║                                           ║
-╚═══════════════════════════════════════════╝
-  `));
-  console.log(chalk.gray(`Version: ${packageJson.version}\n`));
+  console.log('');
+  console.log(chalk.cyan('╔════════════════════════════════════════════════════════════╗'));
+  console.log(chalk.cyan('║') + chalk.cyan.bold('                                                            ') + chalk.cyan('║'));
+  console.log(chalk.cyan('║') + chalk.cyan.bold('              🚀 Welcome to InitKit CLI! 🚀               ') + chalk.cyan('║'));
+  console.log(chalk.cyan('║') + chalk.cyan.bold('                                                            ') + chalk.cyan('║'));
+  console.log(chalk.cyan('║') + chalk.white('       Scaffold modern web projects with best               ') + chalk.cyan('║'));
+  console.log(chalk.cyan('║') + chalk.white('       practices and lightning-fast speed ⚡                ') + chalk.cyan('║'));
+  console.log(chalk.cyan('║') + chalk.cyan.bold('                                                            ') + chalk.cyan('║'));
+  console.log(chalk.cyan('╚════════════════════════════════════════════════════════════╝'));
+  console.log('');
+  console.log(chalk.gray(`         Version ${packageJson.version} | Made with ❤️  by developers\n`));
 }
 
 // Set up the CLI program
@@ -59,10 +59,11 @@ program
       if (projectName) {
         const validation = validateProjectName(projectName);
         if (!validation.valid) {
+          const suggestion = require('../utils/validation.js').suggestProjectName(projectName);
           throw new CLIError(
-            `Invalid project name: ${projectName}`,
+            `"${projectName}" is not a valid project name`,
             ERROR_CODES.VALIDATION_ERROR,
-            { errors: validation.errors.join(', ') }
+            { suggestion: suggestion, issue: validation.errors[0] }
           );
         }
 
@@ -70,9 +71,9 @@ program
         const dirCheck = checkDirectoryExists(projectName);
         if (dirCheck.exists) {
           throw new CLIError(
-            `Directory "${projectName}" already exists`,
+            `A folder named "${projectName}" already exists here`,
             ERROR_CODES.DIRECTORY_EXISTS,
-            { path: dirCheck.path }
+            { path: dirCheck.path, projectName }
           );
         }
 
@@ -125,9 +126,7 @@ program
         projectPath,
       });
 
-      // Success message
-      console.log(chalk.green.bold('\nProject created successfully!\n'));
-      displayNextSteps(answers);
+      // Success message is now part of the comprehensive summary in create.js
 
     } catch (error) {
       displayError(error, { projectName });
@@ -179,26 +178,6 @@ program
     
     console.log('\n');
   });
-
-// Display next steps
-function displayNextSteps(answers) {
-  const { projectName, packageManager, installDependencies } = answers;
-  
-  console.log(chalk.cyan.bold('Next steps:\n'));
-  console.log(chalk.white(`  ${chalk.cyan('1.')} Navigate to your project:`));
-  console.log(chalk.gray(`     cd ${projectName}\n`));
-  
-  if (!installDependencies) {
-    console.log(chalk.white(`  ${chalk.cyan('2.')} Install dependencies:`));
-    console.log(chalk.gray(`     ${packageManager} install\n`));
-  }
-  
-  const stepNum = installDependencies ? 2 : 3;
-  console.log(chalk.white(`  ${chalk.cyan(`${stepNum}.`)} Start development server:`));
-  console.log(chalk.gray(`     ${packageManager} ${packageManager === 'npm' ? 'run ' : ''}dev\n`));
-  
-  console.log(chalk.green('Happy coding!\n'));
-}
 
 // Handle unknown commands
 program.on('command:*', () => {

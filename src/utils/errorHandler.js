@@ -37,30 +37,35 @@ export const ERROR_CODES = {
  */
 export function displayError(error, context = {}) {
   console.log('\n');
+  console.log(chalk.red('╔════════════════════════════════════════════════════════════╗'));
+  console.log(chalk.red('║') + chalk.red.bold('                    ❌ Error                             ') + chalk.red('║'));
+  console.log(chalk.red('╚════════════════════════════════════════════════════════════╝'));
+  console.log('');
   
   if (error instanceof CLIError) {
-    console.error(chalk.red.bold('Error:'), chalk.red(error.message));
+    console.error(chalk.red.bold('  ' + error.message));
     
     // Display error code
     if (error.code) {
-      console.error(chalk.gray(`   Code: ${error.code}`));
+      console.error(chalk.gray(`\n  Error code: ${error.code}`));
     }
 
     // Display additional details
     if (Object.keys(error.details).length > 0) {
-      console.log(chalk.yellow('\n   Details:'));
+      console.log(chalk.yellow('\n  📋 Details:'));
       Object.entries(error.details).forEach(([key, value]) => {
-        console.log(chalk.yellow(`   • ${key}: ${value}`));
+        console.log(chalk.yellow(`     • ${key}: ${value}`));
       });
     }
 
     // Display helpful suggestions based on error type
+    console.log('');
     displayErrorSuggestions(error.code, context);
   } else {
-    console.error(chalk.red.bold('Unexpected Error:'), chalk.red(error.message));
+    console.error(chalk.red.bold('  Unexpected error: ') + chalk.red(error.message));
     
     if (process.env.DEBUG) {
-      console.error(chalk.gray('\n   Stack trace:'));
+      console.error(chalk.gray('\n  Stack trace:'));
       console.error(chalk.gray(error.stack));
     }
   }
@@ -76,27 +81,31 @@ export function displayError(error, context = {}) {
 function displayErrorSuggestions(errorCode, context) {
   const suggestions = {
     [ERROR_CODES.VALIDATION_ERROR]: [
-      'Ensure your project name follows npm naming conventions',
-      'Use lowercase letters, numbers, hyphens, and underscores only',
-      'Project name should not contain spaces',
+      '💡 Tip: Project names should be lowercase with hyphens (e.g., my-awesome-app)',
+      '💡 Valid characters: letters, numbers, hyphens (-) and underscores (_)',
+      '💡 Spaces are not allowed - use hyphens instead!',
     ],
     [ERROR_CODES.DIRECTORY_EXISTS]: [
-      `Try using a different project name`,
-      `Or remove the existing directory: rm -rf ${context.projectName}`,
+      `🤔 Oops! That folder already exists here.`,
+      `💡 Try a different name, or remove the existing one first`,
+      `   Command: rm -rf ${context.projectName || 'project-name'}`,
     ],
     [ERROR_CODES.CREATION_FAILED]: [
-      'Check if you have write permissions in the current directory',
-      'Ensure you have enough disk space',
-      'Try running with elevated permissions',
+      '😕 Hmm, couldn\'t create the project folder.',
+      '💡 Check if you have permission to write here',
+      '💡 Make sure you have enough disk space',
+      '💡 Try running in a different directory',
     ],
     [ERROR_CODES.INSTALL_FAILED]: [
-      'Check your internet connection',
-      'Try running the installation manually after project creation',
-      'Check if npm/yarn/pnpm is properly installed',
+      '📦 Package installation hit a snag!',
+      '💡 Check your internet connection and try again',
+      '💡 You can install packages later with: npm install',
+      '💡 Or use --no-install flag to skip installation',
     ],
     [ERROR_CODES.GIT_INIT_FAILED]: [
-      'Ensure Git is installed on your system',
-      'You can skip Git initialization with --no-git flag',
+      '🔧 Git initialization failed.',
+      '💡 Make sure Git is installed: git --version',
+      '💡 Or skip Git setup with: --no-git flag',
     ],
     [ERROR_CODES.PERMISSION_DENIED]: [
       'You may need elevated permissions to write to this directory',

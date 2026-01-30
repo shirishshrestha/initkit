@@ -22,11 +22,14 @@ InitKit eliminates the tedious project setup process by providing intelligent sc
 
 **Key Benefits:**
 - **Smart Validation** - Real-time npm package name validation with helpful suggestions
-- **Flexible Architecture** - Choose from feature-based, type-based, domain-driven, or flat folder structures
-- **Comprehensive Testing** - Pre-configured Jest/Vitest with test structure
+- **Monorepo Support** - Full-stack monorepo architecture with Turborepo
+- **Multiple Stacks** - MERN, PERN, Next.js + Express, Laravel + React
+- **Flexible Architecture** - Feature-based, type-based, domain-driven, or flat structures
+- **Docker Ready** - Complete Docker orchestration for all services
+- **API Integration** - Seamless frontend-backend communication setup
 - **Production Ready** - ESLint, Prettier, Git hooks, and CI/CD out of the box
 - **Automatic Rollback** - Failed installations clean up automatically
-- **13 Interactive Prompts** - Customized workflow based on your project type
+- **Interactive Prompts** - Customized workflow based on your project type
 
 ---
 
@@ -119,9 +122,31 @@ Comprehensive documentation to help you get the most out of InitKit:
 
 **DevOps:**
 - Docker (multi-stage builds)
-- Docker Compose (local dev environment)
+- Docker Compose (full-stack orchestration)
 - GitHub Actions (CI/CD pipelines)
 - Environment variables (.env setup)
+- Turborepo (monorepo build system)
+
+### 🏗️ Full-Stack Architectures
+
+**Monorepo (Turborepo):**
+- Shared packages (types, UI components)
+- Unified workspace management
+- Optimized build pipeline
+- Consistent tooling across apps
+
+**Traditional Stack Options:**
+- **MERN** - MongoDB + Express + React + Node
+- **PERN** - PostgreSQL + Express + React + Node  
+- **Next.js + Express** - Full-stack React with API
+- **Laravel + React** - PHP backend with React frontend
+
+**Features:**
+- API integration (Vite proxy, Next.js rewrites)
+- Docker orchestration (frontend + backend + database)
+- Environment configuration
+- Shared TypeScript types
+- Reusable UI components
 
 ### 🎨 Styling Solutions
 
@@ -226,29 +251,56 @@ my-react-app/
 └── package.json
 ```
 
-### Example 2: Full Stack Next.js + Express
+### Example 2: Full Stack MERN with Docker
 
 ```bash
 initkit fullstack-app
-# Select: Full Stack → Next.js → Express → PostgreSQL → TypeScript
+# Select: Full Stack → Traditional → MERN
 ```
 
 **Generated Structure:**
 ```
 fullstack-app/
-├── client/              # Next.js frontend
-│   ├── app/
-│   ├── components/
+├── client/              # React + Vite frontend
+│   ├── src/
+│   │   ├── features/
+│   │   ├── components/
+│   │   └── lib/api.js
+│   ├── Dockerfile
 │   └── package.json
 ├── server/              # Express backend
 │   ├── src/
-│   ├── routes/
+│   │   ├── controllers/
+│   │   ├── models/
+│   │   └── routes/
+│   ├── Dockerfile
 │   └── package.json
-├── docker-compose.yml
+├── docker-compose.yml   # MongoDB + Frontend + Backend
 └── README.md
 ```
 
-### Example 3: Express API with Docker
+### Example 3: Monorepo with Turborepo
+
+```bash
+initkit my-monorepo
+# Select: Full Stack → Monorepo → Next.js + Express + PostgreSQL
+```
+
+**Generated Structure:**
+```
+my-monorepo/
+├── apps/
+│   ├── frontend/        # Next.js app
+│   └── backend/         # Express API
+├── packages/
+│   ├── shared-types/    # Shared TypeScript interfaces
+│   └── ui-components/   # Shared React components
+├── turbo.json          # Turborepo config
+├── docker-compose.yml
+└── package.json
+```
+
+### Example 4: Express API with Docker
 
 ```bash
 initkit api-server
@@ -262,7 +314,7 @@ initkit api-server
 - GitHub Actions CI/CD
 - Environment variable management
 
-### Example 4: Quick Start with Defaults
+### Example 5: Quick Start with Defaults
 
 ```bash
 initkit quick-app --yes

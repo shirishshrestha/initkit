@@ -97,10 +97,8 @@ async function createProject(answers, options = {}) {
       console.log(chalk.gray('\n   Skipping dependency installation (--no-install)'));
     }
 
-    // Step 6: Display summary
-    if (verbose) {
-      displayProjectSummary(answers, projectPath);
-    }
+    // Step 6: Display comprehensive success summary
+    displaySuccessSummary(answers, projectPath, verbose);
 
   } catch (error) {
     // Stop any running spinners
@@ -123,35 +121,107 @@ async function createProject(answers, options = {}) {
 }
 
 /**
- * Display a summary of the created project
+ * Display comprehensive success summary after project creation
  * @param {Object} answers - Project configuration
  * @param {string} projectPath - Path to the project
+ * @param {boolean} verbose - Show detailed information
  */
-function displayProjectSummary(answers, projectPath) {
-  console.log(chalk.cyan.bold('\nProject Summary:\n'));
-  console.log(chalk.white(`  Name: ${answers.projectName}`));
-  console.log(chalk.white(`  Type: ${answers.projectType}`));
-  console.log(chalk.white(`  Language: ${answers.language || 'JavaScript'}`));
+function displaySuccessSummary(answers, projectPath, verbose = false) {
+  console.log('');
+  console.log(chalk.green('╔════════════════════════════════════════════════════════════╗'));
+  console.log(chalk.green('║') + chalk.green.bold('              ✨ Project Created Successfully! ✨           ') + chalk.green('║'));
+  console.log(chalk.green('╚════════════════════════════════════════════════════════════╝'));
+  console.log('');
+
+  // Project info section
+  console.log(chalk.cyan.bold('  📦 Project Information'));
+  console.log(chalk.white(`     ${chalk.gray('Name:')}        ${chalk.bold(answers.projectName)}`));
+  console.log(chalk.white(`     ${chalk.gray('Type:')}        ${answers.projectType}`));
+  console.log(chalk.white(`     ${chalk.gray('Language:')}    ${answers.language || 'JavaScript'}`));
   
   if (answers.frontend) {
-    console.log(chalk.white(`  Frontend: ${answers.frontend}`));
+    console.log(chalk.white(`     ${chalk.gray('Frontend:')}    ${answers.frontend}`));
   }
   
   if (answers.backend) {
-    console.log(chalk.white(`  Backend: ${answers.backend}`));
+    console.log(chalk.white(`     ${chalk.gray('Backend:')}     ${answers.backend}`));
+  }
+
+  if (answers.fullstackType) {
+    console.log(chalk.white(`     ${chalk.gray('Architecture:')} ${answers.fullstackType}`));
   }
   
   if (answers.database && answers.database !== 'none') {
-    console.log(chalk.white(`  Database: ${answers.database}`));
+    console.log(chalk.white(`     ${chalk.gray('Database:')}    ${answers.database}`));
   }
-  
-  console.log(chalk.white(`  Package Manager: ${answers.packageManager}`));
-  console.log(chalk.white(`  Location: ${projectPath}`));
-  
+  console.log('');
+
+  // Location section
+  console.log(chalk.cyan.bold('  📁 Project Location'));
+  console.log(chalk.white(`     ${projectPath}`));
+  console.log('');
+
+  // Features section
   if (answers.features && answers.features.length > 0) {
-    console.log(chalk.white(`  Features: ${answers.features.join(', ')}`));
+    console.log(chalk.cyan.bold('  ⚙️  Configured Features'));
+    answers.features.forEach(feature => {
+      console.log(chalk.white(`     ${chalk.green('✓')} ${feature}`));
+    });
+    console.log('');
+  }
+
+  // Additional libraries
+  if (answers.additionalLibraries && answers.additionalLibraries.length > 0) {
+    console.log(chalk.cyan.bold('  📚 Additional Libraries'));
+    answers.additionalLibraries.slice(0, 5).forEach(lib => {
+      console.log(chalk.white(`     ${chalk.green('✓')} ${lib}`));
+    });
+    if (answers.additionalLibraries.length > 5) {
+      console.log(chalk.gray(`     ... and ${answers.additionalLibraries.length - 5} more`));
+    }
+    console.log('');
+  }
+
+  // Package manager info
+  const packagesInstalled = answers.installDependencies !== false;
+  if (packagesInstalled) {
+    console.log(chalk.cyan.bold('  📦 Dependencies'));
+    console.log(chalk.white(`     ${chalk.green('✓')} Installed with ${answers.packageManager}`));
+    console.log('');
+  }
+
+  // Next steps
+  console.log(chalk.cyan.bold('  🚀 Next Steps'));
+  console.log('');
+  console.log(chalk.white(`     ${chalk.yellow('1.')} Navigate to your project:`));
+  console.log(chalk.gray(`        cd ${answers.projectName}`));
+  console.log('');
+  
+  if (!packagesInstalled) {
+    console.log(chalk.white(`     ${chalk.yellow('2.')} Install dependencies:`));
+    console.log(chalk.gray(`        ${answers.packageManager} install`));
+    console.log('');
   }
   
+  const stepNum = packagesInstalled ? 2 : 3;
+  console.log(chalk.white(`     ${chalk.yellow(stepNum + '.')} Start development server:`));
+  console.log(chalk.gray(`        ${answers.packageManager} ${answers.packageManager === 'npm' ? 'run ' : ''}dev`));
+  console.log('');
+  
+  console.log(chalk.white(`     ${chalk.yellow((stepNum + 1) + '.')} Read the README for more info:`));
+  console.log(chalk.gray(`        cat README.md`));
+  console.log('');
+
+  // Documentation link
+  console.log(chalk.cyan.bold('  📚 Documentation'));
+  console.log(chalk.white(`     Check out the README.md in your project folder`));
+  console.log(chalk.white(`     for setup instructions and best practices.`));
+  console.log('');
+
+  // Footer
+  console.log(chalk.green('  ─────────────────────────────────────────────────────────────'));
+  console.log(chalk.green.bold('           🎉 Happy coding! Your project is ready! 🎉'));
+  console.log(chalk.green('  ─────────────────────────────────────────────────────────────'));
   console.log('');
 }
 

@@ -6,6 +6,7 @@ import { generateNextjsTemplate } from '../templates/nextjs.js';
 import { generateReactTemplate } from '../templates/react.js';
 import { generateVueTemplate } from '../templates/vue.js';
 import generateExpressTemplate from '../templates/express.js';
+import { generateFullStackTemplate } from '../templates/fullstack.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -206,72 +207,8 @@ Built with InitKit
 }
 
 async function generateFullStackFiles(projectPath, config) {
-  // Generate both frontend and backend in separate directories
-  const clientPath = path.join(projectPath, 'client');
-  const serverPath = path.join(projectPath, 'server');
-
-  await fs.ensureDir(clientPath);
-  await fs.ensureDir(serverPath);
-
-  // Frontend
-  await generateFrontendFiles(clientPath, {
-    ...config,
-    projectType: 'frontend',
-    projectName: `${config.projectName}-client`,
-  });
-
-  // Backend
-  await generateBackendFiles(serverPath, {
-    ...config,
-    projectType: 'backend',
-    projectName: `${config.projectName}-server`,
-  });
-
-  // Root package.json for monorepo
-  const rootPackageJson = {
-    name: config.projectName,
-    version: '1.0.0',
-    private: true,
-    description: 'Full stack application',
-    scripts: {
-      'dev:client': `cd client && ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev`,
-      'dev:server': `cd server && ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev`,
-      dev: 'echo "Run dev:client and dev:server in separate terminals"',
-    },
-    workspaces: ['client', 'server'],
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), rootPackageJson, { spaces: 2 });
-
-  // Root README
-  const readme = `# ${config.projectName}
-
-Full stack application created with InitKit CLI
-
-## Structure
-
-- \`client/\` - Frontend application (${config.frontend})
-- \`server/\` - Backend application (${config.backend})
-
-## Getting Started
-
-1. Install dependencies:
-   \`\`\`bash
-   ${config.packageManager} install
-   \`\`\`
-
-2. Run client and server:
-   \`\`\`bash
-   ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev:client
-   ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev:server
-   \`\`\`
-
----
-
-Built with InitKit
-`;
-
-  await fs.writeFile(path.join(projectPath, 'README.md'), readme);
+  // Use the dedicated full-stack template generator
+  await generateFullStackTemplate(projectPath, config);
 }
 
 async function generateLibraryFiles(projectPath, config) {

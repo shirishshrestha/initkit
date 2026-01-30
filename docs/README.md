@@ -38,6 +38,14 @@ Welcome to the InitKit CLI documentation! InitKit is a powerful command-line too
    - API documentation (Swagger/OpenAPI)
    - Docker support
 
+5. **[Phase 5: Full-Stack Template System](./PHASE_5.md)**
+   - Monorepo architecture (Turborepo)
+   - Traditional full-stack architectures
+   - Multiple technology stacks (MERN, PERN, Next.js + Express, Laravel + React)
+   - Shared packages (types, UI components)
+   - API integration (Vite proxy, Next.js rewrites)
+   - Docker orchestration (frontend, backend, database)
+
 ### 📝 Changelog & Updates
 
 4. **[Template Refactoring Summary](./TEMPLATE_REFACTORING.md)**
@@ -107,6 +115,12 @@ InitKit generates **organized folder structures** for your projects. It does NOT
 - **Features:** Complete backend scaffolding with middleware, database, Docker
 - **Status:** Production ready
 
+### Phase 5: Full-Stack System
+- **Achievement:** Monorepo and traditional full-stack templates
+- **Stacks:** MERN, PERN, Next.js + Express, Laravel + React
+- **Features:** Shared packages, API integration, Docker orchestration
+- **Status:** Production ready
+
 ---
 
 ## 🎯 Key Concepts
@@ -146,6 +160,7 @@ docs/
 ├── PHASE_2.md                     # Tailwind v4 & framework updates
 ├── PHASE_3_IMPLEMENTATION.md      # Frontend template implementation
 ├── PHASE_4.md                     # Backend template implementation
+├── PHASE_5.md                     # Full-stack template system
 ├── TEMPLATE_REFACTORING.md        # v2.0 refactoring summary
 └── DOCUMENTATION_IMPROVEMENTS.md  # Documentation changelog
 ```
@@ -158,6 +173,7 @@ docs/
 - **Phase 2** → [Version Updates & Tailwind v4](./PHASE_2.md)
 - **Phase 3** → [Frontend Implementation](./PHASE_3_IMPLEMENTATION.md)
 - **Phase 4** → [Backend Implementation](./PHASE_4.md)
+- **Phase 5** → [Full-Stack System](./PHASE_5.md)
 - **Refactoring** → [Complete Refactoring Summary](./TEMPLATE_REFACTORING.md)
 - **Docs** → [Documentation Improvements](./DOCUMENTATION_IMPROVEMENTS.md)
 
@@ -180,6 +196,14 @@ docs/
 - Vite: v5.2.0 → v6.0.7
 - Vue: v3.4.21 → v3.5.13
 - TypeScript: v5.4.5 → v5.7.3
+
+### Phase 5 Achievements
+- **Architectures**: Monorepo + Traditional (4 stacks)
+- **Monorepo Features**: Turborepo, shared packages, workspace management
+- **Stacks**: MERN, PERN, Next.js + Express, Laravel + React
+- **Files Generated**: 25-50 per project (depending on stack)
+- **Docker**: Full orchestration with frontend, backend, database services
+- **API Integration**: Vite proxy, Next.js rewrites, Axios client wrapper
 
 ---
 
