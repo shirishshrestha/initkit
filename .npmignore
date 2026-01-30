@@ -1,0 +1,35 @@
+# Development files
+.git/
+.gitignore
+.eslintrc.js
+.prettierrc
+*.test.js
+*.spec.js
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# Documentation
+docs/
+examples/
+*.md
+!README.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Test files
+__tests__/
+__mocks__/
+test/
+
+# Source maps
+*.map
+
+# Environment
+.env
+.env.*
