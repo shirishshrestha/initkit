@@ -1,8 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
-import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { generateNextjsTemplate } from '../templates/nextjs.js';
+import { generateReactTemplate } from '../templates/react.js';
+import { generateVueTemplate } from '../templates/vue.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -13,18 +15,10 @@ const __dirname = dirname(__filename);
  * @param {Object} config - User's project configuration
  */
 async function generateTemplate(projectPath, config) {
-  const templatesDir = path.join(__dirname, '../../templates');
+  // Generate .gitignore
+  await generateGitignore(projectPath, config);
 
-  // Copy base template
-  await copyBaseTemplate(projectPath, config);
-
-  // Generate package.json
-  await generatePackageJson(projectPath, config);
-
-  // Generate README
-  await generateReadme(projectPath, config);
-
-  // Generate project-specific files
+  // Generate project-specific files based on type
   switch (config.projectType) {
     case 'frontend':
       await generateFrontendFiles(projectPath, config);
@@ -40,43 +34,83 @@ async function generateTemplate(projectPath, config) {
       break;
   }
 
-  // Add additional features
+  // Add additional features (Docker, GitHub Actions, etc.)
   if (config.features) {
     await addFeatures(projectPath, config);
   }
 }
 
-async function copyBaseTemplate(projectPath, config) {
-  // Create basic directory structure
-  await fs.ensureDir(path.join(projectPath, 'src'));
+async function generateFrontendFiles(projectPath, config) {
+  const framework = config.frontend;
 
-  if (config.projectType === 'fullstack') {
-    await fs.ensureDir(path.join(projectPath, 'client'));
-    await fs.ensureDir(path.join(projectPath, 'server'));
+  switch (framework) {
+    case 'nextjs':
+      await generateNextjsTemplate(projectPath, config);
+      break;
+    case 'react':
+      await generateReactTemplate(projectPath, config);
+      break;
+    case 'vue':
+      await generateVueTemplate(projectPath, config);
+      break;
+    case 'angular':
+      await generateAngularTemplate(projectPath, config);
+      break;
+    case 'svelte':
+      await generateSvelteTemplate(projectPath, config);
+      break;
+    case 'vanilla':
+      await generateVanillaTemplate(projectPath, config);
+      break;
+    default:
+      // Fallback to basic structure
+      await generateBasicFrontend(projectPath, config);
   }
 }
 
-async function generatePackageJson(projectPath, config) {
+// Vue template is now imported from vue.js
+
+async function generateAngularTemplate(projectPath, config) {
+  // TODO: Implement Angular template
+  console.log('Angular template generation - coming soon');
+  await generateBasicFrontend(projectPath, config);
+}
+
+async function generateSvelteTemplate(projectPath, config) {
+  // TODO: Implement Svelte template
+  console.log('Svelte template generation - coming soon');
+  await generateBasicFrontend(projectPath, config);
+}
+
+async function generateVanillaTemplate(projectPath, config) {
+  // TODO: Implement Vanilla JS template
+  console.log('Vanilla JS template generation - coming soon');
+  await generateBasicFrontend(projectPath, config);
+}
+
+async function generateBasicFrontend(projectPath, config) {
+  // Basic fallback structure
+  await fs.ensureDir(path.join(projectPath, 'src'));
+  await fs.ensureDir(path.join(projectPath, 'public'));
+
   const packageJson = {
     name: config.projectName,
     version: '1.0.0',
-    description: `A ${config.projectType} project`,
-    main: config.projectType === 'library' ? 'dist/index.js' : 'src/index.js',
-    scripts: generateScripts(config),
+    description: `${config.frontend} project`,
+    scripts: {
+      dev: 'echo "Configure your dev script"',
+      build: 'echo "Configure your build script"',
+    },
     keywords: [],
     author: '',
     license: 'MIT',
-    dependencies: {},
-    devDependencies: {},
   };
 
   await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
-}
 
-async function generateReadme(projectPath, config) {
   const readme = `# ${config.projectName}
 
-${config.projectType.charAt(0).toUpperCase() + config.projectType.slice(1)} project created with InitKit
+Created with InitKit CLI
 
 ## Getting Started
 
@@ -85,65 +119,134 @@ ${config.packageManager} install
 ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev
 \`\`\`
 
-## Project Structure
+---
 
-TODO: Add project structure
-
-## Available Scripts
-
-TODO: Add available scripts
-
-## License
-
-MIT
+Built with InitKit
 `;
 
   await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
-async function generateFrontendFiles(projectPath, config) {
-  // Create frontend-specific files based on chosen framework
-  const srcPath = path.join(projectPath, 'src');
-
-  // Create a basic index file
-  const indexContent = config.useTypescript
-    ? `import './styles/main.css';\n\nconsole.log('Hello from ${config.frontend}!');\n`
-    : `import './styles/main.css';\n\nconsole.log('Hello from ${config.frontend}!');\n`;
-
-  const ext = config.useTypescript ? 'ts' : 'js';
-  await fs.writeFile(path.join(srcPath, `index.${ext}`), indexContent);
-
-  // Create styles directory
-  await fs.ensureDir(path.join(srcPath, 'styles'));
-  await fs.writeFile(path.join(srcPath, 'styles', 'main.css'), '/* Add your styles here */\n');
-}
-
 async function generateBackendFiles(projectPath, config) {
   // Create backend-specific files based on chosen framework
   const srcPath = path.join(projectPath, 'src');
+  await fs.ensureDir(srcPath);
 
-  const ext = config.useTypescript ? 'ts' : 'js';
+  const ext = config.language === 'typescript' ? 'ts' : 'js';
   const serverContent = `// ${config.backend} server\n\nconst PORT = process.env.PORT || 3000;\n\nconsole.log(\`Server starting on port \${PORT}\`);\n`;
 
   await fs.writeFile(path.join(srcPath, `server.${ext}`), serverContent);
+
+  // Basic package.json
+  const packageJson = {
+    name: config.projectName,
+    version: '1.0.0',
+    description: `${config.backend} backend`,
+    main: `src/server.${ext}`,
+    scripts: {
+      dev: 'node src/server.js',
+      start: 'node src/server.js',
+    },
+    keywords: [],
+    author: '',
+    license: 'MIT',
+  };
+
+  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+
+  const readme = `# ${config.projectName}
+
+Created with InitKit CLI
+
+## Getting Started
+
+\`\`\`bash
+${config.packageManager} install
+${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev
+\`\`\`
+
+---
+
+Built with InitKit
+`;
+
+  await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
 async function generateFullStackFiles(projectPath, config) {
-  // Generate both frontend and backend
-  await generateFrontendFiles(path.join(projectPath, 'client'), {
+  // Generate both frontend and backend in separate directories
+  const clientPath = path.join(projectPath, 'client');
+  const serverPath = path.join(projectPath, 'server');
+
+  await fs.ensureDir(clientPath);
+  await fs.ensureDir(serverPath);
+
+  // Frontend
+  await generateFrontendFiles(clientPath, {
     ...config,
     projectType: 'frontend',
+    projectName: `${config.projectName}-client`,
   });
 
-  await generateBackendFiles(path.join(projectPath, 'server'), {
+  // Backend
+  await generateBackendFiles(serverPath, {
     ...config,
     projectType: 'backend',
+    projectName: `${config.projectName}-server`,
   });
+
+  // Root package.json for monorepo
+  const rootPackageJson = {
+    name: config.projectName,
+    version: '1.0.0',
+    private: true,
+    description: 'Full stack application',
+    scripts: {
+      'dev:client': `cd client && ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev`,
+      'dev:server': `cd server && ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev`,
+      dev: 'echo "Run dev:client and dev:server in separate terminals"',
+    },
+    workspaces: ['client', 'server'],
+  };
+
+  await fs.writeJSON(path.join(projectPath, 'package.json'), rootPackageJson, { spaces: 2 });
+
+  // Root README
+  const readme = `# ${config.projectName}
+
+Full stack application created with InitKit CLI
+
+## Structure
+
+- \`client/\` - Frontend application (${config.frontend})
+- \`server/\` - Backend application (${config.backend})
+
+## Getting Started
+
+1. Install dependencies:
+   \`\`\`bash
+   ${config.packageManager} install
+   \`\`\`
+
+2. Run client and server:
+   \`\`\`bash
+   ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev:client
+   ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev:server
+   \`\`\`
+
+---
+
+Built with InitKit
+`;
+
+  await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
 async function generateLibraryFiles(projectPath, config) {
   const srcPath = path.join(projectPath, 'src');
-  const ext = config.useTypescript ? 'ts' : 'js';
+  await fs.ensureDir(srcPath);
+
+  const ext = config.language === 'typescript' ? 'ts' : 'js';
 
   const indexContent = `/**
  * Main entry point for ${config.projectName}
@@ -155,64 +258,191 @@ export function hello() {
 `;
 
   await fs.writeFile(path.join(srcPath, `index.${ext}`), indexContent);
+
+  // Package.json for library
+  const packageJson = {
+    name: config.projectName,
+    version: '1.0.0',
+    description: 'A reusable library',
+    main: `dist/index.js`,
+    types: config.language === 'typescript' ? 'dist/index.d.ts' : undefined,
+    files: ['dist'],
+    scripts: {
+      build: 'echo "Configure build script"',
+      test: 'echo "Configure test script"',
+    },
+    keywords: [],
+    author: '',
+    license: 'MIT',
+  };
+
+  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+
+  const readme = `# ${config.projectName}
+
+Library created with InitKit CLI
+
+## Installation
+
+\`\`\`bash
+npm install ${config.projectName}
+\`\`\`
+
+## Usage
+
+\`\`\`javascript
+import { hello } from '${config.projectName}';
+
+console.log(hello());
+\`\`\`
+
+---
+
+Built with InitKit
+`;
+
+  await fs.writeFile(path.join(projectPath, 'README.md'), readme);
+}
+
+async function generateGitignore(projectPath, config) {
+  const gitignore = `# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Production
+build/
+dist/
+.next/
+out/
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env
+.env*.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+`;
+
+  await fs.writeFile(path.join(projectPath, '.gitignore'), gitignore);
 }
 
 async function addFeatures(projectPath, config) {
   const features = config.features || [];
 
-  // Add ESLint
-  if (features.includes('eslint')) {
-    await fs.writeJSON(
-      path.join(projectPath, '.eslintrc.json'),
-      {
-        extends: ['eslint:recommended'],
-        env: {
-          node: true,
-          es2021: true,
-        },
-      },
-      { spaces: 2 }
-    );
+  // Docker configuration
+  if (features.includes('docker')) {
+    await generateDockerFiles(projectPath, config);
   }
 
-  // Add Prettier
-  if (features.includes('prettier')) {
-    await fs.writeJSON(
-      path.join(projectPath, '.prettierrc'),
-      {
-        semi: true,
-        singleQuote: true,
-        tabWidth: 2,
-        trailingComma: 'es5',
-      },
-      { spaces: 2 }
-    );
+  // GitHub Actions
+  if (features.includes('github-actions')) {
+    await generateGitHubActions(projectPath, config);
   }
 
-  // Add .env file
-  if (features.includes('dotenv')) {
-    await fs.writeFile(
-      path.join(projectPath, '.env.example'),
-      '# Environment variables\nNODE_ENV=development\n'
-    );
+  // Husky
+  if (features.includes('husky')) {
+    await generateHuskyFiles(projectPath, config);
   }
 }
 
-function generateScripts(config) {
-  const scripts = {
-    dev: 'node src/index.js',
-    start: 'node src/index.js',
-  };
+async function generateDockerFiles(projectPath, config) {
+  const dockerfile = `FROM node:18-alpine
 
-  if (config.features?.includes('jest')) {
-    scripts.test = 'jest';
-  }
+WORKDIR /app
 
-  if (config.features?.includes('eslint')) {
-    scripts.lint = 'eslint src/**/*.js';
-  }
+COPY package*.json ./
 
-  return scripts;
+RUN npm ci --only=production
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+`;
+
+  await fs.writeFile(path.join(projectPath, 'Dockerfile'), dockerfile);
+
+  const dockerignore = `node_modules
+.git
+.env
+npm-debug.log
+`;
+
+  await fs.writeFile(path.join(projectPath, '.dockerignore'), dockerignore);
+}
+
+async function generateGitHubActions(projectPath, config) {
+  await fs.ensureDir(path.join(projectPath, '.github', 'workflows'));
+
+  const workflow = `name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run lint
+      run: npm run lint
+      
+    - name: Run tests
+      run: npm test
+`;
+
+  await fs.writeFile(path.join(projectPath, '.github', 'workflows', 'ci.yml'), workflow);
+}
+
+async function generateHuskyFiles(projectPath, config) {
+  await fs.ensureDir(path.join(projectPath, '.husky'));
+
+  const preCommit = `#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+npm run lint
+`;
+
+  await fs.writeFile(path.join(projectPath, '.husky', 'pre-commit'), preCommit);
 }
 
 export { generateTemplate };
