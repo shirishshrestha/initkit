@@ -5,8 +5,65 @@ import { generateReactTemplate } from './react.js';
 import generateExpressTemplate from './express.js';
 
 /**
- * Generate Full-Stack project structure
- * Supports both monorepo and traditional structures
+ * Generate Full-Stack project with integrated frontend and backend
+ * 
+ * Creates a complete full-stack application supporting:
+ * - **Monorepo Structure**: Turborepo with apps/ and packages/ workspaces
+ * - **Traditional Structure**: Separate client/ and server/ directories
+ * - **Popular Stacks**: MERN, PERN, T3 Stack, Next.js + Express, etc.
+ * - **Shared Packages**: Common types, UI components, utilities
+ * - **API Integration**: Pre-configured frontend-backend communication
+ * - **Database Setup**: Models, migrations, seeders
+ * - **Docker Compose**: Complete orchestration for all services
+ * 
+ * Generated project includes:
+ * - Frontend application (React, Next.js, Vue, etc.)
+ * - Backend API (Express, NestJS, etc.)
+ * - Shared TypeScript types package
+ * - UI components library (optional)
+ * - Root configuration (Turborepo, Docker Compose, etc.)
+ * - Environment configuration for all services
+ * - Comprehensive README with setup instructions
+ * 
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User configuration object
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.language - Programming language ('typescript'|'javascript')
+ * @param {string} config.fullstackType - Project structure type
+ *   - 'monorepo': Turborepo with workspaces (recommended for large projects)
+ *   - 'traditional': Separate client/ and server/ folders
+ * @param {string} config.stack - Technology stack selection
+ *   - 'MERN': MongoDB + Express + React + Node.js
+ *   - 'PERN': PostgreSQL + Express + React + Node.js
+ *   - 'T3': Next.js + tRPC + Prisma + NextAuth
+ *   - 'Next.js + Express': Next.js frontend with Express backend
+ *   - 'Vue + Express': Vue.js frontend with Express backend
+ * @param {string} [config.frontend] - Frontend framework (derived from stack)
+ * @param {string} [config.backend] - Backend framework (derived from stack)
+ * @param {string} [config.database] - Database choice (derived from stack)
+ * @param {string} config.packageManager - Package manager to use
+ * 
+ * @returns {Promise<void>}
+ * 
+ * @example
+ * // Create MERN stack monorepo with Turborepo
+ * await generateFullStackTemplate('/path/to/project', {
+ *   projectName: 'my-fullstack-app',
+ *   language: 'typescript',
+ *   fullstackType: 'monorepo',
+ *   stack: 'MERN',
+ *   packageManager: 'pnpm'
+ * });
+ * 
+ * @example
+ * // Create T3 Stack (Next.js + tRPC + Prisma)
+ * await generateFullStackTemplate('/path/to/project', {
+ *   projectName: 'my-t3-app',
+ *   language: 'typescript',
+ *   fullstackType: 'monorepo',
+ *   stack: 'T3',
+ *   packageManager: 'pnpm'
+ * });
  */
 export async function generateFullStackTemplate(projectPath, config) {
   const { fullstackType, stack } = config;

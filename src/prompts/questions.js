@@ -3,9 +3,42 @@ import validateNpmName from 'validate-npm-package-name';
 import { validateProjectName, checkDirectoryExists, suggestProjectName } from '../utils/validation.js';
 
 /**
- * Get interactive prompts based on the question flow
- * @param {string} initialProjectName - Project name passed as CLI argument
- * @returns {Array} Array of Inquirer question objects
+ * Get interactive prompts for project configuration
+ * 
+ * Generates a dynamic question flow based on user selections:
+ * 1. Project Type (Frontend/Backend/Full Stack/Library)
+ * 2. Project Name (with real-time validation)
+ * 3. Framework Selection (conditional based on project type)
+ * 4. Language Choice (TypeScript/JavaScript)
+ * 5. Additional Features (styling, testing, linting, etc.)
+ * 6. Configuration Options (package manager, Git, etc.)
+ * 
+ * Uses conditional logic with 'when' to show/hide questions based on previous answers.
+ * Provides real-time validation feedback with colored icons and suggestions.
+ * 
+ * @param {string|null} initialProjectName - Project name from CLI argument (e.g., 'initkit my-app')
+ *                                           If provided, skips the project name prompt
+ * 
+ * @returns {Array<Object>} Array of Inquirer.js question objects with:
+ *   - type: Question type ('list'|'input'|'confirm'|'checkbox')
+ *   - name: Answer key to store the value
+ *   - message: Question text displayed to user
+ *   - choices: Array of options for list/checkbox questions
+ *   - when: Function to conditionally show question based on previous answers
+ *   - validate: Function to validate user input with helpful error messages
+ *   - transformer: Function to provide real-time visual feedback during input
+ *   - default: Default value or function to compute default based on previous answers
+ * 
+ * @example
+ * // Without initial project name (user will be prompted)
+ * const questions = getQuestions(null);
+ * const answers = await inquirer.prompt(questions);
+ * 
+ * @example
+ * // With initial project name from CLI
+ * const questions = getQuestions('my-awesome-app');
+ * const answers = await inquirer.prompt(questions);
+ * // User will NOT be asked for project name
  */
 function getQuestions(initialProjectName) {
   const questions = [

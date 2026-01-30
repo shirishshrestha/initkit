@@ -62,12 +62,30 @@ Comprehensive documentation to help you get the most out of InitKit:
 
 | Document | Description |
 |----------|-------------|
-| **[User Guide](./docs/user-guide.md)** | Complete usage guide with step-by-step instructions |
+| **[Quick Start Guide](./docs/QUICK_START.md)** | Get started in under 5 minutes with step-by-step tutorial |
+| **[Advanced Configuration](./docs/ADVANCED_CONFIGURATION.md)** | Custom templates, Docker, CI/CD, and advanced features |
+| **[Architecture](./docs/ARCHITECTURE.md)** | System design, data flow, and technical implementation |
+| **[Contributing Guide](./CONTRIBUTING.md)** | How to contribute, code guidelines, and adding templates |
+| **[User Guide](./docs/user-guide.md)** | Complete usage guide with detailed instructions |
 | **[API Reference](./docs/api-reference.md)** | Programmatic API for custom integrations |
-| **[Architecture](./docs/architecture.md)** | Technical design and implementation details |
 | **[Examples](./docs/examples.md)** | Real-world project examples and use cases |
 | **[Question Flow](./QUESTION_FLOW.md)** | Interactive prompt flow and decision tree |
-| **[Build Summary](./docs/BUILD_SUMMARY.md)** | Development history and implementation notes |
+
+### 🚀 Getting Started
+
+New to InitKit? Start here:
+
+1. **[Quick Start Guide](./docs/QUICK_START.md)** - Create your first project in 5 minutes
+2. **[Question Flow](./QUESTION_FLOW.md)** - Understand the interactive setup process
+3. **[Advanced Configuration](./docs/ADVANCED_CONFIGURATION.md)** - Customize and extend InitKit
+
+### 🛠️ For Contributors
+
+Want to contribute or add a custom template?
+
+1. **[Contributing Guide](./CONTRIBUTING.md)** - Code of conduct, workflow, guidelines
+2. **[Architecture](./docs/ARCHITECTURE.md)** - Technical design and implementation
+3. **[Examples](./docs/examples.md)** - Real-world examples to learn from
 
 ---
 

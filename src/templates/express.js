@@ -2,8 +2,49 @@ import fs from 'fs-extra';
 import path from 'path';
 
 /**
- * Generate Express.js backend project structure
- * Creates organized folder structure with minimal boilerplate
+ * Generate Express.js backend API project with organized architecture
+ * 
+ * Creates a production-ready Express.js server with:
+ * - RESTful API structure
+ * - Multiple architecture patterns (MVC, Clean Architecture, Domain-Driven Design)
+ * - Database integration (MongoDB, PostgreSQL, MySQL, SQLite)
+ * - TypeScript or JavaScript support
+ * - Authentication middleware setup
+ * - Error handling and validation
+ * - Environment configuration
+ * 
+ * Generated project includes:
+ * - Organized folder structure based on pattern
+ * - Server entry point with middleware configuration
+ * - Route handlers and controllers
+ * - Database models and schemas
+ * - Package.json with Express and dependencies
+ * - .env.example for environment variables
+ * - README with API documentation
+ * 
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User configuration object
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.language - Programming language ('typescript'|'javascript')
+ * @param {string} [config.folderStructure='mvc'] - Architecture pattern
+ *   - 'mvc': Model-View-Controller (recommended for REST APIs)
+ *   - 'clean-architecture': Clean Architecture with domain/infrastructure layers
+ *   - 'ddd': Domain-Driven Design with bounded contexts
+ *   - 'feature-based': Organize by features/modules
+ * @param {string} [config.database='none'] - Database choice ('mongodb'|'postgresql'|'mysql'|'sqlite'|'none')
+ * @param {string} config.packageManager - Package manager to use
+ * 
+ * @returns {Promise<void>}
+ * 
+ * @example
+ * // Create Express API with PostgreSQL and MVC pattern
+ * await generateExpressTemplate('/path/to/project', {
+ *   projectName: 'my-express-api',
+ *   language: 'typescript',
+ *   folderStructure: 'mvc',
+ *   database: 'postgresql',
+ *   packageManager: 'npm'
+ * });
  */
 export async function generateExpressTemplate(projectPath, config) {
   // Create folder structure

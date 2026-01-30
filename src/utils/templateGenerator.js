@@ -12,9 +12,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
- * Generate project files from templates
- * @param {string} projectPath - Path to the project directory
- * @param {Object} config - User's project configuration
+ * Generate project files from templates based on user configuration
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration object
+ * @param {string} config.projectType - Type of project ('frontend'|'backend'|'fullstack'|'library')
+ * @param {string} [config.frontend] - Frontend framework choice
+ * @param {string} [config.backend] - Backend framework choice
+ * @param {Array<string>} [config.features] - Additional features to enable
+ * @returns {Promise<void>}
+ * @throws {Error} If template generation fails
  */
 async function generateTemplate(projectPath, config) {
   // Generate .gitignore
@@ -42,6 +48,16 @@ async function generateTemplate(projectPath, config) {
   }
 }
 
+/**
+ * Generate frontend project files based on selected framework
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} config.frontend - Frontend framework ('react'|'vue'|'nextjs'|'angular'|'svelte'|'nuxt')
+ * @param {string} config.language - Language choice ('typescript'|'javascript')
+ * @param {string} config.folderStructure - Folder structure preference
+ * @returns {Promise<void>}
+ * @throws {Error} If framework template is not found or generation fails
+ */
 async function generateFrontendFiles(projectPath, config) {
   const framework = config.frontend;
 
@@ -129,6 +145,18 @@ Built with InitKit
   await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
+/**
+ * Generate backend project files based on selected framework
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} config.backend - Backend framework ('express'|'fastify'|'nestjs'|'koa'|'hapi')
+ * @param {string} [config.database] - Database choice ('mongodb'|'postgresql'|'mysql'|'sqlite')
+ * @param {string} config.language - Language choice ('typescript'|'javascript')
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.packageManager - Package manager to use
+ * @returns {Promise<void>}
+ * @throws {Error} If backend template generation fails
+ */
 async function generateBackendFiles(projectPath, config) {
   const backend = config.backend;
 
@@ -206,11 +234,32 @@ Built with InitKit
   await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
+/**
+ * Generate full-stack project with both frontend and backend
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} [config.fullstackType] - Project structure type ('monorepo'|'traditional')
+ * @param {string} [config.stack] - Technology stack ('MERN'|'PERN'|'T3'|etc)
+ * @param {string} [config.frontend] - Frontend framework
+ * @param {string} [config.backend] - Backend framework
+ * @returns {Promise<void>}
+ * @throws {Error} If full-stack template generation fails
+ */
 async function generateFullStackFiles(projectPath, config) {
   // Use the dedicated full-stack template generator
   await generateFullStackTemplate(projectPath, config);
 }
 
+/**
+ * Generate Node.js library/package structure
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} config.projectName - Name of the library
+ * @param {string} config.language - Language choice ('typescript'|'javascript')
+ * @param {string} config.packageManager - Package manager to use
+ * @returns {Promise<void>}
+ * @throws {Error} If library template generation fails
+ */
 async function generateLibraryFiles(projectPath, config) {
   const srcPath = path.join(projectPath, 'src');
   await fs.ensureDir(srcPath);
@@ -273,6 +322,17 @@ Built with InitKit
   await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
+/**
+ * Generate .gitignore file with framework-specific patterns
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} config.projectType - Type of project ('frontend'|'backend'|'fullstack'|'library')
+ * @param {string} [config.frontend] - Frontend framework name
+ * @param {string} [config.backend] - Backend framework name
+ * @param {boolean} [config.monorepo] - Whether project uses monorepo structure
+ * @returns {Promise<void>}
+ * @throws {Error} If file creation fails
+ */
 async function generateGitignore(projectPath, config) {
   const gitignore = `# Dependencies
 node_modules/
@@ -320,6 +380,13 @@ next-env.d.ts
   await fs.writeFile(path.join(projectPath, '.gitignore'), gitignore);
 }
 
+/**
+ * Add additional features to the project (Docker, CI/CD, Git hooks)
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {Array<string>} config.features - List of features to add (e.g., ['docker', 'github-actions', 'husky'])
+ * @returns {Promise<void>}
+ */
 async function addFeatures(projectPath, config) {
   const features = config.features || [];
 
@@ -339,6 +406,12 @@ async function addFeatures(projectPath, config) {
   }
 }
 
+/**
+ * Generate Docker configuration files (Dockerfile and .dockerignore)
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @returns {Promise<void>}
+ */
 async function generateDockerFiles(projectPath, config) {
   const dockerfile = `FROM node:18-alpine
 
@@ -366,6 +439,12 @@ npm-debug.log
   await fs.writeFile(path.join(projectPath, '.dockerignore'), dockerignore);
 }
 
+/**
+ * Generate GitHub Actions CI/CD workflow
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @returns {Promise<void>}
+ */
 async function generateGitHubActions(projectPath, config) {
   await fs.ensureDir(path.join(projectPath, '.github', 'workflows'));
 
@@ -402,6 +481,12 @@ jobs:
   await fs.writeFile(path.join(projectPath, '.github', 'workflows', 'ci.yml'), workflow);
 }
 
+/**
+ * Generate Husky Git hooks for pre-commit linting
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @returns {Promise<void>}
+ */
 async function generateHuskyFiles(projectPath, config) {
   await fs.ensureDir(path.join(projectPath, '.husky'));
 

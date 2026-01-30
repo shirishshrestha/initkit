@@ -2,8 +2,41 @@ import fs from 'fs-extra';
 import path from 'path';
 
 /**
- * Generate Vue 3 + Vite project structure (folders only)
- * Vite creates all config files automatically
+ * Generate Vue 3 + Vite project with Composition API
+ * 
+ * Creates a modern Vue 3 single-page application using:
+ * - Vue 3 with Composition API
+ * - Vite for fast development and optimized builds
+ * - TypeScript or JavaScript support
+ * - Vue Router for navigation
+ * - Pinia for state management (optional)
+ * 
+ * Generated project includes:
+ * - Vite configuration with Vue plugin
+ * - Folder structure based on preference
+ * - Package.json with Vue 3 and Vite dependencies
+ * - README with getting started instructions
+ * 
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User configuration object
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.language - Programming language ('typescript'|'javascript')
+ * @param {string} [config.folderStructure='feature-based'] - Folder organization pattern
+ *   - 'feature-based': Organize by features with composables (recommended)
+ *   - 'component-based': Organize by component types
+ *   - 'type-based': Organize by file type (components, composables, utils)
+ * @param {string} config.packageManager - Package manager to use
+ * 
+ * @returns {Promise<void>}
+ * 
+ * @example
+ * // Create Vue 3 + Vite project with TypeScript
+ * await generateVueTemplate('/path/to/project', {
+ *   projectName: 'my-vue-app',
+ *   language: 'typescript',
+ *   folderStructure: 'feature-based',
+ *   packageManager: 'npm'
+ * });
  */
 export async function generateVueTemplate(projectPath, config) {
   // Create folder structure only

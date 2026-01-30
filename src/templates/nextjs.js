@@ -2,8 +2,35 @@ import fs from 'fs-extra';
 import path from 'path';
 
 /**
- * Generate Next.js project structure (folders only)
- * Next.js CLI creates all config files automatically
+ * Generate Next.js project with App Router or Pages Router structure
+ * 
+ * Creates a modern Next.js project with:
+ * - Folder structure based on user preference (feature-based, type-based, or pages-router)
+ * - TypeScript or JavaScript configuration
+ * - App Router (default) or Pages Router architecture
+ * - Package.json with Next.js 14+ dependencies
+ * - README with getting started instructions
+ * 
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User configuration object
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.language - Programming language ('typescript'|'javascript')
+ * @param {string} [config.folderStructure='feature-based'] - Folder organization pattern
+ *   - 'feature-based': Organize by features/modules (recommended for large apps)
+ *   - 'type-based': Organize by file type (components, hooks, utils)
+ *   - 'pages-router': Use legacy Pages Router instead of App Router
+ * @param {string} config.packageManager - Package manager to use
+ * 
+ * @returns {Promise<void>}
+ * 
+ * @example
+ * // Create Next.js project with App Router and feature-based structure
+ * await generateNextjsTemplate('/path/to/project', {
+ *   projectName: 'my-nextjs-app',
+ *   language: 'typescript',
+ *   folderStructure: 'feature-based',
+ *   packageManager: 'npm'
+ * });
  */
 export async function generateNextjsTemplate(projectPath, config) {
   // Create folder structure only

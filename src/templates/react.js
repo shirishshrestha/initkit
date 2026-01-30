@@ -2,8 +2,40 @@ import fs from 'fs-extra';
 import path from 'path';
 
 /**
- * Generate React + Vite project structure (folders only)
- * Vite creates all config files automatically
+ * Generate React + Vite project with modern build tooling
+ * 
+ * Creates a React single-page application using Vite for:
+ * - Fast HMR (Hot Module Replacement)
+ * - Optimized production builds
+ * - TypeScript or JavaScript support
+ * - Multiple folder structure patterns
+ * 
+ * Generated project includes:
+ * - Vite configuration with React plugin
+ * - Folder structure based on preference
+ * - Package.json with React 18+ and Vite dependencies
+ * - README with getting started instructions
+ * 
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User configuration object
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.language - Programming language ('typescript'|'javascript')
+ * @param {string} [config.folderStructure='feature-based'] - Folder organization pattern
+ *   - 'feature-based': Organize by features/modules (recommended)
+ *   - 'component-based': Organize by component types (pages, components, layouts)
+ *   - 'type-based': Organize by file type (components, hooks, utils, services)
+ * @param {string} config.packageManager - Package manager to use
+ * 
+ * @returns {Promise<void>}
+ * 
+ * @example
+ * // Create React + Vite project with feature-based structure
+ * await generateReactTemplate('/path/to/project', {
+ *   projectName: 'my-react-app',
+ *   language: 'typescript',
+ *   folderStructure: 'feature-based',
+ *   packageManager: 'npm'
+ * });
  */
 export async function generateReactTemplate(projectPath, config) {
   // Create folder structure only

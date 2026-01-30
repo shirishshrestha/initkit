@@ -14,9 +14,45 @@ import {
 } from '../utils/errorHandler.js';
 
 /**
- * Create a new project based on user answers
- * @param {Object} answers - User's answers from prompts
- * @param {Object} options - Additional options
+ * Create a new project based on user configuration
+ * 
+ * This is the main orchestration function that:
+ * 1. Creates the project directory
+ * 2. Generates template files
+ * 3. Installs dependencies
+ * 4. Initializes Git repository
+ * 5. Handles errors with automatic rollback
+ * 
+ * @param {Object} answers - User's configuration from interactive prompts
+ * @param {string} answers.projectName - Name of the project (used for directory)
+ * @param {string} answers.projectType - Type of project ('frontend'|'backend'|'fullstack'|'library')
+ * @param {string} [answers.frontend] - Frontend framework choice
+ * @param {string} [answers.backend] - Backend framework choice
+ * @param {string} answers.language - Programming language ('typescript'|'javascript')
+ * @param {string} answers.packageManager - Package manager ('npm'|'yarn'|'pnpm')
+ * @param {boolean} [answers.gitInit] - Whether to initialize Git repository
+ * 
+ * @param {Object} [options={}] - Additional command-line options
+ * @param {boolean} [options.verbose=false] - Show detailed output during creation
+ * @param {string} [options.projectPath] - Custom path for project (overrides answers.projectName)
+ * 
+ * @returns {Promise<void>}
+ * @throws {CLIError} If project creation fails at any step (automatic rollback triggered)
+ * 
+ * @example
+ * // Basic usage
+ * await createProject({
+ *   projectName: 'my-app',
+ *   projectType: 'frontend',
+ *   frontend: 'react',
+ *   language: 'typescript',
+ *   packageManager: 'npm',
+ *   gitInit: true
+ * });
+ * 
+ * @example
+ * // With verbose output
+ * await createProject(answers, { verbose: true });
  */
 async function createProject(answers, options = {}) {
   const { verbose = false, projectPath: customProjectPath } = options;

@@ -6,8 +6,24 @@ import path from 'path';
 const execAsync = promisify(exec);
 
 /**
- * Initialize a Git repository
- * @param {string} projectPath - Path to the project
+ * Initialize a Git repository and create first commit
+ * 
+ * Performs the following operations:
+ * 1. Runs `git init` to create a new repository
+ * 2. Creates .gitignore file with common patterns (if not exists)
+ * 3. Stages all files with `git add .`
+ * 4. Creates initial commit with message "Initial commit"
+ * 
+ * Note: Catches and warns if Git is not installed or initialization fails.
+ * 
+ * @param {string} projectPath - Absolute path to the project directory
+ * @returns {Promise<void>}
+ * 
+ * @example
+ * await initGit('/path/to/my-project');
+ * // Creates .git directory and initial commit
+ * 
+ * @throws {Error} Logs warning but does not throw - Git init is optional
  */
 async function initGit(projectPath) {
   try {
