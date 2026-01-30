@@ -1,51 +1,72 @@
-# InitKit CLI Documentation
+# 📚 InitKit CLI Documentation
 
 Welcome to the InitKit CLI documentation! InitKit is a powerful command-line tool for scaffolding modern web projects with best practices built-in.
 
-## 📚 Documentation Index
+---
 
-### Getting Started
-- **[User Guide](./user-guide.md)** - Complete guide for using InitKit CLI
-  - Installation instructions
-  - Command reference
-  - Interactive prompts explained
-  - Common usage examples
-  - Troubleshooting
+## Table of Contents
 
-### Technical Documentation
-- **[Architecture](./architecture.md)** - Internal architecture and design
-  - Project structure
-  - Core components
-  - Data flow diagrams
-  - Module responsibilities
-  - Error handling strategy
-  - Extension points
+### 🚀 Getting Started
 
-- **[API Reference](./api-reference.md)** - Programmatic API documentation
-  - Public API functions
-  - Validation utilities
-  - Error handling classes
-  - CLI command reference
-  - Type definitions
+1. **[User Guide](./user-guide.md)**
+   - Installation & setup
+   - Command reference
+   - Interactive prompts
+   - Usage examples
+   - Troubleshooting
 
-### Practical Examples
-- **[Examples & Use Cases](./examples.md)** - Real-world examples
-  - Quick start examples
-  - Frontend projects
-  - Backend projects
-  - Full stack applications
-  - Library projects
-  - CI/CD integration
-  - Scripting examples
+2. **[Examples & Use Cases](./examples.md)**
+   - Quick start examples
+   - Frontend/Backend/Fullstack projects
+   - Library scaffolding
+   - CI/CD integration
 
-## 🚀 Quick Links
+### 🔧 Technical Documentation
+
+3. **[Architecture](./architecture.md)**
+   - Project structure
+   - Core components
+   - Data flow diagrams
+   - Module responsibilities
+   - Error handling strategy
+
+4. **[API Reference](./api-reference.md)**
+   - Programmatic API
+   - Validation utilities
+   - Error handling classes
+   - Type definitions
+
+### 📋 Changelog & Updates
+
+5. **[Template Refactoring](./TEMPLATE_REFACTORING.md)**
+   - v2.0 template system changes
+   - Migration guide
+   - Tailwind v4 update
+
+6. **[Phase 3 Implementation](./PHASE_3_IMPLEMENTATION.md)**
+   - Frontend template generators
+   - Framework support details
+
+7. **[Build Summary](./BUILD_SUMMARY.md)**
+   - Initial implementation notes
+   - Feature completion status
+
+8. **[Documentation Improvements](./DOCUMENTATION_IMPROVEMENTS.md)**
+   - Documentation changelog
+   - Content enhancements
+
+---
+
+## 🚀 Quick Start
 
 ### Installation
+
 ```bash
 npm install -g initkit
 ```
 
 ### Basic Usage
+
 ```bash
 # Interactive mode (recommended)
 initkit
