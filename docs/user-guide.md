@@ -1,11 +1,20 @@
-# InitKit CLI - User Guide ## Table of Contents
+# 📖 User Guide
+
+> **User Documentation** | Complete guide to using InitKit CLI effectively
+
+## 📋 Table of Contents
+
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Commands](#commands)
 - [Options](#options)
 - [Interactive Prompts](#interactive-prompts)
-- [Examples](#examples)
-- [Troubleshooting](#troubleshooting) ## Installation ### Global Installation (Recommended)
+- [Troubleshooting](#troubleshooting)
+- [Getting Help](#getting-help)
+
+---
+
+## 📦 Installation ### Global Installation (Recommended)
 ```bash
 npm install -g initkit
 ``` ### Using npx (No Installation)
@@ -15,7 +24,9 @@ npx initkit create my-project
 ```bash
 npm install initkit
 npx initkit create my-project
-``` ## Quick Start ### Interactive Mode (Recommended)
+```
+
+## 🚀 Quick Start ### Interactive Mode (Recommended)
 Start the CLI and follow the prompts:
 ```bash
 initkit
@@ -30,7 +41,9 @@ initkit create my-project --yes
 ``` ### Specify Project Name
 ```bash
 initkit create my-awesome-app
-``` ## Commands ### `create [project-name]`
+```
+
+## 💻 Commands ### `create [project-name]`
 Create a new project (default command). **Usage:**
 ```bash
 initkit create [project-name] [options]
@@ -62,7 +75,9 @@ Display help information. **Usage:**
 ```bash
 initkit --help
 initkit create --help
-``` ## Options ### Project Type Options #### `-y, --yes`
+```
+
+## ⚙️ Options ### Project Type Options #### `-y, --yes`
 Skip all prompts and create with default configuration. **Example:**
 ```bash
 initkit create quick-app --yes
@@ -109,7 +124,9 @@ initkit create my-app --package-manager pnpm
 Show detailed output during project creation. **Example:**
 ```bash
 initkit create my-app --verbose
-``` ## Interactive Prompts When running InitKit without the `--yes` flag, you'll be guided through an interactive setup: ### 1. Project Type
+```
+
+## 🎯 Interactive Prompts When running InitKit without the `--yes` flag, you'll be guided through an interactive setup: ### 1. Project Type
 Choose the type of project:
 - 🎨 **Frontend Only** - Client-side application
 - **Backend Only** - Server/API application
@@ -229,7 +246,9 @@ initkit create my-project
 3. Initialize manually later: ```bash cd my-project git init ``` ### Permission Denied Errors **Error:** "Permission denied" **Solutions:**
 1. Run in a directory where you have write permissions
 2. On Linux/Mac, avoid using sudo with npm
-3. Change directory ownership: ```bash sudo chown -R $USER:$GROUP ~/.npm sudo chown -R $USER:$GROUP ~/.config ``` ## Getting Help ### View Available Commands
+3. Change directory ownership: ```bash sudo chown -R $USER:$GROUP ~/.npm sudo chown -R $USER:$GROUP ~/.config ```
+
+## 🆘 Getting Help ### View Available Commands
 ```bash
 initkit --help
 ``` ### Get Help for Specific Command

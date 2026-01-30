@@ -1,9 +1,19 @@
-# InitKit CLI - API Reference ## Table of Contents
+# 📚 API Reference
+
+> **Technical Documentation** | Complete API reference for programmatic usage and CLI commands
+
+## 📋 Table of Contents
+
 - [Public API](#public-api)
 - [CLI Commands](#cli-commands)
 - [Validation Functions](#validation-functions)
 - [Error Handling](#error-handling)
-- [Utility Functions](#utility-functions) ## Public API InitKit can be used programmatically in your Node.js applications. ### Installation ```bash
+- [Utility Functions](#utility-functions)
+- [Type Definitions](#type-definitions)
+
+---
+
+## 🔧 Public API InitKit can be used programmatically in your Node.js applications. ### Installation ```bash
 npm install initkit
 ``` ### Import ```javascript
 import { createProject, getQuestions } from 'initkit';
@@ -158,7 +168,11 @@ import { initGit } from 'initkit/src/utils/git.js'; await initGit('/path/to/proj
 ```javascript
 import { generateTemplate } from 'initkit/src/utils/templateGenerator.js'; await generateTemplate('/path/to/project', { projectType: 'frontend', frontend: 'react', language: 'typescript', // ... other config
 });
-``` --- ## Type Definitions ### Answer Types ```typescript
+```
+
+---
+
+## 📝 Type Definitions ### Answer Types ```typescript
 interface ProjectAnswers { projectName: string; projectType: 'frontend' | 'backend' | 'fullstack' | 'library'; frontend?: 'react' | 'vue' | 'angular' | 'svelte' | 'nextjs' | 'nuxtjs' | 'vanilla'; backend?: 'express' | 'fastify' | 'koa' | 'nestjs' | 'hapi'; database?: 'postgresql' | 'mysql' | 'mongodb' | 'sqlite' | 'none'; language: 'typescript' | 'javascript'; typescriptStrict?: 'strict' | 'moderate' | 'relaxed'; folderStructure?: 'feature-based' | 'type-based' | 'domain-driven' | 'flat'; styling?: 'tailwind' | 'css-modules' | 'styled-components' | 'emotion' | 'sass' | 'css'; additionalLibraries: string[]; features: string[]; packageManager: 'npm' | 'yarn' | 'pnpm'; useGit: boolean; installDependencies: boolean;
 }
 ``` ### Validation Result ```typescript
@@ -167,7 +181,11 @@ interface ValidationResult { valid: boolean; errors: string[];
 ``` ### Directory Check Result ```typescript
 interface DirectoryCheckResult { exists: boolean; path: string;
 }
-``` --- ## CLI Commands ### create ```bash
+```
+
+---
+
+## 💻 CLI Commands ### create ```bash
 initkit create [project-name] [options]
 ``` **Aliases:** Default command (can omit 'create') **Options:**
 - `-y, --yes` - Skip prompts

@@ -1,15 +1,27 @@
-# InitKit CLI - Architecture ## Table of Contents
+# 🏗️ Architecture
+
+> **Technical Documentation** | Understanding InitKit's internal structure and design patterns
+
+## 📋 Table of Contents
+
 - [Overview](#overview)
 - [Project Structure](#project-structure)
 - [Core Components](#core-components)
 - [Data Flow](#data-flow)
 - [Module Responsibilities](#module-responsibilities)
 - [Error Handling Strategy](#error-handling-strategy)
-- [Extension Points](#extension-points) ## Overview InitKit CLI is built using a modular architecture that separates concerns and makes the codebase maintainable and extensible. The architecture follows these principles: 1. **Separation of Concerns** - Each module has a single, well-defined purpose
+- [Extension Points](#extension-points)
+- [Best Practices](#best-practices)
+
+---
+
+## 🎯 Overview InitKit CLI is built using a modular architecture that separates concerns and makes the codebase maintainable and extensible. The architecture follows these principles: 1. **Separation of Concerns** - Each module has a single, well-defined purpose
 2. **ES Modules** - Modern JavaScript module system
 3. **Error First** - Comprehensive error handling with rollback capabilities
 4. **Progressive Enhancement** - Start simple, add complexity as needed
-5. **User Experience First** - Clear feedback and helpful error messages ## Project Structure ```
+5. **User Experience First** - Clear feedback and helpful error messages
+
+## 📁 Project Structure ```
 initkit/
 ├── bin/
 │ └── index.js # CLI entry point
@@ -31,7 +43,9 @@ initkit/
 ├── __tests__/ # Tests
 ├── package.json
 └── README.md
-``` ## Core Components ### 1. Entry Point (`bin/index.js`) **Purpose:** Minimal entry point that delegates to main CLI logic **Features:**
+```
+
+## ⚙️ Core Components ### 1. Entry Point (`bin/index.js`) **Purpose:** Minimal entry point that delegates to main CLI logic **Features:**
 - Shebang for direct execution
 - Simple import of main CLI module ```javascript
 #!/usr/bin/env node
@@ -148,7 +162,9 @@ import '../src/cli.js';
 │ Create Command │
 │ (same flow as above) │
 └────────────────────────┘
-``` ## Module Responsibilities ### CLI Layer (`cli.js`)
+```
+
+## 📦 Module Responsibilities ### CLI Layer (`cli.js`)
 - Command registration
 - Option parsing
 - User interface (banner, help)
@@ -173,7 +189,9 @@ import '../src/cli.js';
 - File operations
 - Error handling
 - User interaction
-- CLI-specific logic ## Error Handling Strategy ### 1. Error Types **CLIError:** Custom error with code and context
+- CLI-specific logic
+
+## 🚨 Error Handling Strategy ### 1. Error Types **CLIError:** Custom error with code and context
 ```javascript
 throw new CLIError( 'Message', ERROR_CODE, { details }
 );
@@ -206,7 +224,9 @@ throw new CLIError( 'Message', ERROR_CODE, { details }
 1. Catch SIGINT/SIGTERM
 2. Rollback incomplete project
 3. Display cleanup message
-4. Exit cleanly ## Extension Points ### Adding New Commands ```javascript
+4. Exit cleanly
+
+## 🔌 Extension Points ### Adding New Commands ```javascript
 // In src/cli.js
 program .command('new-command') .description('Description') .action(async () => { // Implementation });
 ``` ### Adding New Questions ```javascript
@@ -229,7 +249,9 @@ export const ERROR_CODES = { ...existing, NEW_ERROR_CODE: 'NEW_ERROR_CODE',
 - Be specific and actionable
 - Provide suggestions
 - Show error codes for debugging
-- Include context ### 2. User Feedback
+- Include context
+
+### 2. User Feedback
 - Show progress with spinners
 - Use colors meaningfully
 - Display summaries
