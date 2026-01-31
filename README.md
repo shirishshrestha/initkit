@@ -110,11 +110,11 @@ Want to contribute or add a custom template?
 
 ### 🎯 Project Types
 
-| Type                | Description                | Use Case                         |
-| ------------------- | -------------------------- | -------------------------------- |
-| **Frontend Only**   | Single-page applications   | React, Vue, Next.js apps         |
-| **Backend Only**    | REST APIs and services     | Express, NestJS, Fastify servers |
-| **Node.js Library** | Publishable npm packages   | Reusable modules and utilities   |
+| Type                | Description              | Use Case                         |
+| ------------------- | ------------------------ | -------------------------------- |
+| **Frontend Only**   | Single-page applications | React, Vue, Next.js apps         |
+| **Backend Only**    | REST APIs and services   | Express, NestJS, Fastify servers |
+| **Node.js Library** | Publishable npm packages | Reusable modules and utilities   |
 
 ### 🎨 Framework Support
 
@@ -129,6 +129,7 @@ Want to contribute or add a custom template?
 - Express.js (Minimalist & flexible)
 
 **Coming Soon:**
+
 - NestJS (Enterprise TypeScript) - Code ready, testing in progress
 - Fastify (High performance) - Code ready, testing in progress
 - Nuxt.js (Vue 3) - Code ready, testing in progress
@@ -165,7 +166,7 @@ Want to contribute or add a custom template?
 - Environment variables (.env setup)
 - Turborepo (monorepo build system)
 
-###  Styling Solutions
+### Styling Solutions
 
 | Solution              | Description                     | Best For                       |
 | --------------------- | ------------------------------- | ------------------------------ |
@@ -742,6 +743,7 @@ initkit my-app --verbose
 - All tests passing (48/48)
 
 **📊 Test Results:**
+
 - React + Vite: ✅ 16.5s (218 packages)
 - Next.js: ✅ 26.9s (347 packages)
 - Vue: ✅ 16.2s (153 packages)
