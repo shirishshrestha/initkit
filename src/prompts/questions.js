@@ -1,10 +1,14 @@
 import chalk from 'chalk';
 import validateNpmName from 'validate-npm-package-name';
-import { validateProjectName, checkDirectoryExists, suggestProjectName } from '../utils/validation.js';
+import {
+  validateProjectName,
+  checkDirectoryExists,
+  suggestProjectName,
+} from '../utils/validation.js';
 
 /**
  * Get interactive prompts for project configuration
- * 
+ *
  * Generates a dynamic question flow based on user selections:
  * 1. Project Type (Frontend/Backend/Full Stack/Library)
  * 2. Project Name (with real-time validation)
@@ -12,13 +16,13 @@ import { validateProjectName, checkDirectoryExists, suggestProjectName } from '.
  * 4. Language Choice (TypeScript/JavaScript)
  * 5. Additional Features (styling, testing, linting, etc.)
  * 6. Configuration Options (package manager, Git, etc.)
- * 
+ *
  * Uses conditional logic with 'when' to show/hide questions based on previous answers.
  * Provides real-time validation feedback with colored icons and suggestions.
- * 
+ *
  * @param {string|null} initialProjectName - Project name from CLI argument (e.g., 'initkit my-app')
  *                                           If provided, skips the project name prompt
- * 
+ *
  * @returns {Array<Object>} Array of Inquirer.js question objects with:
  *   - type: Question type ('list'|'input'|'confirm'|'checkbox')
  *   - name: Answer key to store the value
@@ -28,12 +32,12 @@ import { validateProjectName, checkDirectoryExists, suggestProjectName } from '.
  *   - validate: Function to validate user input with helpful error messages
  *   - transformer: Function to provide real-time visual feedback during input
  *   - default: Default value or function to compute default based on previous answers
- * 
+ *
  * @example
  * // Without initial project name (user will be prompted)
  * const questions = getQuestions(null);
  * const answers = await inquirer.prompt(questions);
- * 
+ *
  * @example
  * // With initial project name from CLI
  * const questions = getQuestions('my-awesome-app');
@@ -90,10 +94,10 @@ function getQuestions(initialProjectName) {
         if (!input || input.trim() === '') {
           return chalk.gray(input);
         }
-        
+
         const validation = validateProjectName(input);
         const dirCheck = checkDirectoryExists(input);
-        
+
         if (validation.valid && !dirCheck.exists) {
           return chalk.green('✓ ') + chalk.green(input);
         } else if (!validation.valid) {
@@ -101,7 +105,7 @@ function getQuestions(initialProjectName) {
         } else if (dirCheck.exists) {
           return chalk.yellow('⚠ ') + chalk.yellow(input) + chalk.gray(' (exists)');
         }
-        
+
         return input;
       },
     },
@@ -111,12 +115,12 @@ function getQuestions(initialProjectName) {
       name: 'frontend',
       message: 'Choose your frontend framework:',
       choices: [
-        { name: 'React', value: 'react' },
-        { name: 'Vue.js', value: 'vue' },
+        { name: 'React + Vite', value: 'react' },
+        { name: 'Next.js (React)', value: 'nextjs' },
+        { name: 'Vue.js + Vite', value: 'vue' },
+        { name: 'Nuxt.js (Vue)', value: 'nuxtjs' },
         { name: 'Angular', value: 'angular' },
         { name: 'Svelte', value: 'svelte' },
-        { name: 'Next.js (React)', value: 'nextjs' },
-        { name: 'Nuxt.js (Vue)', value: 'nuxtjs' },
         { name: 'Vanilla JavaScript', value: 'vanilla' },
       ],
       when: (answers) => ['frontend', 'fullstack'].includes(answers.projectType),
@@ -284,10 +288,16 @@ function getQuestions(initialProjectName) {
         ];
 
         const frontendChoices = [
-          { name: 'React Query (Data fetching)', value: 'react-query', checked: false },
+          { name: 'TanStack Query (Data fetching)', value: 'tanstack-query', checked: false },
+          { name: 'React Router (Routing)', value: 'react-router', checked: false },
+          { name: 'Redux Toolkit (State management)', value: 'redux-toolkit', checked: false },
           { name: 'Zustand (State management)', value: 'zustand', checked: false },
+          { name: 'Jotai (State management)', value: 'jotai', checked: false },
           { name: 'React Hook Form (Forms)', value: 'react-hook-form', checked: false },
           { name: 'Framer Motion (Animations)', value: 'framer-motion', checked: false },
+          { name: 'React Icons (Icon library)', value: 'react-icons', checked: false },
+          { name: 'Radix UI (Headless components)', value: 'radix-ui', checked: false },
+          { name: 'ShadCN UI (Component library)', value: 'shadcn-ui', checked: false },
         ];
 
         const backendChoices = [
@@ -339,6 +349,7 @@ function getQuestions(initialProjectName) {
         { name: 'npm', value: 'npm' },
         { name: 'yarn', value: 'yarn' },
         { name: 'pnpm', value: 'pnpm' },
+        { name: 'bun', value: 'bun' },
       ],
       default: 'npm',
     },

@@ -20,7 +20,7 @@ function displayBanner() {
   console.log('');
   console.log(chalk.cyan('╔════════════════════════════════════════════════════════════╗'));
   console.log(chalk.cyan('║') + chalk.cyan.bold('                                                            ') + chalk.cyan('║'));
-  console.log(chalk.cyan('║') + chalk.cyan.bold('              🚀 Welcome to InitKit CLI! 🚀               ') + chalk.cyan('║'));
+  console.log(chalk.cyan('║') + chalk.cyan.bold('               Welcome to InitKit CLI!                      ') + chalk.cyan('║'));
   console.log(chalk.cyan('║') + chalk.cyan.bold('                                                            ') + chalk.cyan('║'));
   console.log(chalk.cyan('║') + chalk.white('       Scaffold modern web projects with best               ') + chalk.cyan('║'));
   console.log(chalk.cyan('║') + chalk.white('       practices and lightning-fast speed ⚡                ') + chalk.cyan('║'));
@@ -31,6 +31,7 @@ function displayBanner() {
 }
 
 // Set up the CLI program
+
 program
   .name('initkit')
   .description(packageJson.description)
