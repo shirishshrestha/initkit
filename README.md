@@ -763,12 +763,14 @@ initkit my-app --verbose
 - ✅ **Improved file creation** - Uses proper fs-extra methods for reliable config file generation
 
 **What's Fixed:**
+
 - `hasAddons()` function now properly checks for styling configuration
 - Changed from unreliable `npx tailwindcss init` to direct config file creation
 - All package managers tested and verified working
 - Next.js now uses built-in Tailwind setup (no duplicates)
 
 **Testing:**
+
 - ✅ 4/4 package managers passing tests (npm, yarn, pnpm, bun)
 - ✅ Verified across React+Vite, Next.js, and Vue.js
 - ✅ No duplicate configuration files

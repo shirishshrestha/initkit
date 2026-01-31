@@ -14,7 +14,7 @@ import chalk from 'chalk';
  * @returns {Promise<void>}
  */
 export async function bootstrapWithOfficialCLI(projectPath, config) {
-  const { projectType, frontend, backend } = config;
+  const { projectType, frontend: _frontend, backend: _backend } = config;
 
   switch (projectType) {
     case 'frontend':
@@ -239,7 +239,7 @@ export async function bootstrapSvelte(projectPath, config) {
  * @param {Object} config - Configuration object
  */
 export async function bootstrapExpress(projectPath, config) {
-  const { language, packageManager = 'npm' } = config;
+  const { language } = config;
   const projectName = path.basename(projectPath);
   const parentDir = path.dirname(projectPath);
 

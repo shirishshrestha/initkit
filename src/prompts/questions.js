@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import validateNpmName from 'validate-npm-package-name';
 import {
   validateProjectName,
   checkDirectoryExists,

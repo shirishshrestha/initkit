@@ -109,7 +109,7 @@ async function createFeatureBasedStructure(srcPath, config) {
 /**
  * Create component-based folder structure
  */
-async function createComponentBasedStructure(srcPath, config) {
+async function createComponentBasedStructure(srcPath, _config) {
   await fs.ensureDir(path.join(srcPath, 'components', 'ui'));
   await fs.ensureDir(path.join(srcPath, 'components', 'layout'));
   await fs.ensureDir(path.join(srcPath, 'components', 'forms'));

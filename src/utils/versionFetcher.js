@@ -6,7 +6,7 @@ import https from 'https';
  * @returns {Promise<string>} Latest version number
  */
 export async function getLatestVersion(packageName) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const url = `https://registry.npmjs.org/${packageName}/latest`;
 
     https
@@ -21,13 +21,13 @@ export async function getLatestVersion(packageName) {
           try {
             const json = JSON.parse(data);
             resolve(json.version || 'latest');
-          } catch (error) {
+          } catch (_error) {
             // If parsing fails, return 'latest' as fallback
             resolve('latest');
           }
         });
       })
-      .on('error', (error) => {
+      .on('error', () => {
         // On network error, return 'latest' as fallback
         console.warn(`Warning: Could not fetch version for ${packageName}, using 'latest'`);
         resolve('latest');

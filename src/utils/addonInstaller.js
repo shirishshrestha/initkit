@@ -118,7 +118,7 @@ async function installStyling(projectPath, styling, config) {
   const installCmd = getInstallCommand(packageManager);
 
   switch (styling) {
-    case 'tailwind':
+    case 'tailwind': {
       // Next.js already includes Tailwind CSS when --tailwind flag is used
       if (frontend === 'nextjs') {
         console.log(chalk.dim('  Tailwind CSS already configured by Next.js'));
@@ -171,6 +171,7 @@ export default {
         await fs.outputFile(cssPath, tailwindDirectives);
       }
       break;
+    }
 
     case 'scss':
     case 'sass':
@@ -209,12 +210,12 @@ export default {
  * Install UI library (some have their own CLIs!)
  */
 async function installUILibrary(projectPath, library, config) {
-  const { packageManager, language } = config;
+  const { packageManager } = config;
   const installCmd = getInstallCommand(packageManager);
 
   switch (library) {
     case 'shadcn':
-    case 'shadcn-ui':
+    case 'shadcn-ui': {
       console.log(chalk.dim('  Running shadcn-ui init...'));
 
       // Ensure tsconfig has path aliases for shadcn
@@ -245,6 +246,7 @@ async function installUILibrary(projectPath, library, config) {
                 : 'npx';
       await execCommand(`${execCmd} shadcn@latest init -y`, { cwd: projectPath });
       break;
+    }
 
     case 'mui':
     case 'material-ui':
@@ -432,7 +434,7 @@ async function installTesting(projectPath, testingLibs, config) {
         });
         break;
 
-      case 'playwright':
+      case 'playwright': {
         console.log(chalk.dim('  Installing Playwright...'));
         // Playwright has its own init CLI! Use package manager's create command
         const initCmd =
@@ -447,6 +449,7 @@ async function installTesting(projectPath, testingLibs, config) {
                   : 'npm init';
         await execCommand(`${initCmd} playwright@latest`, { cwd: projectPath });
         break;
+      }
 
       case 'cypress':
         console.log(chalk.dim('  Installing Cypress...'));
