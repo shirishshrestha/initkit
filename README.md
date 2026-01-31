@@ -851,7 +851,7 @@ MIT © [Shirish Shrestha](https://github.com/shirishshrestha)
 - **Issues**: [GitHub Issues](https://github.com/shirishshrestha/initkit/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/shirishshrestha/initkit/discussions)
 - **Documentation**: [Full Documentation](./docs/QUICK_START.md)
-- **Email**: your.email@example.com
+- **Email**: shirish.shrestha07@gmail.com
 
 ---
 
