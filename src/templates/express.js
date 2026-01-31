@@ -652,7 +652,7 @@ function generateNodemonConfig(isTypeScript) {
   );
 }
 
-function generateAppFile(config) {
+function generateAppFile(_config) {
   return `import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

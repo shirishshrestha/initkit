@@ -44,7 +44,7 @@ START: $ initkit [project-name] [options]
          │ 5. Install deps       │
          │ 6. Success summary    │
          └───────────────────────┘
-         
+
          Note: Step 1 queries npm registry
          for latest package versions
 ```
@@ -54,6 +54,7 @@ START: $ initkit [project-name] [options]
 ## Question Details
 
 ### Q1: Project Type
+
 **Purpose:** Determines the entire flow and which subsequent questions to ask
 
 ```javascript
@@ -64,12 +65,14 @@ Skip condition: None
 ```
 
 **Options:**
+
 - `Frontend Only` → Skip backend/database questions
 - `Backend Only` → Skip frontend/styling questions
 - `Full Stack` → Show all framework questions
 - `Node.js Library/Package` → Skip frontend, backend, database, styling
 
 **Default project names by type:**
+
 - Frontend: `my-frontend-app`
 - Backend: `my-backend-api`
 - Full Stack: `my-fullstack-app`
@@ -78,12 +81,13 @@ Skip condition: None
 ---
 
 ### Q2: Frontend Framework
+
 **Purpose:** Select the frontend technology stack
 
 ```javascript
-Type: list
-Message: "Choose your frontend framework:"
-When: projectType === 'frontend' || projectType === 'fullstack'
+Type: list;
+Message: 'Choose your frontend framework:';
+When: projectType === 'frontend' || projectType === 'fullstack';
 ```
 
 **Options:**
@@ -100,12 +104,13 @@ When: projectType === 'frontend' || projectType === 'fullstack'
 ---
 
 ### Q3: Backend Framework
+
 **Purpose:** Select the backend/API framework
 
 ```javascript
-Type: list
-Message: "Choose your backend framework:"
-When: projectType === 'backend' || projectType === 'fullstack'
+Type: list;
+Message: 'Choose your backend framework:';
+When: projectType === 'backend' || projectType === 'fullstack';
 ```
 
 **Options:**
@@ -120,12 +125,13 @@ When: projectType === 'backend' || projectType === 'fullstack'
 ---
 
 ### Q4: Database
+
 **Purpose:** Select database system for data persistence
 
 ```javascript
-Type: list
-Message: "Choose your database:"
-When: projectType === 'backend' || projectType === 'fullstack'
+Type: list;
+Message: 'Choose your database:';
+When: projectType === 'backend' || projectType === 'fullstack';
 ```
 
 **Options:**
@@ -140,6 +146,7 @@ When: projectType === 'backend' || projectType === 'fullstack'
 ---
 
 ### Q5: Project Name
+
 **Purpose:** Define the project directory name with validation
 
 ```javascript
@@ -151,6 +158,7 @@ Real-time: Color feedback (green = valid, red = invalid)
 ```
 
 **Validation Rules:**
+
 - Lowercase only (no uppercase letters)
 - No spaces (use hyphens instead)
 - Cannot start with `.` or `_`
@@ -159,12 +167,14 @@ Real-time: Color feedback (green = valid, red = invalid)
 - Cannot use reserved npm package names
 
 **Interactive Features:**
+
 - Real-time color feedback as you type
 - Automatic suggestion if invalid (e.g., "My App" → "my-app")
 - Directory existence check
 - Uses `validate-npm-package-name` library
 
 **Example Validation Flow:**
+
 ```
 Input: "My Cool App"
 Error: "Name cannot contain spaces"
@@ -177,6 +187,7 @@ Status: ✓ Valid (shown in green)
 ---
 
 ### Q6: Language
+
 **Purpose:** Choose between TypeScript and JavaScript
 
 ```javascript
@@ -193,6 +204,7 @@ Default: 'typescript'
 | JavaScript | `javascript` | Simpler, no compilation |
 
 **Impact:**
+
 - Affects file extensions (`.ts`/`.tsx` vs `.js`/`.jsx`)
 - Generates `tsconfig.json` if TypeScript
 - Installs type definitions (`@types/*`)
@@ -201,13 +213,14 @@ Default: 'typescript'
 ---
 
 ### Q7: TypeScript Strictness
+
 **Purpose:** Configure TypeScript compiler strictness level
 
 ```javascript
-Type: list
-Message: "TypeScript strictness level:"
-When: language === 'typescript'
-Default: 'strict'
+Type: list;
+Message: 'TypeScript strictness level:';
+When: language === 'typescript';
+Default: 'strict';
 ```
 
 **Options:**
@@ -218,6 +231,7 @@ Default: 'strict'
 | Relaxed | `relaxed` | Minimal type checking |
 
 **Generated `tsconfig.json` settings:**
+
 ```json
 // Strict
 {
@@ -244,27 +258,29 @@ Default: 'strict'
 ---
 
 ### Q8: Folder Structure
+
 **Purpose:** Choose code organization pattern
 
 ```javascript
-Type: list
-Message: "Choose your folder structure preference:"
-When: projectType === 'frontend' || projectType === 'fullstack'
-Default: 'feature-based'
+Type: list;
+Message: 'Choose your folder structure preference:';
+When: projectType === 'frontend' || projectType === 'fullstack';
+Default: 'feature-based';
 ```
 
 **Options:**
 
-| Structure | Value | Organization | Best For |
-|-----------|-------|--------------|----------|
-| **Feature-based** | `feature-based` | Group by feature/module | Scalable apps |
-| **Type-based** | `type-based` | Group by file type | Small-medium projects |
-| **Domain-driven** | `domain-driven` | Group by business domain | Enterprise apps |
-| **Flat** | `flat` | Minimal nesting | Prototypes, simple apps |
+| Structure         | Value           | Organization             | Best For                |
+| ----------------- | --------------- | ------------------------ | ----------------------- |
+| **Feature-based** | `feature-based` | Group by feature/module  | Scalable apps           |
+| **Type-based**    | `type-based`    | Group by file type       | Small-medium projects   |
+| **Domain-driven** | `domain-driven` | Group by business domain | Enterprise apps         |
+| **Flat**          | `flat`          | Minimal nesting          | Prototypes, simple apps |
 
 **Structure Examples:**
 
 **Feature-based:**
+
 ```
 src/
 ├── features/
@@ -279,6 +295,7 @@ src/
 ```
 
 **Type-based:**
+
 ```
 src/
 ├── components/
@@ -289,6 +306,7 @@ src/
 ```
 
 **Domain-driven:**
+
 ```
 src/
 ├── domains/
@@ -299,6 +317,7 @@ src/
 ```
 
 **Flat:**
+
 ```
 src/
 ├── App.tsx
@@ -310,12 +329,13 @@ src/
 ---
 
 ### Q9: Styling Solution
+
 **Purpose:** Select CSS framework or preprocessor
 
 ```javascript
-Type: list
-Message: "Choose your styling solution:"
-When: projectType === 'frontend' || projectType === 'fullstack'
+Type: list;
+Message: 'Choose your styling solution:';
+When: projectType === 'frontend' || projectType === 'fullstack';
 ```
 
 **Options:**
@@ -331,6 +351,7 @@ When: projectType === 'frontend' || projectType === 'fullstack'
 ---
 
 ### Q10: Additional Libraries
+
 **Purpose:** Select optional utility libraries
 
 ```javascript
@@ -340,6 +361,7 @@ Dynamic choices: Based on project type
 ```
 
 **Common Libraries (All Projects):**
+
 - `Axios` - HTTP client for API calls
 - `Lodash` - Utility function library
 - `Date-fns` - Date manipulation
@@ -347,41 +369,47 @@ Dynamic choices: Based on project type
 
 **Frontend-Specific Libraries:**
 
-*State Management:*
+_State Management:_
+
 - `Redux Toolkit` - Industry-standard state management with React Redux
 - `Zustand` - Lightweight state management
 - `Jotai` - Atomic state management
 
-*Routing & Data:*
+_Routing & Data:_
+
 - `React Router` - Client-side routing
 - `TanStack Query` - Data fetching & caching
 - `React Hook Form` - Performant form handling
 
-*UI & Animation:*
+_UI & Animation:_
+
 - `Radix UI` - Headless accessible components
 - `ShadCN UI` - Beautiful component library
 - `React Icons` - Popular icon library
 - `Framer Motion` - Animation library
 
 **Backend-Specific Libraries:**
+
 - `Prisma` - Type-safe ORM
 - `JWT` - Token-based authentication
 - `Bcrypt` - Password hashing
 - `Winston` - Structured logging
 
 **Conditional Logic:**
+
 ```javascript
 if (projectType === 'frontend' || projectType === 'fullstack') {
-  choices = [...commonChoices, ...frontendChoices]
+  choices = [...commonChoices, ...frontendChoices];
 }
 if (projectType === 'backend' || projectType === 'fullstack') {
-  choices = [...commonChoices, ...backendChoices]
+  choices = [...commonChoices, ...backendChoices];
 }
 ```
 
 ---
 
 ### Q11: Development Features
+
 **Purpose:** Select development tools and configurations
 
 ```javascript
@@ -406,6 +434,7 @@ Pre-checked: ESLint, Prettier, dotenv, EditorConfig
 | EditorConfig | `editorconfig` | ✓ Yes | Editor consistency |
 
 **Generated Files by Feature:**
+
 - `eslint` → `.eslintrc.cjs`, `.eslintignore`
 - `prettier` → `.prettierrc`, `.prettierignore`
 - `husky` → `.husky/pre-commit`
@@ -418,6 +447,7 @@ Pre-checked: ESLint, Prettier, dotenv, EditorConfig
 ---
 
 ### Q12: Package Manager
+
 **Purpose:** Choose which package manager to use
 
 ```javascript
@@ -436,6 +466,7 @@ Default: 'npm'
 | bun | `bun` | `bun install` | `bun run dev` | Blazing Fast ⚡ |
 
 **Impact:**
+
 - Lock file type (package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb)
 - Installation speed and disk usage (bun is fastest)
 - Workspaces configuration (if monorepo)
@@ -445,6 +476,7 @@ Default: 'npm'
 ---
 
 ### Q13: Git Initialization
+
 **Purpose:** Initialize Git repository with .gitignore
 
 ```javascript
@@ -455,11 +487,13 @@ Default: true
 ```
 
 **If Yes:**
+
 - Runs `git init`
 - Creates `.gitignore` with common patterns
 - Makes initial commit (optional)
 
 **Generated `.gitignore` includes:**
+
 ```
 node_modules/
 dist/
@@ -475,26 +509,25 @@ coverage/
 
 ## Conditional Logic Matrix
 
-| Question | Frontend | Backend | Full Stack | Library |
-|----------|----------|---------|------------|---------|
-| Q1: Project Type | ✓ | ✓ | ✓ | ✓ |
-| Q2: Frontend Framework | ✓ | ✗ | ✓ | ✗ |
-| Q3: Backend Framework | ✗ | ✓ | ✓ | ✗ |
-| Q4: Database | ✗ | ✓ | ✓ | ✗ |
-| Q5: Project Name | ✓ | ✓ | ✓ | ✓ |
-| Q6: Language | ✓ | ✓ | ✓ | ✓ |
-| Q7: TS Strictness | If TS | If TS | If TS | If TS |
-| Q8: Folder Structure | ✓ | ✗ | ✓ | ✗ |
-| Q9: Styling | ✓ | ✗ | ✓ | ✗ |
-| Q10: Libraries | ✓ | ✓ | ✓ | ✓ |
-| Q11: Features | ✓ | ✓ | ✓ | ✓ |
-| Q12: Package Manager | ✓ | ✓ | ✓ | ✓ |
-| Q13: Git | ✓ | ✓ | ✓ | ✓ |
+| Question               | Frontend | Backend | Full Stack | Library |
+| ---------------------- | -------- | ------- | ---------- | ------- |
+| Q1: Project Type       | ✓        | ✓       | ✓          | ✓       |
+| Q2: Frontend Framework | ✓        | ✗       | ✓          | ✗       |
+| Q3: Backend Framework  | ✗        | ✓       | ✓          | ✗       |
+| Q4: Database           | ✗        | ✓       | ✓          | ✗       |
+| Q5: Project Name       | ✓        | ✓       | ✓          | ✓       |
+| Q6: Language           | ✓        | ✓       | ✓          | ✓       |
+| Q7: TS Strictness      | If TS    | If TS   | If TS      | If TS   |
+| Q8: Folder Structure   | ✓        | ✗       | ✓          | ✗       |
+| Q9: Styling            | ✓        | ✗       | ✓          | ✗       |
+| Q10: Libraries         | ✓        | ✓       | ✓          | ✓       |
+| Q11: Features          | ✓        | ✓       | ✓          | ✓       |
+| Q12: Package Manager   | ✓        | ✓       | ✓          | ✓       |
+| Q13: Git               | ✓        | ✓       | ✓          | ✓       |
 
 ---
 
 ## Complete Flow Examples
-
 
 ## Version Fetching (New in v1.1.0)
 
@@ -514,6 +547,7 @@ Results:
 ```
 
 **How it works:**
+
 1. Queries `registry.npmjs.org/${package}/latest` via HTTPS
 2. Parses JSON response for version number
 3. Returns in `^x.y.z` semver format
@@ -521,6 +555,7 @@ Results:
 5. Shows spinner during fetch with success/error feedback
 
 **Benefits:**
+
 - Always get the latest stable versions
 - Professional package.json (no "latest" strings)
 - No manual version updates needed
@@ -533,6 +568,7 @@ Results:
 ### Example 1: React + TypeScript + Tailwind (Frontend)
 
 **User Journey:**
+
 ```
 $ initkit my-react-app
 
@@ -559,6 +595,7 @@ Q11: Git → "Yes"
 ```
 
 **Generated Structure:**
+
 ```
 my-react-app/
 ├── src/
@@ -595,6 +632,7 @@ Dependencies (with actual latest versions):
 ### Example 2: Express API + PostgreSQL (Backend)
 
 **User Journey:**
+
 ```
 $ initkit api-service
 
@@ -619,6 +657,7 @@ Q10: Git → "Yes"
 ```
 
 **Generated Structure:**
+
 ```
 api-service/
 ├── src/
@@ -655,6 +694,7 @@ Dependencies:
 ### Example 3: Full Stack MERN (Next.js + Express)
 
 **User Journey:**
+
 ```
 $ initkit mern-app
 
@@ -683,6 +723,7 @@ Q13: Git → "Yes"
 ```
 
 **Generated Structure:**
+
 ```
 mern-app/
 ├── client/                    # Next.js frontend
@@ -728,6 +769,7 @@ Server:
 ### Example 4: Node.js Library/Package
 
 **User Journey:**
+
 ```
 $ initkit my-utility-lib
 
@@ -750,6 +792,7 @@ Q8: Git → "Yes"
 ```
 
 **Generated Structure:**
+
 ```
 my-utility-lib/
 ├── src/
@@ -782,6 +825,7 @@ package.json extras:
 ### Example 5: Quick Start with --yes Flag
 
 **User Journey:**
+
 ```
 $ initkit my-app --yes
 
@@ -837,6 +881,7 @@ initkit my-app --yes --javascript --no-git --package-manager yarn
 ```
 
 **Flag Priority:**
+
 1. CLI flags override prompt answers
 2. If `--yes` is used, remaining flags can still override defaults
 3. If `--template` is specified, it overrides framework selections
@@ -848,6 +893,7 @@ initkit my-app --yes --javascript --no-git --package-manager yarn
 ### Project Name Validation
 
 **Invalid Inputs & Suggestions:**
+
 ```
 Input: "My Cool App"
 ❌ Error: Name cannot contain spaces
@@ -908,31 +954,28 @@ Rollback Process:
 if (projectType === 'fullstack') {
   createDirectory('client/');
   createDirectory('server/');
-  
+
   generateFrontend('client/', {
     framework: answers.frontend,
     language: answers.language,
     styling: answers.styling,
     folderStructure: answers.folderStructure,
   });
-  
+
   generateBackend('server/', {
     framework: answers.backend,
     database: answers.database,
     language: answers.language,
   });
-  
+
   generateRootFiles({
     packageManager: answers.packageManager,
     workspaces: true,
   });
-  
 } else if (projectType === 'frontend') {
   generateFrontend('src/', answers);
-  
 } else if (projectType === 'backend') {
   generateBackend('src/', answers);
-  
 } else if (projectType === 'library') {
   generateLibrary('src/', {
     language: answers.language,
@@ -964,10 +1007,7 @@ if (answers.useGit) {
 
 // Install dependencies
 if (answers.installDependencies !== false) {
-  await installDependencies(
-    projectPath,
-    answers.packageManager
-  );
+  await installDependencies(projectPath, answers.packageManager);
 }
 ```
 
@@ -1015,6 +1055,7 @@ Happy coding!
 ### Common Issues
 
 **Problem:** "Directory already exists"
+
 ```bash
 Solution 1: Choose a different name
 Solution 2: Remove the directory first
@@ -1024,6 +1065,7 @@ Solution 3: Navigate elsewhere
 ```
 
 **Problem:** "Invalid project name"
+
 ```bash
 Check: Use lowercase letters and hyphens only
 Example: my-project-name
@@ -1031,6 +1073,7 @@ Avoid: My Project Name, my_project_name
 ```
 
 **Problem:** "npm install failed"
+
 ```bash
 Causes:
 - Network issues
@@ -1045,6 +1088,7 @@ Solutions:
 ```
 
 **Problem:** "Git initialization failed"
+
 ```bash
 Check: Git is installed
   git --version
