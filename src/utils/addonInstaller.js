@@ -119,6 +119,12 @@ async function installStyling(projectPath, styling, config) {
 
   switch (styling) {
     case 'tailwind':
+      // Next.js already includes Tailwind CSS when --tailwind flag is used
+      if (frontend === 'nextjs') {
+        console.log(chalk.dim('  Tailwind CSS already configured by Next.js'));
+        return;
+      }
+
       console.log(chalk.dim('  Installing Tailwind CSS...'));
       await execCommand(`${installCmd} -D tailwindcss postcss autoprefixer`, {
         cwd: projectPath,
