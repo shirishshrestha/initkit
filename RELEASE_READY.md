@@ -9,21 +9,25 @@
 ## 🔧 Issues Fixed
 
 ### 1. Tailwind CSS Initialization (Original Issue)
+
 **Problem**: `npx tailwindcss init -p` failed with pnpm, yarn, bun  
 **Fixed**: Now uses package manager specific commands  
 **File**: [src/utils/addonInstaller.js](src/utils/addonInstaller.js#L127-L134)
 
 ### 2. shadcn/ui Initialization (Additional Issue Found)
+
 **Problem**: `npx shadcn@latest init` failed with pnpm, yarn, bun  
 **Fixed**: Now uses `pnpm dlx`, `yarn dlx`, `bunx`  
 **File**: [src/utils/addonInstaller.js](src/utils/addonInstaller.js#L210-L232)
 
 ### 3. Prisma Initialization (Additional Issue Found)
+
 **Problem**: `npx prisma init` failed with pnpm, yarn, bun  
 **Fixed**: Now uses `pnpm exec`, `yarn`, `bunx`  
 **File**: [src/utils/addonInstaller.js](src/utils/addonInstaller.js#L289-L307)
 
 ### 4. Playwright Initialization (Additional Issue Found)
+
 **Problem**: `npm init playwright@latest` always used npm  
 **Fixed**: Now uses `pnpm create`, `yarn create`, `bun create`  
 **File**: [src/utils/addonInstaller.js](src/utils/addonInstaller.js#L389-L397)
@@ -32,12 +36,12 @@
 
 ## 📦 Package Manager Commands
 
-| Tool | npm | yarn | pnpm | bun |
-|------|-----|------|------|-----|
-| **Tailwind** | `npx tailwindcss init` | `yarn tailwindcss init` | `pnpm exec tailwindcss init` | `bunx tailwindcss init` |
-| **shadcn** | `npx shadcn@latest` | `yarn dlx shadcn@latest` | `pnpm dlx shadcn@latest` | `bunx shadcn@latest` |
-| **Prisma** | `npx prisma init` | `yarn prisma init` | `pnpm exec prisma init` | `bunx prisma init` |
-| **Playwright** | `npm init playwright` | `yarn create playwright` | `pnpm create playwright` | `bun create playwright` |
+| Tool           | npm                    | yarn                     | pnpm                         | bun                     |
+| -------------- | ---------------------- | ------------------------ | ---------------------------- | ----------------------- |
+| **Tailwind**   | `npx tailwindcss init` | `yarn tailwindcss init`  | `pnpm exec tailwindcss init` | `bunx tailwindcss init` |
+| **shadcn**     | `npx shadcn@latest`    | `yarn dlx shadcn@latest` | `pnpm dlx shadcn@latest`     | `bunx shadcn@latest`    |
+| **Prisma**     | `npx prisma init`      | `yarn prisma init`       | `pnpm exec prisma init`      | `bunx prisma init`      |
+| **Playwright** | `npm init playwright`  | `yarn create playwright` | `pnpm create playwright`     | `bun create playwright` |
 
 ---
 
@@ -78,7 +82,7 @@
 ✅ **5 UI Libraries**: shadcn, Material-UI, Chakra UI, Mantine, DaisyUI  
 ✅ **5 State Management**: Redux Toolkit, Zustand, Jotai, Recoil, Pinia  
 ✅ **3 ORMs**: Prisma, Drizzle, Mongoose  
-✅ **1 Auth**: Clerk  
+✅ **1 Auth**: Clerk
 
 **Total Scenarios**: 18 edge case tests covering 100+ combinations
 
@@ -97,24 +101,31 @@
 ## 🚀 How to Test
 
 ### Quick Test (5 minutes)
+
 Test the original failing scenario:
+
 ```bash
 node test-all-scenarios.js 1
 ```
 
 ### Package Manager Test (15 minutes)
+
 Test all 4 package managers:
+
 ```bash
 node test-package-managers.js
 ```
 
 ### Full Test Suite (60 minutes)
+
 Test all 18 scenarios:
+
 ```bash
 node test-all-scenarios.js
 ```
 
 ### Manual Test
+
 Follow instructions in [TEST_NOW.txt](TEST_NOW.txt)
 
 ---
@@ -166,18 +177,21 @@ gh release create v1.2.2 \
 ## 🎯 What Was Accomplished
 
 ### Code Changes
+
 - ✅ Fixed 4 critical package manager bugs
 - ✅ Added proper binary runner detection for all tools
 - ✅ Maintained backward compatibility with npm
 - ✅ No breaking changes for existing users
 
 ### Testing
+
 - ✅ Created 5 comprehensive test scripts
 - ✅ 18 test scenarios covering all edge cases
 - ✅ Automated testing for CI/CD integration
 - ✅ Manual testing guides
 
 ### Documentation
+
 - ✅ Complete test suite documentation
 - ✅ Updated changelog
 - ✅ Fix summaries for technical reference
@@ -203,14 +217,16 @@ gh release create v1.2.2 \
 ## 📈 Impact
 
 ### Before Fix
+
 - ❌ pnpm users: Tailwind CSS failed
-- ❌ yarn users: Tailwind CSS failed  
+- ❌ yarn users: Tailwind CSS failed
 - ❌ bun users: Tailwind CSS failed
 - ❌ shadcn/ui: Would fail with non-npm PMs
 - ❌ Prisma: Would fail with non-npm PMs
 - ❌ Playwright: Always used npm
 
 ### After Fix
+
 - ✅ All 4 package managers work perfectly
 - ✅ All CLI tools use correct commands
 - ✅ No more "command failed with exit code 1" errors
@@ -224,6 +240,7 @@ gh release create v1.2.2 \
 **InitKit now fully supports all 4 major package managers (npm, yarn, pnpm, bun) for all features!**
 
 The CLI will automatically detect which package manager the user chose and use the correct commands for:
+
 - Installing packages
 - Running CLI tools (Tailwind, shadcn, Prisma, Playwright)
 - Initializing configurations
@@ -234,11 +251,13 @@ The CLI will automatically detect which package manager the user chose and use t
 ## 📞 Next Steps
 
 1. **Test manually** (recommended):
+
    ```bash
    node test-all-scenarios.js 1
    ```
 
 2. **If test passes**, publish:
+
    ```bash
    npm version patch
    git push origin develop --tags

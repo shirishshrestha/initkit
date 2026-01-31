@@ -536,6 +536,7 @@ function getDriverForTypeORM(database) {
  */
 export function hasAddons(config) {
   return !!(
+    (config.styling && config.styling !== 'none' && config.styling !== 'css') ||
     (config.stateManagement && config.stateManagement !== 'none') ||
     (config.uiLibrary && config.uiLibrary !== 'none') ||
     (config.orm && config.orm !== 'none') ||
