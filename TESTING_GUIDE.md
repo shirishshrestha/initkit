@@ -11,6 +11,7 @@
 ## Manual Testing Instructions
 
 ### Test 1: React + Vite + Tailwind + shadcn (pnpm) - PRIMARY TEST ⭐
+
 This was the failing scenario that we fixed.
 
 ```bash
@@ -18,6 +19,7 @@ node bin/index.js
 ```
 
 **Answers**:
+
 - Project type: `Frontend Only`
 - Project name: `test-react-tailwind-pnpm`
 - Framework: `React + Vite`
@@ -37,6 +39,7 @@ node bin/index.js
 **Expected**: ✅ Project creates successfully without "No Tailwind CSS configuration found" error
 
 **Verify**:
+
 ```bash
 cd test-react-tailwind-pnpm
 ls tailwind.config.js    # Should exist
@@ -48,6 +51,7 @@ cat tsconfig.json        # Should have @/* path alias
 ---
 
 ### Test 2: React + Vite + Tailwind (yarn)
+
 Test Tailwind with yarn package manager.
 
 ```bash
@@ -55,6 +59,7 @@ node bin/index.js
 ```
 
 **Answers**:
+
 - Project type: `Frontend Only`
 - Project name: `test-react-tailwind-yarn`
 - Framework: `React + Vite`
@@ -76,6 +81,7 @@ node bin/index.js
 ---
 
 ### Test 3: React + Vite + Tailwind (bun)
+
 Test Tailwind with bun package manager.
 
 ```bash
@@ -83,6 +89,7 @@ node bin/index.js
 ```
 
 **Answers**:
+
 - Project type: `Frontend Only`
 - Project name: `test-react-tailwind-bun`
 - Framework: `React + Vite`
@@ -104,6 +111,7 @@ node bin/index.js
 ---
 
 ### Test 4: React + Vite + Tailwind (npm - baseline)
+
 Test Tailwind with npm package manager (should have always worked).
 
 ```bash
@@ -111,6 +119,7 @@ node bin/index.js
 ```
 
 **Answers**:
+
 - Project type: `Frontend Only`
 - Project name: `test-react-tailwind-npm`
 - Framework: `React + Vite`
@@ -132,6 +141,7 @@ node bin/index.js
 ---
 
 ### Test 5: Next.js + Tailwind (pnpm)
+
 Test Tailwind with Next.js framework.
 
 ```bash
@@ -139,6 +149,7 @@ node bin/index.js
 ```
 
 **Answers**:
+
 - Project type: `Frontend Only`
 - Project name: `test-nextjs-tailwind-pnpm`
 - Framework: `Next.js`
@@ -160,6 +171,7 @@ node bin/index.js
 ---
 
 ### Test 6: Vue + Sass (bun)
+
 Test other styling solutions still work.
 
 ```bash
@@ -167,6 +179,7 @@ node bin/index.js
 ```
 
 **Answers**:
+
 - Project type: `Frontend Only`
 - Project name: `test-vue-sass-bun`
 - Framework: `Vue`
@@ -188,6 +201,7 @@ node bin/index.js
 ---
 
 ### Test 7: Express Backend (npm)
+
 Test backend still works.
 
 ```bash
@@ -195,6 +209,7 @@ node bin/index.js
 ```
 
 **Answers**:
+
 - Project type: `Backend Only`
 - Project name: `test-express-npm`
 - Framework: `Express`
@@ -253,6 +268,7 @@ echo "🧪 Test 7: Express + npm"
 ✅ **All 7 tests must pass without errors**
 
 Key checks:
+
 1. No "Command failed with exit code 1: npx tailwindcss init -p" error
 2. No "No Tailwind CSS configuration found" error from shadcn
 3. Project directories created successfully
@@ -279,6 +295,7 @@ npm publish
 ```
 
 If any test fails:
+
 1. Check the error message
 2. Review the relevant code in `src/utils/addonInstaller.js`
 3. Fix and re-test
@@ -298,6 +315,7 @@ If any test fails:
 ## Test Coverage
 
 Current coverage:
+
 - ✅ React + Vite
 - ✅ Next.js
 - ✅ Vue
@@ -310,6 +328,7 @@ Current coverage:
 - ✅ Git initialization
 
 Not yet tested:
+
 - ⏳ NestJS (coming soon)
 - ⏳ Fastify (coming soon)
 - ⏳ Other UI libraries (Material-UI, Ant Design, Chakra UI, Mantine, DaisyUI)

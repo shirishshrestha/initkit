@@ -126,11 +126,17 @@ async function installStyling(projectPath, styling, config) {
 
       // Initialize Tailwind config using the package manager's binary
       console.log(chalk.dim('  Initializing Tailwind configuration...'));
-      const execCmd = packageManager === 'npm' ? 'npx' : 
-                      packageManager === 'yarn' ? 'yarn' :
-                      packageManager === 'pnpm' ? 'pnpm exec' :
-                      packageManager === 'bun' ? 'bunx' : 'npx';
-      
+      const execCmd =
+        packageManager === 'npm'
+          ? 'npx'
+          : packageManager === 'yarn'
+            ? 'yarn'
+            : packageManager === 'pnpm'
+              ? 'pnpm exec'
+              : packageManager === 'bun'
+                ? 'bunx'
+                : 'npx';
+
       await execCommand(`${execCmd} tailwindcss init -p`, { cwd: projectPath });
 
       // For Vite projects, we need to update the Tailwind config
@@ -222,8 +228,19 @@ async function installUILibrary(projectPath, library, config) {
         await fs.writeJson(tsconfigPath, tsconfig, { spaces: 2 });
       }
 
-      // shadcn has its own CLI!
-      await execCommand(`npx shadcn@latest init -y`, { cwd: projectPath });
+      // shadcn has its own CLI! Use package manager's binary runner
+      const { packageManager } = config;
+      const execCmd =
+        packageManager === 'npm'
+          ? 'npx'
+          : packageManager === 'yarn'
+            ? 'yarn dlx'
+            : packageManager === 'pnpm'
+              ? 'pnpm dlx'
+              : packageManager === 'bun'
+                ? 'bunx'
+                : 'npx';
+      await execCommand(`${execCmd} shadcn@latest init -y`, { cwd: projectPath });
       break;
 
     case 'mui':
@@ -282,10 +299,20 @@ async function installORM(projectPath, orm, database, config) {
       await execCommand(`${installCmd} -D prisma`, { cwd: projectPath });
       await execCommand(`${installCmd} @prisma/client`, { cwd: projectPath });
 
-      // Initialize Prisma with database
+      // Initialize Prisma with database using package manager's binary runner
       const datasource = getDatasourceForPrisma(database);
       console.log(chalk.dim(`  Initializing Prisma with ${datasource}...`));
-      await execCommand(`npx prisma init --datasource-provider ${datasource}`, {
+      const execCmd =
+        packageManager === 'npm'
+          ? 'npx'
+          : packageManager === 'yarn'
+            ? 'yarn'
+            : packageManager === 'pnpm'
+              ? 'pnpm exec'
+              : packageManager === 'bun'
+                ? 'bunx'
+                : 'npx';
+      await execCommand(`${execCmd} prisma init --datasource-provider ${datasource}`, {
         cwd: projectPath,
       });
       break;
@@ -404,8 +431,18 @@ async function installTesting(projectPath, testingLibs, config) {
 
       case 'playwright':
         console.log(chalk.dim('  Installing Playwright...'));
-        // Playwright has its own init CLI!
-        await execCommand(`npm init playwright@latest`, { cwd: projectPath });
+        // Playwright has its own init CLI! Use package manager's create command
+        const initCmd =
+          packageManager === 'npm'
+            ? 'npm init'
+            : packageManager === 'yarn'
+              ? 'yarn create'
+              : packageManager === 'pnpm'
+                ? 'pnpm create'
+                : packageManager === 'bun'
+                  ? 'bun create'
+                  : 'npm init';
+        await execCommand(`${initCmd} playwright@latest`, { cwd: projectPath });
         break;
 
       case 'cypress':

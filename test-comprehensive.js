@@ -19,21 +19,21 @@ const testConfigurations = [
     name: 'React + Vite + Tailwind + shadcn (pnpm)',
     type: 'frontend',
     answers: [
-      'Frontend Only',             // Project type
-      'test-react-tailwind-pnpm',  // Project name
-      'React + Vite',              // Framework
-      'TypeScript (Recommended)',  // Language
+      'Frontend Only', // Project type
+      'test-react-tailwind-pnpm', // Project name
+      'React + Vite', // Framework
+      'TypeScript (Recommended)', // Language
       'Feature-based (Organize by feature/module)', // Structure
-      'Strict (Recommended for new projects)',      // TS strictness
-      'Tailwind CSS',              // Styling
+      'Strict (Recommended for new projects)', // TS strictness
+      'Tailwind CSS', // Styling
       'Redux Toolkit (Official Redux)', // State management
-      'shadcn/ui (Radix + Tailwind)',  // UI library
-      'None',                      // Auth
-      '',                          // Testing (none)
-      'Axios (HTTP client)',       // Additional libraries (just one)
-      'ESLint (Code linting)',     // Dev tools (just one)
-      'pnpm',                      // Package manager
-      'Yes',                       // Git
+      'shadcn/ui (Radix + Tailwind)', // UI library
+      'None', // Auth
+      '', // Testing (none)
+      'Axios (HTTP client)', // Additional libraries (just one)
+      'ESLint (Code linting)', // Dev tools (just one)
+      'pnpm', // Package manager
+      'Yes', // Git
     ],
   },
   {
@@ -176,9 +176,7 @@ async function runTest(config) {
           resolve({ output, errorOutput });
         } else {
           reject(
-            new Error(
-              `Process exited with code ${code}\nOutput: ${output}\nError: ${errorOutput}`
-            )
+            new Error(`Process exited with code ${code}\nOutput: ${output}\nError: ${errorOutput}`)
           );
         }
       });
@@ -188,10 +186,13 @@ async function runTest(config) {
       });
 
       // Timeout after 5 minutes
-      setTimeout(() => {
-        child.kill();
-        reject(new Error('Test timed out after 5 minutes'));
-      }, 5 * 60 * 1000);
+      setTimeout(
+        () => {
+          child.kill();
+          reject(new Error('Test timed out after 5 minutes'));
+        },
+        5 * 60 * 1000
+      );
     });
 
     // Verify project was created
@@ -206,13 +207,13 @@ async function runTest(config) {
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`\n✅ SUCCESS: ${config.name} (${duration}s)\n`);
-    
+
     return { success: true, config, duration };
   } catch (error) {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`\n❌ FAILED: ${config.name} (${duration}s)`);
     console.error(`Error: ${error.message}\n`);
-    
+
     return { success: false, config, duration, error: error.message };
   }
 }

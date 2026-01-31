@@ -23,7 +23,7 @@ const answers = [
   'Redux Toolkit (Official Redux)',
   'shadcn/ui (Radix + Tailwind)',
   'None',
-  '',  // No testing frameworks
+  '', // No testing frameworks
   'Axios (HTTP client)',
   'ESLint (Code linting)',
   'pnpm',
@@ -57,7 +57,7 @@ async function runTest() {
       const originalStdout = process.stdout.write.bind(process.stdout);
       process.stdout.write = (chunk, ...args) => {
         buffer += chunk.toString();
-        
+
         // Detect question prompts
         if (buffer.includes('?') && answerIndex < answers.length) {
           setTimeout(() => {
@@ -68,7 +68,7 @@ async function runTest() {
           }, 200);
           buffer = ''; // Clear buffer after detecting question
         }
-        
+
         return originalStdout(chunk, ...args);
       };
 
@@ -87,11 +87,14 @@ async function runTest() {
       });
 
       // Timeout after 3 minutes
-      setTimeout(() => {
-        process.stdout.write = originalStdout;
-        child.kill();
-        reject(new Error('Test timed out after 3 minutes'));
-      }, 3 * 60 * 1000);
+      setTimeout(
+        () => {
+          process.stdout.write = originalStdout;
+          child.kill();
+          reject(new Error('Test timed out after 3 minutes'));
+        },
+        3 * 60 * 1000
+      );
     });
 
     // Verify project was created

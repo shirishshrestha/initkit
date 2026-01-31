@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.2] - 2026-01-31
 
 ### Fixed
+
 - Fixed Tailwind CSS initialization failing with pnpm, yarn, and bun package managers
 - Changed from hardcoded `npx` to package manager specific binary runners:
   - npm: `npx`
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed shadcn/ui installation that requires Tailwind CSS as prerequisite
 
 ### Added
+
 - Comprehensive testing guide (TESTING_GUIDE.md)
 - Test scripts for various framework and package manager combinations
 
