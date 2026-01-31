@@ -751,6 +751,32 @@ initkit my-app --verbose
 
 ---
 
+## Recent Updates
+
+### Version 1.2.2 (January 2026)
+
+**Critical Bug Fixes:**
+
+- ✅ **Fixed Tailwind CSS installation** - Resolved issue where styling was not installed if no other addons were selected
+- ✅ **Fixed package manager compatibility** - All 4 package managers (npm, yarn, pnpm, bun) now work correctly with Tailwind CSS
+- ✅ **Fixed Next.js duplicate configs** - Prevents duplicate Tailwind config files in Next.js projects
+- ✅ **Improved file creation** - Uses proper fs-extra methods for reliable config file generation
+
+**What's Fixed:**
+- `hasAddons()` function now properly checks for styling configuration
+- Changed from unreliable `npx tailwindcss init` to direct config file creation
+- All package managers tested and verified working
+- Next.js now uses built-in Tailwind setup (no duplicates)
+
+**Testing:**
+- ✅ 4/4 package managers passing tests (npm, yarn, pnpm, bun)
+- ✅ Verified across React+Vite, Next.js, and Vue.js
+- ✅ No duplicate configuration files
+
+[View Full Changelog](./docs/CHANGELOG.md)
+
+---
+
 ## Contributing
 
 We welcome contributions! InitKit has comprehensive documentation to help you get started.
