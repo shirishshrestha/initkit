@@ -1,246 +1,266 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { generateNextjsTemplate } from '../templates/nextjs.js';
-import { generateReactTemplate } from '../templates/react.js';
-import { generateVueTemplate } from '../templates/vue.js';
-import { generateExpressTemplate } from '../templates/express.js';
-import { generateFullStackTemplate } from '../templates/fullstack.js';
+import chalk from 'chalk';
 
 /**
  * Generate project files from templates based on user configuration
+ *
+ * NOTE: With the new CLI-first approach, this function now focuses on
+ * ENHANCING the project created by official CLIs rather than creating
+ * everything from scratch. It adds custom folder structures on top of
+ * the base project.
+ *
  * @param {string} projectPath - Absolute path to the project directory
  * @param {Object} config - User's project configuration object
- * @param {string} config.projectType - Type of project ('frontend'|'backend'|'fullstack'|'library')
+ * @param {string} config.projectType - Type of project ('frontend'|'backend'|'library')
  * @param {string} [config.frontend] - Frontend framework choice
  * @param {string} [config.backend] - Backend framework choice
+ * @param {string} [config.folderStructure] - Folder structure preference
  * @param {Array<string>} [config.features] - Additional features to enable
  * @returns {Promise<void>}
  * @throws {Error} If template generation fails
  */
 async function generateTemplate(projectPath, config) {
-  // Generate .gitignore
-  await generateGitignore(projectPath, config);
+  console.log(chalk.dim('\n  Adding custom folder structure...\n'));
 
-  // Generate project-specific files based on type
+  // Add custom folder structure based on project type
   switch (config.projectType) {
     case 'frontend':
-      await generateFrontendFiles(projectPath, config);
+      await enhanceFrontendStructure(projectPath, config);
       break;
     case 'backend':
-      await generateBackendFiles(projectPath, config);
-      break;
-    case 'fullstack':
-      await generateFullStackFiles(projectPath, config);
+      await enhanceBackendStructure(projectPath, config);
       break;
     case 'library':
-      await generateLibraryFiles(projectPath, config);
+      await enhanceLibraryStructure(projectPath, config);
       break;
+    default:
+      console.log(chalk.gray('  ✓ Using default project structure'));
   }
 
   // Add additional features (Docker, GitHub Actions, etc.)
   if (config.features) {
     await addFeatures(projectPath, config);
   }
-}
 
-/**
- * Generate frontend project files based on selected framework
- * @param {string} projectPath - Absolute path to the project directory
- * @param {Object} config - User's project configuration
- * @param {string} config.frontend - Frontend framework ('react'|'vue'|'nextjs'|'angular'|'svelte'|'nuxt')
- * @param {string} config.language - Language choice ('typescript'|'javascript')
- * @param {string} config.folderStructure - Folder structure preference
- * @returns {Promise<void>}
- * @throws {Error} If framework template is not found or generation fails
- */
-async function generateFrontendFiles(projectPath, config) {
-  const framework = config.frontend;
-
-  switch (framework) {
-    case 'nextjs':
-      await generateNextjsTemplate(projectPath, config);
-      break;
-    case 'react':
-      await generateReactTemplate(projectPath, config);
-      break;
-    case 'vue':
-      await generateVueTemplate(projectPath, config);
-      break;
-    default:
-      throw new Error(
-        `Frontend framework "${framework}" is not yet implemented. Available: react, nextjs, vue`
-      );
+  // Generate .env example files if needed
+  if (config.features && config.features.includes('dotenv')) {
+    await generateEnvFiles(projectPath, config);
   }
 }
 
 /**
- * Generate backend project files based on selected framework
- * @param {string} projectPath - Absolute path to the project directory
- * @param {Object} config - User's project configuration
- * @param {string} config.backend - Backend framework ('express'|'fastify'|'nestjs'|'koa'|'hapi')
- * @param {string} [config.database] - Database choice ('mongodb'|'postgresql'|'mysql'|'sqlite')
- * @param {string} config.language - Language choice ('typescript'|'javascript')
- * @param {string} config.projectName - Name of the project
- * @param {string} config.packageManager - Package manager to use
- * @returns {Promise<void>}
- * @throws {Error} If backend template generation fails
+ * Enhance frontend project with custom folder structure
+ * Adds folders on top of CLI-generated project
  */
-async function generateBackendFiles(projectPath, config) {
-  const backend = config.backend;
-
-  switch (backend) {
-    case 'express':
-      await generateExpressTemplate(projectPath, config);
-      break;
-    default:
-      throw new Error(`Backend framework "${backend}" is not yet implemented. Available: express`);
-  }
-}
-
-/**
- * Generate full-stack project with both frontend and backend
- * @param {string} projectPath - Absolute path to the project directory
- * @param {Object} config - User's project configuration
- * @param {string} [config.fullstackType] - Project structure type ('monorepo'|'traditional')
- * @param {string} [config.stack] - Technology stack ('MERN'|'PERN'|'T3'|etc)
- * @param {string} [config.frontend] - Frontend framework
- * @param {string} [config.backend] - Backend framework
- * @returns {Promise<void>}
- * @throws {Error} If full-stack template generation fails
- */
-async function generateFullStackFiles(projectPath, config) {
-  // Use the dedicated full-stack template generator
-  await generateFullStackTemplate(projectPath, config);
-}
-
-/**
- * Generate Node.js library/package structure
- * @param {string} projectPath - Absolute path to the project directory
- * @param {Object} config - User's project configuration
- * @param {string} config.projectName - Name of the library
- * @param {string} config.language - Language choice ('typescript'|'javascript')
- * @param {string} config.packageManager - Package manager to use
- * @returns {Promise<void>}
- * @throws {Error} If library template generation fails
- */
-async function generateLibraryFiles(projectPath, config) {
+async function enhanceFrontendStructure(projectPath, config) {
+  const { folderStructure = 'feature-based' } = config;
   const srcPath = path.join(projectPath, 'src');
+
+  // Ensure src directory exists (should already exist from CLI)
   await fs.ensureDir(srcPath);
 
-  const ext = config.language === 'typescript' ? 'ts' : 'js';
+  switch (folderStructure) {
+    case 'feature-based':
+      await createFeatureBasedStructure(srcPath, config);
+      break;
+    case 'component-based':
+      await createComponentBasedStructure(srcPath, config);
+      break;
+    case 'atomic':
+      await createAtomicStructure(srcPath, config);
+      break;
+    default:
+      await createFeatureBasedStructure(srcPath, config);
+  }
 
-  const indexContent = `/**
- * Main entry point for ${config.projectName}
- */
-
-export function hello() {
-  return 'Hello from ${config.projectName}!';
-}
-`;
-
-  await fs.writeFile(path.join(srcPath, `index.${ext}`), indexContent);
-
-  // Package.json for library
-  const packageJson = {
-    name: config.projectName,
-    version: '1.0.0',
-    description: 'A reusable library',
-    main: `dist/index.js`,
-    types: config.language === 'typescript' ? 'dist/index.d.ts' : undefined,
-    files: ['dist'],
-    scripts: {
-      build: 'echo "Configure build script"',
-      test: 'echo "Configure test script"',
-    },
-    keywords: [],
-    author: '',
-    license: 'MIT',
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
-
-  const readme = `# ${config.projectName}
-
-Library created with InitKit CLI
-
-## Installation
-
-\`\`\`bash
-npm install ${config.projectName}
-\`\`\`
-
-## Usage
-
-\`\`\`javascript
-import { hello } from '${config.projectName}';
-
-console.log(hello());
-\`\`\`
-
----
-
-Built with InitKit
-`;
-
-  await fs.writeFile(path.join(projectPath, 'README.md'), readme);
+  console.log(chalk.gray(`  ✓ Added ${folderStructure} folder structure`));
 }
 
 /**
- * Generate .gitignore file with framework-specific patterns
- * @param {string} projectPath - Absolute path to the project directory
- * @param {Object} config - User's project configuration
- * @param {string} config.projectType - Type of project ('frontend'|'backend'|'fullstack'|'library')
- * @param {string} [config.frontend] - Frontend framework name
- * @param {string} [config.backend] - Backend framework name
- * @param {boolean} [config.monorepo] - Whether project uses monorepo structure
- * @returns {Promise<void>}
- * @throws {Error} If file creation fails
+ * Create feature-based folder structure
  */
-async function generateGitignore(projectPath, _config) {
-  const gitignore = `# Dependencies
-node_modules/
-.pnp
-.pnp.js
+async function createFeatureBasedStructure(srcPath, config) {
+  const features = ['auth', 'dashboard', 'users'];
 
-# Testing
-coverage/
+  for (const feature of features) {
+    await fs.ensureDir(path.join(srcPath, 'features', feature, 'components'));
+    await fs.ensureDir(path.join(srcPath, 'features', feature, 'hooks'));
+    await fs.ensureDir(path.join(srcPath, 'features', feature, 'services'));
+    await fs.ensureDir(path.join(srcPath, 'features', feature, 'types'));
 
-# Production
-build/
-dist/
-.next/
-out/
+    // Add barrel export
+    const ext = config.language === 'typescript' ? 'ts' : 'js';
+    await fs.writeFile(
+      path.join(srcPath, 'features', feature, `index.${ext}`),
+      `// ${feature} feature exports\n// TODO: Export your components and hooks here\n`
+    );
+  }
 
-# Misc
-.DS_Store
-*.pem
+  // Add shared folder
+  await fs.ensureDir(path.join(srcPath, 'shared', 'components', 'ui'));
+  await fs.ensureDir(path.join(srcPath, 'shared', 'components', 'layout'));
+  await fs.ensureDir(path.join(srcPath, 'shared', 'hooks'));
+  await fs.ensureDir(path.join(srcPath, 'shared', 'utils'));
+  await fs.ensureDir(path.join(srcPath, 'shared', 'types'));
+  await fs.ensureDir(path.join(srcPath, 'shared', 'constants'));
+}
 
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+/**
+ * Create component-based folder structure
+ */
+async function createComponentBasedStructure(srcPath, config) {
+  await fs.ensureDir(path.join(srcPath, 'components', 'ui'));
+  await fs.ensureDir(path.join(srcPath, 'components', 'layout'));
+  await fs.ensureDir(path.join(srcPath, 'components', 'forms'));
+  await fs.ensureDir(path.join(srcPath, 'pages'));
+  await fs.ensureDir(path.join(srcPath, 'hooks'));
+  await fs.ensureDir(path.join(srcPath, 'services'));
+  await fs.ensureDir(path.join(srcPath, 'utils'));
+  await fs.ensureDir(path.join(srcPath, 'types'));
+  await fs.ensureDir(path.join(srcPath, 'constants'));
+}
 
-# Local env files
-.env
-.env*.local
+/**
+ * Create atomic design folder structure
+ */
+async function createAtomicStructure(srcPath, config) {
+  await fs.ensureDir(path.join(srcPath, 'components', 'atoms'));
+  await fs.ensureDir(path.join(srcPath, 'components', 'molecules'));
+  await fs.ensureDir(path.join(srcPath, 'components', 'organisms'));
+  await fs.ensureDir(path.join(srcPath, 'components', 'templates'));
+  await fs.ensureDir(path.join(srcPath, 'pages'));
+  await fs.ensureDir(path.join(srcPath, 'hooks'));
+  await fs.ensureDir(path.join(srcPath, 'services'));
+  await fs.ensureDir(path.join(srcPath, 'utils'));
+  await fs.ensureDir(path.join(srcPath, 'types'));
+}
 
-# Vercel
-.vercel
+/**
+ * Enhance backend project with custom folder structure
+ */
+async function enhanceBackendStructure(projectPath, config) {
+  const { folderStructure = 'mvc' } = config;
+  const srcPath = path.join(projectPath, 'src');
 
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
+  await fs.ensureDir(srcPath);
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+  switch (folderStructure) {
+    case 'mvc':
+      await createMVCStructure(srcPath, config);
+      break;
+    case 'clean-architecture':
+      await createCleanArchitectureStructure(srcPath, config);
+      break;
+    case 'feature-based':
+      await createBackendFeatureBasedStructure(srcPath, config);
+      break;
+    case 'layered':
+      await createLayeredStructure(srcPath, config);
+      break;
+    default:
+      await createMVCStructure(srcPath, config);
+  }
+
+  console.log(chalk.gray(`  ✓ Added ${folderStructure} folder structure`));
+}
+
+/**
+ * Create MVC folder structure for backend
+ */
+async function createMVCStructure(srcPath, config) {
+  await fs.ensureDir(path.join(srcPath, 'models'));
+  await fs.ensureDir(path.join(srcPath, 'controllers'));
+  await fs.ensureDir(path.join(srcPath, 'routes'));
+  await fs.ensureDir(path.join(srcPath, 'middlewares'));
+  await fs.ensureDir(path.join(srcPath, 'services'));
+  await fs.ensureDir(path.join(srcPath, 'utils'));
+  await fs.ensureDir(path.join(srcPath, 'config'));
+  await fs.ensureDir(path.join(srcPath, 'types'));
+}
+
+/**
+ * Create clean architecture structure
+ */
+async function createCleanArchitectureStructure(srcPath, config) {
+  await fs.ensureDir(path.join(srcPath, 'domain', 'entities'));
+  await fs.ensureDir(path.join(srcPath, 'domain', 'repositories'));
+  await fs.ensureDir(path.join(srcPath, 'domain', 'use-cases'));
+  await fs.ensureDir(path.join(srcPath, 'application', 'services'));
+  await fs.ensureDir(path.join(srcPath, 'infrastructure', 'database'));
+  await fs.ensureDir(path.join(srcPath, 'infrastructure', 'repositories'));
+  await fs.ensureDir(path.join(srcPath, 'presentation', 'controllers'));
+  await fs.ensureDir(path.join(srcPath, 'presentation', 'middlewares'));
+  await fs.ensureDir(path.join(srcPath, 'presentation', 'routes'));
+}
+
+/**
+ * Create feature-based structure for backend
+ */
+async function createBackendFeatureBasedStructure(srcPath, config) {
+  const features = ['auth', 'users', 'posts'];
+
+  for (const feature of features) {
+    await fs.ensureDir(path.join(srcPath, 'features', feature, 'controllers'));
+    await fs.ensureDir(path.join(srcPath, 'features', feature, 'services'));
+    await fs.ensureDir(path.join(srcPath, 'features', feature, 'models'));
+    await fs.ensureDir(path.join(srcPath, 'features', feature, 'routes'));
+  }
+
+  await fs.ensureDir(path.join(srcPath, 'shared', 'middlewares'));
+  await fs.ensureDir(path.join(srcPath, 'shared', 'utils'));
+  await fs.ensureDir(path.join(srcPath, 'shared', 'config'));
+}
+
+/**
+ * Create layered structure
+ */
+async function createLayeredStructure(srcPath, config) {
+  await fs.ensureDir(path.join(srcPath, 'controllers'));
+  await fs.ensureDir(path.join(srcPath, 'services'));
+  await fs.ensureDir(path.join(srcPath, 'repositories'));
+  await fs.ensureDir(path.join(srcPath, 'models'));
+  await fs.ensureDir(path.join(srcPath, 'routes'));
+  await fs.ensureDir(path.join(srcPath, 'middlewares'));
+  await fs.ensureDir(path.join(srcPath, 'utils'));
+  await fs.ensureDir(path.join(srcPath, 'config'));
+}
+
+/**
+ * Enhance library structure
+ */
+async function enhanceLibraryStructure(projectPath, config) {
+  const srcPath = path.join(projectPath, 'src');
+  await fs.ensureDir(srcPath);
+  await fs.ensureDir(path.join(srcPath, 'core'));
+  await fs.ensureDir(path.join(srcPath, 'utils'));
+  await fs.ensureDir(path.join(srcPath, 'types'));
+  await fs.ensureDir(path.join(projectPath, 'tests'));
+  await fs.ensureDir(path.join(projectPath, 'docs'));
+
+  console.log(chalk.gray('  ✓ Added library folder structure'));
+}
+
+/**
+ * Generate environment files
+ */
+async function generateEnvFiles(projectPath, config) {
+  const envExample = `# Environment Variables
+# Copy this file to .env and fill in your values
+
+# Application
+NODE_ENV=development
+PORT=3000
+
+# Database
+DATABASE_URL=
+
+# API Keys
+API_KEY=
 `;
 
-  await fs.writeFile(path.join(projectPath, '.gitignore'), gitignore);
+  await fs.writeFile(path.join(projectPath, '.env.example'), envExample);
+  console.log(chalk.gray('  ✓ Added .env.example'));
 }
 
 /**

@@ -1,6 +1,6 @@
 {
   "name": "initkit",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "A modern CLI tool for scaffolding production-ready web projects with live npm version fetching, multiple frameworks, and best practices built-in",
   "main": "src/index.js",
@@ -32,14 +32,11 @@
     "vue",
     "express",
     "typescript",
-    "fullstack",
-    "monorepo",
     "vite",
     "tailwind",
     "redux-toolkit",
     "prisma",
-    "docker",
-    "turborepo"
+    "docker"
   ],
   "author": "Shirish Shrestha <shirishshrestha07@gmail.com>",
   "license": "MIT",

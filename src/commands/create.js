@@ -3,42 +3,42 @@ import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { generateTemplate } from '../utils/templateGenerator.js';
-import { installDependencies } from '../utils/packageManager.js';
 import { initGit } from '../utils/git.js';
+import { bootstrapWithOfficialCLI } from '../utils/frameworkBootstrap.js';
+import { installAddons, hasAddons } from '../utils/addonInstaller.js';
 import {
   CLIError,
   ERROR_CODES,
   withErrorHandling,
   rollbackProject,
-  safeFileOperation,
 } from '../utils/errorHandler.js';
 
 /**
  * Create a new project based on user configuration
- * 
+ *
  * This is the main orchestration function that:
  * 1. Creates the project directory
  * 2. Generates template files
  * 3. Installs dependencies
  * 4. Initializes Git repository
  * 5. Handles errors with automatic rollback
- * 
+ *
  * @param {Object} answers - User's configuration from interactive prompts
  * @param {string} answers.projectName - Name of the project (used for directory)
- * @param {string} answers.projectType - Type of project ('frontend'|'backend'|'fullstack'|'library')
+ * @param {string} answers.projectType - Type of project ('frontend'|'backend'|'library')
  * @param {string} [answers.frontend] - Frontend framework choice
  * @param {string} [answers.backend] - Backend framework choice
  * @param {string} answers.language - Programming language ('typescript'|'javascript')
  * @param {string} answers.packageManager - Package manager ('npm'|'yarn'|'pnpm')
  * @param {boolean} [answers.gitInit] - Whether to initialize Git repository
- * 
+ *
  * @param {Object} [options={}] - Additional command-line options
  * @param {boolean} [options.verbose=false] - Show detailed output during creation
  * @param {string} [options.projectPath] - Custom path for project (overrides answers.projectName)
- * 
+ *
  * @returns {Promise<void>}
  * @throws {CLIError} If project creation fails at any step (automatic rollback triggered)
- * 
+ *
  * @example
  * // Basic usage
  * await createProject({
@@ -49,7 +49,7 @@ import {
  *   packageManager: 'npm',
  *   gitInit: true
  * });
- * 
+ *
  * @example
  * // With verbose output
  * await createProject(answers, { verbose: true });
@@ -57,10 +57,18 @@ import {
 async function createProject(answers, options = {}) {
   const { verbose = false, projectPath: customProjectPath } = options;
   const projectPath = customProjectPath || path.join(process.cwd(), answers.projectName);
-  let spinner;
+  let spinner = ora();
 
   try {
-    // Step 1: Check if directory already exists
+    // ============================================
+    // STEP 1: Bootstrap with Official Framework CLI
+    // ============================================
+    spinner = ora({
+      text: 'Bootstrapping project with official CLI...',
+      color: 'cyan',
+    }).start();
+
+    // Check if directory already exists
     if (await fs.pathExists(projectPath)) {
       throw new CLIError(
         `Directory "${answers.projectName}" already exists!`,
@@ -69,78 +77,105 @@ async function createProject(answers, options = {}) {
       );
     }
 
-    // Step 2: Create project directory
-    spinner = ora({
-      text: 'Creating project structure...',
-      color: 'cyan',
-    }).start();
+    await withErrorHandling(() => bootstrapWithOfficialCLI(projectPath, answers), {
+      projectPath,
+      rollback: true,
+      errorCode: ERROR_CODES.CREATION_FAILED,
+      context: { step: 'CLI bootstrapping' },
+    });
 
-    await safeFileOperation(
-      () => fs.ensureDir(projectPath),
-      'Creating project directory'
-    );
+    spinner.succeed(chalk.green('✓ Base project created'));
 
-    if (verbose) {
-      spinner.info(chalk.gray(`Created directory: ${projectPath}`));
-      spinner.start('Generating project files...');
-    }
+    // ============================================
+    // STEP 2: Install Add-ons with Official CLIs/Commands
+    // ============================================
+    if (hasAddons(answers)) {
+      spinner = ora({
+        text: 'Installing selected libraries and add-ons...',
+        color: 'cyan',
+      }).start();
 
-    // Step 3: Generate project files from templates
-    await withErrorHandling(
-      () => generateTemplate(projectPath, answers),
-      {
+      await withErrorHandling(() => installAddons(projectPath, answers), {
         projectPath,
         rollback: true,
         errorCode: ERROR_CODES.CREATION_FAILED,
-        context: { step: 'template generation' },
-      }
-    );
+        context: { step: 'add-on installation' },
+      });
 
-    spinner.succeed(chalk.green('Project structure created'));
+      spinner.succeed(chalk.green('✓ Add-ons installed'));
+    }
 
-    // Step 4: Initialize Git if requested
+    // ============================================
+    // STEP 3: Enhance with Custom Folder Structure
+    // ============================================
+    spinner = ora({
+      text: 'Creating custom folder structure...',
+      color: 'cyan',
+    }).start();
+
+    await withErrorHandling(() => generateTemplate(projectPath, answers), {
+      projectPath,
+      rollback: true,
+      errorCode: ERROR_CODES.CREATION_FAILED,
+      context: { step: 'folder structure enhancement' },
+    });
+
+    spinner.succeed(chalk.green('✓ Folder structure configured'));
+
+    // ============================================
+    // STEP 4: Install Dependencies
+    // ============================================
+    spinner = ora({
+      text: `Installing dependencies with ${answers.packageManager}...`,
+      color: 'cyan',
+    }).start();
+
+    try {
+      const installCmd = getInstallCommand(answers.packageManager);
+      const { execCommand } = await import('../utils/cliRunner.js');
+      await execCommand(installCmd, { cwd: projectPath });
+      spinner.succeed(chalk.green('✓ Dependencies installed'));
+    } catch (error) {
+      spinner.warn(chalk.yellow('⚠ Dependency installation had issues'));
+      console.log(chalk.gray(`   You can run '${answers.packageManager} install' manually\\n`));
+    }
+
+    // ============================================
+    // STEP 5: Initialize Git Repository
+    // ============================================
     if (answers.useGit) {
-      const gitSpinner = ora('Initializing Git repository...').start();
-      
+      spinner = ora({
+        text: 'Initializing Git repository...',
+        color: 'cyan',
+      }).start();
+
       try {
         await initGit(projectPath);
-        gitSpinner.succeed(chalk.green('Git repository initialized'));
+        spinner.succeed(chalk.green('✓ Git initialized'));
       } catch (error) {
-        gitSpinner.warn(chalk.yellow('Git initialization skipped'));
-        
+        spinner.warn(chalk.yellow('⚠ Git initialization skipped'));
+
         if (verbose) {
           console.log(chalk.gray(`   Reason: ${error.message}`));
         }
       }
     }
 
-    // Step 5: Install dependencies
-    if (answers.installDependencies !== false) {
-      try {
-        await installDependencies(projectPath, answers.packageManager, {
-          verbose,
-        });
-      } catch (error) {
-        // Don't fail the entire process if install fails
-        console.log(chalk.yellow('\nDependency installation failed'));
-        console.log(chalk.gray('   You can install them manually later\n'));
-        
-        if (verbose) {
-          console.log(chalk.gray(`   Error: ${error.message}`));
-        }
-      }
-    } else {
-      console.log(chalk.gray('\n   Skipping dependency installation (--no-install)'));
-    }
-
-    // Step 6: Display comprehensive success summary
-    displaySuccessSummary(answers, projectPath, verbose);
-
+    // ============================================
+    // SUCCESS!
+    // ============================================
+    console.log('\n');
+    displaySuccessMessage(answers, projectPath);
   } catch (error) {
     // Stop any running spinners
     if (spinner && spinner.isSpinning) {
-      spinner.fail(chalk.red('Project creation failed'));
+      spinner.fail(chalk.red('✗ Project creation failed'));
     }
+
+    console.log(chalk.red('\n✗ Error: ' + error.message));
+
+    // Rollback project directory
+    await rollbackProject(projectPath);
 
     // If it's already a CLIError, just re-throw it
     if (error instanceof CLIError) {
@@ -148,24 +183,74 @@ async function createProject(answers, options = {}) {
     }
 
     // Wrap unexpected errors
-    throw new CLIError(
-      `Failed to create project: ${error.message}`,
-      ERROR_CODES.CREATION_FAILED,
-      { originalError: error.name, path: projectPath }
-    );
+    throw new CLIError(`Failed to create project: ${error.message}`, ERROR_CODES.CREATION_FAILED, {
+      originalError: error.name,
+      path: projectPath,
+    });
   }
 }
 
 /**
- * Display comprehensive success summary after project creation
+ * Display success message after project creation
  * @param {Object} answers - Project configuration
  * @param {string} projectPath - Path to the project
- * @param {boolean} verbose - Show detailed information
  */
-function displaySuccessSummary(answers, projectPath, verbose = false) {
+function displaySuccessMessage(answers, projectPath) {
+  const projectName = path.basename(projectPath);
+
+  console.log(chalk.green.bold('🎉 Project created successfully!\n'));
+  console.log(chalk.cyan('Next steps:'));
+  console.log(chalk.white(`  cd ${projectName}`));
+  console.log(chalk.white(`  ${answers.packageManager} run dev\n`));
+
+  // Show installed add-ons
+  if (hasAddons(answers)) {
+    console.log(chalk.cyan('Installed add-ons:'));
+    if (answers.stateManagement && answers.stateManagement !== 'none') {
+      console.log(chalk.white(`  ✓ State management: ${answers.stateManagement}`));
+    }
+    if (answers.uiLibrary && answers.uiLibrary !== 'none') {
+      console.log(chalk.white(`  ✓ UI library: ${answers.uiLibrary}`));
+    }
+    if (answers.orm && answers.orm !== 'none') {
+      console.log(chalk.white(`  ✓ ORM: ${answers.orm}`));
+    }
+    if (answers.authentication && answers.authentication !== 'none') {
+      console.log(chalk.white(`  ✓ Authentication: ${answers.authentication}`));
+    }
+    if (answers.testing && answers.testing.length > 0) {
+      console.log(chalk.white(`  ✓ Testing: ${answers.testing.join(', ')}`));
+    }
+    console.log();
+  }
+
+  console.log(chalk.gray('Happy coding! 🚀\n'));
+}
+
+/** * Get install command for package manager
+ */
+function getInstallCommand(packageManager) {
+  const commands = {
+    npm: 'npm install',
+    yarn: 'yarn install',
+    pnpm: 'pnpm install',
+    bun: 'bun install',
+  };
+  return commands[packageManager] || 'npm install';
+}
+
+/** * Display comprehensive success summary after project creation (LEGACY - DEPRECATED)
+ * This function is kept for backward compatibility but is no longer used
+ * @deprecated Use displaySuccessMessage instead
+ */
+function displaySuccessSummary(answers, projectPath, _verbose = false) {
   console.log('');
   console.log(chalk.green('╔════════════════════════════════════════════════════════════╗'));
-  console.log(chalk.green('║') + chalk.green.bold('              ✨ Project Created Successfully! ✨           ') + chalk.green('║'));
+  console.log(
+    chalk.green('║') +
+      chalk.green.bold('              ✨ Project Created Successfully! ✨           ') +
+      chalk.green('║')
+  );
   console.log(chalk.green('╚════════════════════════════════════════════════════════════╝'));
   console.log('');
 
@@ -173,20 +258,18 @@ function displaySuccessSummary(answers, projectPath, verbose = false) {
   console.log(chalk.cyan.bold('  📦 Project Information'));
   console.log(chalk.white(`     ${chalk.gray('Name:')}        ${chalk.bold(answers.projectName)}`));
   console.log(chalk.white(`     ${chalk.gray('Type:')}        ${answers.projectType}`));
-  console.log(chalk.white(`     ${chalk.gray('Language:')}    ${answers.language || 'JavaScript'}`));
-  
+  console.log(
+    chalk.white(`     ${chalk.gray('Language:')}    ${answers.language || 'JavaScript'}`)
+  );
+
   if (answers.frontend) {
     console.log(chalk.white(`     ${chalk.gray('Frontend:')}    ${answers.frontend}`));
   }
-  
+
   if (answers.backend) {
     console.log(chalk.white(`     ${chalk.gray('Backend:')}     ${answers.backend}`));
   }
 
-  if (answers.fullstackType) {
-    console.log(chalk.white(`     ${chalk.gray('Architecture:')} ${answers.fullstackType}`));
-  }
-  
   if (answers.database && answers.database !== 'none') {
     console.log(chalk.white(`     ${chalk.gray('Database:')}    ${answers.database}`));
   }
@@ -200,7 +283,7 @@ function displaySuccessSummary(answers, projectPath, verbose = false) {
   // Features section
   if (answers.features && answers.features.length > 0) {
     console.log(chalk.cyan.bold('  ⚙️  Configured Features'));
-    answers.features.forEach(feature => {
+    answers.features.forEach((feature) => {
       console.log(chalk.white(`     ${chalk.green('✓')} ${feature}`));
     });
     console.log('');
@@ -209,7 +292,7 @@ function displaySuccessSummary(answers, projectPath, verbose = false) {
   // Additional libraries
   if (answers.additionalLibraries && answers.additionalLibraries.length > 0) {
     console.log(chalk.cyan.bold('  📚 Additional Libraries'));
-    answers.additionalLibraries.slice(0, 5).forEach(lib => {
+    answers.additionalLibraries.slice(0, 5).forEach((lib) => {
       console.log(chalk.white(`     ${chalk.green('✓')} ${lib}`));
     });
     if (answers.additionalLibraries.length > 5) {
@@ -232,19 +315,25 @@ function displaySuccessSummary(answers, projectPath, verbose = false) {
   console.log(chalk.white(`     ${chalk.yellow('1.')} Navigate to your project:`));
   console.log(chalk.gray(`        cd ${answers.projectName}`));
   console.log('');
-  
+
   if (!packagesInstalled) {
     console.log(chalk.white(`     ${chalk.yellow('2.')} Install dependencies:`));
     console.log(chalk.gray(`        ${answers.packageManager} install`));
     console.log('');
   }
-  
+
   const stepNum = packagesInstalled ? 2 : 3;
   console.log(chalk.white(`     ${chalk.yellow(stepNum + '.')} Start development server:`));
-  console.log(chalk.gray(`        ${answers.packageManager} ${answers.packageManager === 'npm' ? 'run ' : ''}dev`));
+  console.log(
+    chalk.gray(
+      `        ${answers.packageManager} ${answers.packageManager === 'npm' ? 'run ' : ''}dev`
+    )
+  );
   console.log('');
-  
-  console.log(chalk.white(`     ${chalk.yellow((stepNum + 1) + '.')} Read the README for more info:`));
+
+  console.log(
+    chalk.white(`     ${chalk.yellow(stepNum + 1 + '.')} Read the README for more info:`)
+  );
   console.log(chalk.gray(`        cat README.md`));
   console.log('');
 
