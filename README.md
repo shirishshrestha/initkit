@@ -23,7 +23,7 @@ Built with ES Modules | TypeScript Ready | Zero Config Required | Fully Document
 
 ![InitKit Demo](https://raw.githubusercontent.com/shirishshrestha/initkit/main/assets/demo.gif)
 
-_Creating a full-stack Next.js + Express application with InitKit_
+_Creating a production-ready React application with InitKit_
 
 </div>
 
@@ -35,11 +35,11 @@ InitKit eliminates the tedious project setup process by providing intelligent sc
 
 **Key Benefits:**
 
-- **Live Version Fetching** - Automatically fetches latest package versions from npm registry (no hardcoded versions!)
+- **CLI-First Architecture** - Uses official framework CLIs (create-next-app, create-vite, create-vue, express-generator)
 - **Smart Validation** - Real-time npm package name validation with helpful suggestions and colored feedback
 - **Enhanced CLI UX** - Beautiful formatted help text with colors, boxes, and comprehensive examples
-- **Monorepo Support** - Full-stack monorepo architecture with Turborepo and shared packages
-- **Multiple Stacks** - MERN, PERN, T3 Stack, Next.js + Express, and more
+- **Always Up-to-Date** - Leverages official CLIs to ensure latest best practices and configurations
+- **Non-Interactive Mode** - Properly configured for CI/CD with no hanging prompts
 - **Flexible Architecture** - Feature-based, type-based, domain-driven, clean architecture structures
 - **Docker Ready** - Complete Docker orchestration with multi-stage builds and docker-compose
 - **API Integration** - Seamless frontend-backend communication with axios interceptors
@@ -110,32 +110,30 @@ Want to contribute or add a custom template?
 
 ### 🎯 Project Types
 
-| Type                | Description                | Use Case                           |
-| ------------------- | -------------------------- | ---------------------------------- |
-| **Frontend Only**   | Single-page applications   | React, Vue, Angular, Svelte apps   |
-| **Backend Only**    | REST APIs and services     | Express, Fastify, NestJS servers   |
-| **Full Stack**      | Integrated client + server | Monorepo with frontend and backend |
-| **Node.js Library** | Publishable npm packages   | Reusable modules and utilities     |
+| Type                | Description              | Use Case                         |
+| ------------------- | ------------------------ | -------------------------------- |
+| **Frontend Only**   | Single-page applications | React, Vue, Next.js apps         |
+| **Backend Only**    | REST APIs and services   | Express, NestJS, Fastify servers |
+| **Node.js Library** | Publishable npm packages | Reusable modules and utilities   |
 
 ### 🎨 Framework Support
 
 **Frontend Frameworks:**
 
-- React (with Create React App or Vite)
-- Vue.js (Vue CLI or Vite)
-- Angular (Angular CLI)
-- Svelte (SvelteKit)
-- Next.js (App Router & Pages Router)
-- Nuxt.js (Vue 3)
-- Vanilla JavaScript (Modern ES6+)
+- React + Vite (Fast HMR, modern build tool)
+- Next.js (App Router with TypeScript)
+- Vue.js + Vite (Progressive framework)
 
 **Backend Frameworks:**
 
 - Express.js (Minimalist & flexible)
-- Fastify (High performance)
-- Koa (Next-gen Express)
-- NestJS (Enterprise TypeScript)
-- Hapi (Configuration-centric)
+
+**Coming Soon:**
+
+- NestJS (Enterprise TypeScript) - Code ready, testing in progress
+- Fastify (High performance) - Code ready, testing in progress
+- Nuxt.js (Vue 3) - Code ready, testing in progress
+- Svelte (Modern reactivity) - Code ready, testing in progress
 
 **Databases:**
 
@@ -168,31 +166,7 @@ Want to contribute or add a custom template?
 - Environment variables (.env setup)
 - Turborepo (monorepo build system)
 
-### 🏗️ Full-Stack Architectures
-
-**Monorepo (Turborepo):**
-
-- Shared packages (types, UI components)
-- Unified workspace management
-- Optimized build pipeline
-- Consistent tooling across apps
-
-**Traditional Stack Options:**
-
-- **MERN** - MongoDB + Express + React + Node
-- **PERN** - PostgreSQL + Express + React + Node
-- **Next.js + Express** - Full-stack React with API
-- **Laravel + React** - PHP backend with React frontend
-
-**Features:**
-
-- API integration (Vite proxy, Next.js rewrites)
-- Docker orchestration (frontend + backend + database)
-- Environment configuration
-- Shared TypeScript types
-- Reusable UI components
-
-### 🎨 Styling Solutions
+### Styling Solutions
 
 | Solution              | Description                     | Best For                       |
 | --------------------- | ------------------------------- | ------------------------------ |
@@ -341,90 +315,98 @@ my-react-app/
 └── package.json
 ```
 
-### Example 2: Full Stack MERN with Docker
+### Example 2: Next.js with TypeScript
 
 ```bash
-initkit fullstack-app
-# Select: Full Stack → Traditional → MERN
+initkit nextjs-app
+# Select: Frontend Only → Next.js → TypeScript → Tailwind CSS
 ```
 
 **Generated Structure:**
 
 ```
-fullstack-app/
-├── client/              # React + Vite frontend
-│   ├── src/
-│   │   ├── features/
-│   │   ├── components/
-│   │   └── lib/api.js
-│   ├── Dockerfile
-│   └── package.json
-├── server/              # Express backend
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── models/
-│   │   └── routes/
-│   ├── Dockerfile
-│   └── package.json
-├── docker-compose.yml   # MongoDB + Frontend + Backend
-└── README.md
-```
-
-### Example 3: Monorepo with Turborepo
-
-```bash
-initkit my-monorepo
-# Select: Full Stack → Monorepo → Next.js + Express + PostgreSQL
-```
-
-**Generated Structure:**
-
-```
-my-monorepo/
-├── apps/
-│   ├── frontend/        # Next.js app
-│   └── backend/         # Express API
-├── packages/
-│   ├── shared-types/    # Shared TypeScript interfaces
-│   └── ui-components/   # Shared React components
-├── turbo.json          # Turborepo config
-├── docker-compose.yml
+nextjs-app/
+├── src/
+│   ├── app/
+│   │   ├── page.tsx
+│   │   └── layout.tsx
+│   ├── components/
+│   ├── features/
+│   └── lib/
+├── public/
+├── .eslintrc.json
+├── next.config.js
+├── tsconfig.json
+├── tailwind.config.js
 └── package.json
 ```
 
-### Example 4: Express API with Docker
+### Example 3: Vue with TypeScript
+
+```bash
+initkit vue-app
+# Select: Frontend Only → Vue → TypeScript → Tailwind CSS
+```
+
+**Generated Structure:**
+
+```
+vue-app/
+├── src/
+│   ├── components/
+│   ├── features/
+│   ├── composables/
+│   ├── stores/
+│   ├── router/
+│   ├── App.vue
+│   └── main.ts
+├── public/
+├── vite.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+### Example 4: Express Backend API
 
 ```bash
 initkit api-server
-# Select: Backend Only → Express → MongoDB → TypeScript → Docker + GitHub Actions
+# Select: Backend Only → Express → JavaScript → MVC structure
 ```
 
-**Features:**
+**Generated Structure:**
 
-- RESTful API structure
-- MongoDB connection setup
-- Docker multi-stage build
-- GitHub Actions CI/CD
-- Environment variable management
+```
+api-server/
+├── models/
+├── controllers/
+├── routes/
+│   ├── index.js
+│   └── users.js
+├── middlewares/
+├── services/
+├── .env.example
+├── app.js
+└── package.json
+```
 
 ### Example 5: Quick Start with Defaults
 
 ```bash
 initkit quick-app --yes
-# Creates a full-stack app with React + Express + TypeScript
+# Creates a React + Vite app with TypeScript + Tailwind CSS
 ```
 
 ---
 
 ## Interactive Prompt Flow
 
-InitKit uses an intelligent 13-question flow that adapts based on your project type:
+InitKit uses an intelligent question flow that adapts based on your project type:
 
-1. **Project Type** - Frontend, Backend, Full Stack, or Library
+1. **Project Type** - Frontend, Backend, or Library
 2. **Project Name** - With real-time validation and suggestions
-3. **Frontend Framework** - Shown for Frontend/Full Stack projects
-4. **Backend Framework** - Shown for Backend/Full Stack projects
-5. **Database** - Shown for Backend/Full Stack projects
+3. **Frontend Framework** - Shown for Frontend projects
+4. **Backend Framework** - Shown for Backend projects
+5. **Database/ORM** - Shown for Backend projects
 6. **Language** - TypeScript (recommended) or JavaScript
 7. **Folder Structure** - Feature-based, Type-based, Domain-driven, or Flat
 8. **TypeScript Strictness** - Strict, Moderate, or Relaxed (if TS selected)
@@ -444,12 +426,12 @@ See [QUESTION_FLOW.md](./QUESTION_FLOW.md) for the complete decision tree.
 
 Unlike other scaffolding tools, InitKit generates **truly production-ready** projects:
 
-- **Latest Dependencies** - Fetches actual latest versions from npm registry (not hardcoded)
-- **No Manual Setup Required** - Everything configured and ready to deploy
-- **Best Practices Built-in** - Error boundaries, loading states, proper TypeScript types
-- **Security First** - Environment variables, input validation, secure authentication patterns
-- **Performance Optimized** - Code splitting, lazy loading, optimized bundle sizes
-- **Deployment Ready** - Docker files, CI/CD pipelines, health checks included
+- **Official CLIs** - Uses create-next-app, create-vite, create-vue, express-generator for best practices
+- **Always Current** - Leverages framework maintainers' latest configurations
+- **No Hanging** - Properly configured non-interactive mode for CI/CD pipelines
+- **TypeScript First** - Full TypeScript support with proper configurations
+- **Best Practices Built-in** - ESLint, Prettier, proper folder structures
+- **Package Manager Choice** - Full support for npm, yarn, pnpm, and bun
 
 ### 🚀 Developer Experience
 
@@ -729,33 +711,71 @@ initkit my-app --verbose
 
 ## Recent Updates
 
-### Version 1.1.0 (Latest)
+### Version 1.2.0 (Latest) 🚀
 
-**🎉 Major Features:**
+**🎉 BREAKING CHANGES:**
 
-- ✨ **Live NPM Version Fetching** - Automatically fetches latest package versions from npm registry
-- 🎯 **New Libraries Added**:
-  - Redux Toolkit & React Redux (state management)
-  - Jotai (atomic state)
-  - React Router (routing)
-  - React Icons (icon library)
-  - Radix UI (headless components)
-  - ShadCN UI (component library)
-- 📦 **Bun Support** - Added bun as a package manager option
+- **Removed fullstack project type** - Simplified to focus on stable frontend and backend options
+- **Migrated to CLI-first architecture** - Now uses official framework CLIs exclusively
+
+**✨ Major Features:**
+
+- **CLI-First Architecture** - Uses official CLIs for all frameworks:
+  - `create-next-app` for Next.js projects
+  - `create-vite@5.1.0` for React (pinned for stability)
+  - `create-vue` with `--typescript --default` for Vue
+  - `express-generator` for Express backends
+- **Enhanced Logging** - Emoji-based progress indicators (📦) with detailed command visibility
+- **Non-Interactive Mode** - All frameworks properly configured for CI/CD (no hanging prompts)
 
 **🐛 Bug Fixes:**
 
-- Fixed TypeScript config errors (Next.js, Vue, Express)
-- Fixed Express backend feature-based structure directory errors
-- Fixed package manager selection for yarn, pnpm, and bun
-- Fixed Next.js tsconfig to properly include `src/**/*.ts` patterns
+- Fixed package manager override bug (CLI default removed)
+- Fixed create-vite@8.x hanging (pinned to stable v5.1.0)
+- Fixed create-vue prompting (added --default flag)
+- Fixed CI environment variable for non-interactive execution
 
 **🔧 Improvements:**
 
-- All templates now fetch actual latest versions from npm (React 19+, Vite 7+, Next.js 16+)
-- Enhanced error messages with better troubleshooting suggestions
-- Improved directory structure handling across all architecture patterns
-- Better fallback handling when npm registry is unreachable
+- Always uses latest framework configurations from official CLIs
+- Better error messages and rollback handling
+- Cleaner codebase with removed legacy template files
+- All tests passing (48/48)
+
+**📊 Test Results:**
+
+- React + Vite: ✅ 16.5s (218 packages)
+- Next.js: ✅ 26.9s (347 packages)
+- Vue: ✅ 16.2s (153 packages)
+- Express: ✅ 12.3s (53 packages)
+
+---
+
+## Recent Updates
+
+### Version 1.2.2 (January 2026)
+
+**Critical Bug Fixes:**
+
+- ✅ **Fixed Tailwind CSS installation** - Resolved issue where styling was not installed if no other addons were selected
+- ✅ **Fixed package manager compatibility** - All 4 package managers (npm, yarn, pnpm, bun) now work correctly with Tailwind CSS
+- ✅ **Fixed Next.js duplicate configs** - Prevents duplicate Tailwind config files in Next.js projects
+- ✅ **Improved file creation** - Uses proper fs-extra methods for reliable config file generation
+
+**What's Fixed:**
+
+- `hasAddons()` function now properly checks for styling configuration
+- Changed from unreliable `npx tailwindcss init` to direct config file creation
+- All package managers tested and verified working
+- Next.js now uses built-in Tailwind setup (no duplicates)
+
+**Testing:**
+
+- ✅ 4/4 package managers passing tests (npm, yarn, pnpm, bun)
+- ✅ Verified across React+Vite, Next.js, and Vue.js
+- ✅ No duplicate configuration files
+
+[View Full Changelog](./docs/CHANGELOG.md)
 
 ---
 

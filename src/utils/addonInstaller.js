@@ -24,13 +24,19 @@ export async function installAddons(projectPath, config) {
     additionalLibraries = [],
   } = config;
 
+  // Styling (MUST be installed before UI libraries like shadcn)
+  if (styling && styling !== 'none' && styling !== 'css') {
+    console.log(chalk.cyan('\n🎨 Installing styling solution...'));
+    await installStyling(projectPath, styling, config);
+  }
+
   // State Management
   if (stateManagement && stateManagement !== 'none') {
     console.log(chalk.cyan('\n📦 Installing state management...'));
     await installStateManagement(projectPath, stateManagement, config);
   }
 
-  // UI Library
+  // UI Library (must come AFTER styling, especially for shadcn which needs Tailwind)
   if (uiLibrary && uiLibrary !== 'none') {
     console.log(chalk.cyan('\n🎨 Installing UI library...'));
     await installUILibrary(projectPath, uiLibrary, config);
@@ -105,19 +111,142 @@ async function installStateManagement(projectPath, library, config) {
 }
 
 /**
+ * Install styling solution
+ */
+async function installStyling(projectPath, styling, config) {
+  const { packageManager, frontend } = config;
+  const installCmd = getInstallCommand(packageManager);
+
+  switch (styling) {
+    case 'tailwind': {
+      // Next.js already includes Tailwind CSS when --tailwind flag is used
+      if (frontend === 'nextjs') {
+        console.log(chalk.dim('  Tailwind CSS already configured by Next.js'));
+        return;
+      }
+
+      console.log(chalk.dim('  Installing Tailwind CSS...'));
+      await execCommand(`${installCmd} -D tailwindcss postcss autoprefixer`, {
+        cwd: projectPath,
+      });
+
+      // Create Tailwind config files directly (more reliable than running init command)
+      console.log(chalk.dim('  Initializing Tailwind configuration...'));
+      const fs = await import('fs-extra');
+      const path = await import('path');
+
+      // Create tailwind.config.js with proper content paths
+      const tailwindConfigPath = path.join(projectPath, 'tailwind.config.js');
+      const tailwindConfig = `/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}`;
+      await fs.outputFile(tailwindConfigPath, tailwindConfig);
+
+      // Create postcss.config.js
+      const postcssConfigPath = path.join(projectPath, 'postcss.config.js');
+      const postcssConfig = `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}`;
+      await fs.outputFile(postcssConfigPath, postcssConfig);
+
+      // For Vite projects, update the main CSS file
+      if (frontend === 'react' || frontend === 'vue') {
+        // Create/update main CSS file with Tailwind directives
+        const cssPath = path.join(projectPath, 'src', 'index.css');
+        const tailwindDirectives = `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`;
+        await fs.outputFile(cssPath, tailwindDirectives);
+      }
+      break;
+    }
+
+    case 'scss':
+    case 'sass':
+      console.log(chalk.dim('  Installing Sass...'));
+      await execCommand(`${installCmd} -D sass`, { cwd: projectPath });
+      break;
+
+    case 'styled-components':
+      console.log(chalk.dim('  Installing Styled Components...'));
+      await execCommand(`${installCmd} styled-components`, { cwd: projectPath });
+      if (config.language === 'typescript') {
+        await execCommand(`${installCmd} -D @types/styled-components`, {
+          cwd: projectPath,
+        });
+      }
+      break;
+
+    case 'emotion':
+      console.log(chalk.dim('  Installing Emotion...'));
+      await execCommand(`${installCmd} @emotion/react @emotion/styled`, {
+        cwd: projectPath,
+      });
+      break;
+
+    case 'css-modules':
+      // CSS Modules are built into Vite and Next.js, no installation needed
+      console.log(chalk.dim('  CSS Modules are built-in, no installation needed'));
+      break;
+
+    default:
+      console.log(chalk.yellow(`  Unknown styling solution: ${styling}`));
+  }
+}
+
+/**
  * Install UI library (some have their own CLIs!)
  */
 async function installUILibrary(projectPath, library, config) {
-  const { packageManager, language } = config;
+  const { packageManager } = config;
   const installCmd = getInstallCommand(packageManager);
 
   switch (library) {
     case 'shadcn':
-    case 'shadcn-ui':
+    case 'shadcn-ui': {
       console.log(chalk.dim('  Running shadcn-ui init...'));
-      // shadcn has its own CLI!
-      await execCommand(`npx shadcn@latest init -y`, { cwd: projectPath });
+
+      // Ensure tsconfig has path aliases for shadcn
+      const fs = await import('fs-extra');
+      const path = await import('path');
+      const tsconfigPath = path.join(projectPath, 'tsconfig.json');
+
+      if (await fs.pathExists(tsconfigPath)) {
+        const tsconfig = await fs.readJson(tsconfigPath);
+        if (!tsconfig.compilerOptions) tsconfig.compilerOptions = {};
+        if (!tsconfig.compilerOptions.baseUrl) tsconfig.compilerOptions.baseUrl = '.';
+        if (!tsconfig.compilerOptions.paths) tsconfig.compilerOptions.paths = {};
+        tsconfig.compilerOptions.paths['@/*'] = ['./src/*'];
+        await fs.writeJson(tsconfigPath, tsconfig, { spaces: 2 });
+      }
+
+      // shadcn has its own CLI! Use package manager's binary runner
+      const { packageManager } = config;
+      const execCmd =
+        packageManager === 'npm'
+          ? 'npx'
+          : packageManager === 'yarn'
+            ? 'yarn dlx'
+            : packageManager === 'pnpm'
+              ? 'pnpm dlx'
+              : packageManager === 'bun'
+                ? 'bunx'
+                : 'npx';
+      await execCommand(`${execCmd} shadcn@latest init -y`, { cwd: projectPath });
       break;
+    }
 
     case 'mui':
     case 'material-ui':
@@ -175,10 +304,20 @@ async function installORM(projectPath, orm, database, config) {
       await execCommand(`${installCmd} -D prisma`, { cwd: projectPath });
       await execCommand(`${installCmd} @prisma/client`, { cwd: projectPath });
 
-      // Initialize Prisma with database
+      // Initialize Prisma with database using package manager's binary runner
       const datasource = getDatasourceForPrisma(database);
       console.log(chalk.dim(`  Initializing Prisma with ${datasource}...`));
-      await execCommand(`npx prisma init --datasource-provider ${datasource}`, {
+      const execCmd =
+        packageManager === 'npm'
+          ? 'npx'
+          : packageManager === 'yarn'
+            ? 'yarn'
+            : packageManager === 'pnpm'
+              ? 'pnpm exec'
+              : packageManager === 'bun'
+                ? 'bunx'
+                : 'npx';
+      await execCommand(`${execCmd} prisma init --datasource-provider ${datasource}`, {
         cwd: projectPath,
       });
       break;
@@ -295,11 +434,22 @@ async function installTesting(projectPath, testingLibs, config) {
         });
         break;
 
-      case 'playwright':
+      case 'playwright': {
         console.log(chalk.dim('  Installing Playwright...'));
-        // Playwright has its own init CLI!
-        await execCommand(`npm init playwright@latest`, { cwd: projectPath });
+        // Playwright has its own init CLI! Use package manager's create command
+        const initCmd =
+          packageManager === 'npm'
+            ? 'npm init'
+            : packageManager === 'yarn'
+              ? 'yarn create'
+              : packageManager === 'pnpm'
+                ? 'pnpm create'
+                : packageManager === 'bun'
+                  ? 'bun create'
+                  : 'npm init';
+        await execCommand(`${initCmd} playwright@latest`, { cwd: projectPath });
         break;
+      }
 
       case 'cypress':
         console.log(chalk.dim('  Installing Cypress...'));
@@ -392,6 +542,7 @@ function getDriverForTypeORM(database) {
  */
 export function hasAddons(config) {
   return !!(
+    (config.styling && config.styling !== 'none' && config.styling !== 'css') ||
     (config.stateManagement && config.stateManagement !== 'none') ||
     (config.uiLibrary && config.uiLibrary !== 'none') ||
     (config.orm && config.orm !== 'none') ||
