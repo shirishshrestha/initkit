@@ -124,29 +124,14 @@ async function installStyling(projectPath, styling, config) {
         cwd: projectPath,
       });
 
-      // Initialize Tailwind config using the package manager's binary
+      // Create Tailwind config files directly (more reliable than running init command)
       console.log(chalk.dim('  Initializing Tailwind configuration...'));
-      const execCmd =
-        packageManager === 'npm'
-          ? 'npx'
-          : packageManager === 'yarn'
-            ? 'yarn'
-            : packageManager === 'pnpm'
-              ? 'pnpm exec'
-              : packageManager === 'bun'
-                ? 'bunx'
-                : 'npx';
+      const fs = await import('fs-extra');
+      const path = await import('path');
 
-      await execCommand(`${execCmd} tailwindcss init -p`, { cwd: projectPath });
-
-      // For Vite projects, we need to update the Tailwind config
-      if (frontend === 'react' || frontend === 'vue') {
-        const fs = await import('fs-extra');
-        const path = await import('path');
-
-        // Update tailwind.config.js with proper content paths
-        const tailwindConfigPath = path.join(projectPath, 'tailwind.config.js');
-        const tailwindConfig = `/** @type {import('tailwindcss').Config} */
+      // Create tailwind.config.js with proper content paths
+      const tailwindConfigPath = path.join(projectPath, 'tailwind.config.js');
+      const tailwindConfig = `/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
@@ -157,15 +142,27 @@ export default {
   },
   plugins: [],
 }`;
-        await fs.writeFile(tailwindConfigPath, tailwindConfig);
+      await fs.outputFile(tailwindConfigPath, tailwindConfig);
 
+      // Create postcss.config.js
+      const postcssConfigPath = path.join(projectPath, 'postcss.config.js');
+      const postcssConfig = `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}`;
+      await fs.outputFile(postcssConfigPath, postcssConfig);
+
+      // For Vite projects, update the main CSS file
+      if (frontend === 'react' || frontend === 'vue') {
         // Create/update main CSS file with Tailwind directives
         const cssPath = path.join(projectPath, 'src', 'index.css');
         const tailwindDirectives = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
 `;
-        await fs.writeFile(cssPath, tailwindDirectives);
+        await fs.outputFile(cssPath, tailwindDirectives);
       }
       break;
 
