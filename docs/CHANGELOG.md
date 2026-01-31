@@ -11,19 +11,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### CRITICAL: hasAddons() Missing Styling Check
+- **Root Cause**: `hasAddons()` function didn't check for `config.styling`
+- **Impact**: Projects with ONLY styling solutions (Tailwind, Sass, etc.) would skip addon installation entirely
+- **Symptoms**: 
+  - User selects Tailwind CSS
+  - Project creates "successfully"
+  - But tailwind.config.js is missing
+  - No styling packages installed
+  - No error shown (silent failure)
+- **Affected**: All users who selected styling without other addons
+- **Fix**: Added styling check: `(config.styling && config.styling !== 'none' && config.styling !== 'css')`
+- **Severity**: Critical - Complete feature non-functional for common use case
+
+#### Package Manager CLI Tools
 - Fixed Tailwind CSS initialization failing with pnpm, yarn, and bun package managers
-- Changed from hardcoded `npx` to package manager specific binary runners:
-  - npm: `npx`
-  - yarn: `yarn`
-  - pnpm: `pnpm exec`
-  - bun: `bunx`
-- Resolved "Command failed with exit code 1: npx tailwindcss init -p" error
-- Fixed shadcn/ui installation that requires Tailwind CSS as prerequisite
+- Fixed shadcn/ui initialization failing with pnpm, yarn, and bun
+- Fixed Prisma initialization failing with pnpm, yarn, and bun
+- Fixed Playwright initialization always using npm instead of chosen package manager
+- Changed from hardcoded `npx`/`npm init` to package manager specific commands:
+  - npm: `npx` / `npm init`
+  - yarn: `yarn` / `yarn dlx` / `yarn create`
+  - pnpm: `pnpm exec` / `pnpm dlx` / `pnpm create`
+  - bun: `bunx` / `bun create`
+- Resolved "Command failed with exit code 1" errors with non-npm package managers
 
 ### Added
-
-- Comprehensive testing guide (TESTING_GUIDE.md)
-- Test scripts for various framework and package manager combinations
+- Comprehensive testing suite with 5 test files covering 18 scenarios
+- Test scripts: test-all-scenarios.js, test-package-managers.js, test-tailwind-edge-cases.js, test-shadcn-edge-cases.js, test-backend-edge-cases.js
+- TEST_SUITE_README.md with complete testing documentation
+- TESTING_GUIDE.md with manual testing instructions
+- CRITICAL_BUG_FIXED.md documenting the hasAddons issue
 
 ## [1.1.0] - 2026-01-31
 
