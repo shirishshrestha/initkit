@@ -54,7 +54,6 @@ function getQuestions(initialProjectName) {
       choices: [
         { name: 'Frontend Only', value: 'frontend' },
         { name: 'Backend Only', value: 'backend' },
-        { name: 'Full Stack', value: 'fullstack' },
         { name: 'Node.js Library/Package', value: 'library' },
       ],
     },
@@ -68,7 +67,6 @@ function getQuestions(initialProjectName) {
         const typeDefaults = {
           frontend: 'my-frontend-app',
           backend: 'my-backend-api',
-          fullstack: 'my-fullstack-app',
           library: 'my-package',
         };
         return typeDefaults[answers.projectType] || 'my-awesome-project';
@@ -119,41 +117,7 @@ function getQuestions(initialProjectName) {
         { name: 'Next.js (React)', value: 'nextjs' },
         { name: 'Vue.js + Vite', value: 'vue' },
       ],
-      when: (answers) => ['frontend', 'fullstack'].includes(answers.projectType),
-    },
-    // Full-stack architecture type
-    {
-      type: 'list',
-      name: 'fullstackType',
-      message: 'Choose your full-stack architecture:',
-      choices: [
-        { name: 'Monorepo (apps/ + packages/)', value: 'monorepo' },
-        { name: 'Traditional (separate client/ + server/)', value: 'traditional' },
-      ],
-      when: (answers) => answers.projectType === 'fullstack',
-    },
-    // Full-stack stack selection
-    {
-      type: 'list',
-      name: 'stack',
-      message: 'Choose your full-stack:',
-      choices: (answers) => {
-        if (answers.fullstackType === 'monorepo') {
-          return [
-            { name: 'Next.js + Express + MongoDB', value: 'Next.js + Express + MongoDB' },
-            { name: 'Next.js + Express + PostgreSQL', value: 'Next.js + Express + PostgreSQL' },
-            { name: 'React + Express + MongoDB', value: 'React + Express + MongoDB' },
-            { name: 'React + Express + PostgreSQL', value: 'React + Express + PostgreSQL' },
-          ];
-        }
-        return [
-          { name: 'MERN (MongoDB + Express + React + Node)', value: 'MERN' },
-          { name: 'PERN (PostgreSQL + Express + React + Node)', value: 'PERN' },
-          { name: 'Next.js + Express', value: 'Next.js + Express' },
-          { name: 'Laravel + React', value: 'Laravel + React' },
-        ];
-      },
-      when: (answers) => answers.projectType === 'fullstack',
+      when: (answers) => answers.projectType === 'frontend',
     },
     // Backend framework selection
     {
@@ -264,6 +228,98 @@ function getQuestions(initialProjectName) {
       ],
       when: (answers) => answers.projectType === 'frontend',
     },
+    // State Management (Frontend)
+    {
+      type: 'list',
+      name: 'stateManagement',
+      message: 'Choose your state management solution:',
+      choices: [
+        { name: 'None (React Context API only)', value: 'none' },
+        { name: 'Redux Toolkit (Official Redux)', value: 'redux-toolkit' },
+        { name: 'Zustand (Lightweight)', value: 'zustand' },
+        { name: 'Jotai (Atomic)', value: 'jotai' },
+        { name: 'Recoil (Atomic)', value: 'recoil' },
+        { name: 'Pinia (Vue)', value: 'pinia' },
+      ],
+      default: 'none',
+      when: (answers) => answers.projectType === 'frontend' && answers.frontend !== 'nextjs',
+    },
+    // UI Component Library (Frontend)
+    {
+      type: 'list',
+      name: 'uiLibrary',
+      message: 'Choose a UI component library (optional):',
+      choices: [
+        { name: 'None', value: 'none' },
+        { name: 'shadcn/ui (Radix + Tailwind)', value: 'shadcn' },
+        { name: 'Material-UI (MUI)', value: 'mui' },
+        { name: 'Ant Design', value: 'antd' },
+        { name: 'Chakra UI', value: 'chakra' },
+        { name: 'Mantine', value: 'mantine' },
+        { name: 'DaisyUI (Tailwind)', value: 'daisyui' },
+      ],
+      default: 'none',
+      when: (answers) => answers.projectType === 'frontend',
+    },
+    // ORM/Database Tool (Backend)
+    {
+      type: 'list',
+      name: 'orm',
+      message: 'Choose an ORM/database tool:',
+      choices: [
+        { name: 'None', value: 'none' },
+        { name: 'Prisma (Type-safe ORM)', value: 'prisma' },
+        { name: 'Drizzle (Lightweight ORM)', value: 'drizzle' },
+        { name: 'TypeORM', value: 'typeorm' },
+        { name: 'Mongoose (MongoDB)', value: 'mongoose' },
+      ],
+      default: 'none',
+      when: (answers) => answers.projectType === 'backend',
+    },
+    // Database Selection (if ORM selected)
+    {
+      type: 'list',
+      name: 'database',
+      message: 'Choose your database:',
+      choices: [
+        { name: 'PostgreSQL', value: 'postgresql' },
+        { name: 'MySQL', value: 'mysql' },
+        { name: 'SQLite', value: 'sqlite' },
+        { name: 'MongoDB', value: 'mongodb' },
+      ],
+      default: 'postgresql',
+      when: (answers) => answers.orm && answers.orm !== 'none' && answers.orm !== 'mongoose',
+    },
+    // Authentication (Frontend/Backend)
+    {
+      type: 'list',
+      name: 'authentication',
+      message: 'Choose an authentication solution:',
+      choices: [
+        { name: 'None', value: 'none' },
+        { name: 'NextAuth.js', value: 'nextauth' },
+        { name: 'Clerk', value: 'clerk' },
+        { name: 'Supabase Auth', value: 'supabase' },
+        { name: 'Auth0', value: 'auth0' },
+        { name: 'Lucia', value: 'lucia' },
+      ],
+      default: 'none',
+      when: (answers) => ['frontend', 'backend'].includes(answers.projectType),
+    },
+    // Testing Frameworks
+    {
+      type: 'checkbox',
+      name: 'testing',
+      message: 'Select testing frameworks:',
+      choices: [
+        { name: 'Vitest (Unit/Integration)', value: 'vitest', checked: false },
+        { name: 'Jest (Unit/Integration)', value: 'jest', checked: false },
+        { name: 'Playwright (E2E)', value: 'playwright', checked: false },
+        { name: 'Cypress (E2E)', value: 'cypress', checked: false },
+        { name: 'React Testing Library', value: 'testing-library', checked: false },
+      ],
+      when: (answers) => ['frontend', 'backend'].includes(answers.projectType),
+    },
     // Additional Libraries (Multi-select)
     {
       type: 'checkbox',
@@ -301,11 +357,11 @@ function getQuestions(initialProjectName) {
 
         let choices = [...commonChoices];
 
-        if (['frontend', 'fullstack'].includes(answers.projectType)) {
+        if (answers.projectType === 'frontend') {
           choices = [...choices, ...frontendChoices];
         }
 
-        if (['backend', 'fullstack'].includes(answers.projectType)) {
+        if (answers.projectType === 'backend') {
           choices = [...choices, ...backendChoices];
         }
 
