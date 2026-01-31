@@ -1,0 +1,15 @@
+Frontend Only
+my-frontend-app
+React + Vite
+TypeScript (Recommended)
+Feature-based (Organize by feature/module)
+Strict (Recommended for new projects)
+Tailwind CSS
+Redux Toolkit (Official Redux)
+shadcn/ui (Radix + Tailwind)
+None
+
+Axios (HTTP client)
+ESLint (Code linting)
+pnpm
+Yes

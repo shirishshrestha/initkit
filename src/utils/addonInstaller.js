@@ -123,16 +123,21 @@ async function installStyling(projectPath, styling, config) {
       await execCommand(`${installCmd} -D tailwindcss postcss autoprefixer`, {
         cwd: projectPath,
       });
-      
-      // Initialize Tailwind config
+
+      // Initialize Tailwind config using the package manager's binary
       console.log(chalk.dim('  Initializing Tailwind configuration...'));
-      await execCommand(`npx tailwindcss init -p`, { cwd: projectPath });
+      const execCmd = packageManager === 'npm' ? 'npx' : 
+                      packageManager === 'yarn' ? 'yarn' :
+                      packageManager === 'pnpm' ? 'pnpm exec' :
+                      packageManager === 'bun' ? 'bunx' : 'npx';
       
+      await execCommand(`${execCmd} tailwindcss init -p`, { cwd: projectPath });
+
       // For Vite projects, we need to update the Tailwind config
       if (frontend === 'react' || frontend === 'vue') {
         const fs = await import('fs-extra');
         const path = await import('path');
-        
+
         // Update tailwind.config.js with proper content paths
         const tailwindConfigPath = path.join(projectPath, 'tailwind.config.js');
         const tailwindConfig = `/** @type {import('tailwindcss').Config} */
@@ -147,7 +152,7 @@ export default {
   plugins: [],
 }`;
         await fs.writeFile(tailwindConfigPath, tailwindConfig);
-        
+
         // Create/update main CSS file with Tailwind directives
         const cssPath = path.join(projectPath, 'src', 'index.css');
         const tailwindDirectives = `@tailwind base;
@@ -202,12 +207,12 @@ async function installUILibrary(projectPath, library, config) {
     case 'shadcn':
     case 'shadcn-ui':
       console.log(chalk.dim('  Running shadcn-ui init...'));
-      
+
       // Ensure tsconfig has path aliases for shadcn
       const fs = await import('fs-extra');
       const path = await import('path');
       const tsconfigPath = path.join(projectPath, 'tsconfig.json');
-      
+
       if (await fs.pathExists(tsconfigPath)) {
         const tsconfig = await fs.readJson(tsconfigPath);
         if (!tsconfig.compilerOptions) tsconfig.compilerOptions = {};
@@ -216,7 +221,7 @@ async function installUILibrary(projectPath, library, config) {
         tsconfig.compilerOptions.paths['@/*'] = ['./src/*'];
         await fs.writeJson(tsconfigPath, tsconfig, { spaces: 2 });
       }
-      
+
       // shadcn has its own CLI!
       await execCommand(`npx shadcn@latest init -y`, { cwd: projectPath });
       break;
