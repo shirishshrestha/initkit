@@ -119,89 +119,178 @@ async function generateNextjsPackageJson(projectPath, config) {
   const { language, styling, additionalLibraries = [] } = config;
   const isTypeScript = language === 'typescript';
 
-  const dependencies = {
-    next: 'latest',
-    react: 'latest',
-    'react-dom': 'latest',
-  };
+  const spinner = ora('Fetching latest package versions...').start();
 
-  const devDependencies = {
-    ...(isTypeScript && {
-      '@types/node': 'latest',
-      '@types/react': 'latest',
-      '@types/react-dom': 'latest',
-      typescript: 'latest',
-    }),
-  };
+  try {
+    // Fetch core dependencies
+    const [nextVer, reactVer, reactDomVer] = await Promise.all([
+      fetchVersion('next'),
+      fetchVersion('react'),
+      fetchVersion('react-dom'),
+    ]);
 
-  // Add Tailwind
-  if (styling === 'tailwind') {
-    devDependencies['tailwindcss'] = 'latest';
+    const dependencies = {
+      next: nextVer,
+      react: reactVer,
+      'react-dom': reactDomVer,
+    };
+
+    const devDependencies = {};
+
+    // TypeScript dependencies
+    if (isTypeScript) {
+      const [tsVer, typesNodeVer, typesReactVer, typesReactDomVer] = await Promise.all([
+        fetchVersion('typescript'),
+        fetchVersion('@types/node'),
+        fetchVersion('@types/react'),
+        fetchVersion('@types/react-dom'),
+      ]);
+      devDependencies['typescript'] = tsVer;
+      devDependencies['@types/node'] = typesNodeVer;
+      devDependencies['@types/react'] = typesReactVer;
+      devDependencies['@types/react-dom'] = typesReactDomVer;
+    }
+
+    // Add Tailwind
+    if (styling === 'tailwind') {
+      devDependencies['tailwindcss'] = await fetchVersion('tailwindcss');
+    }
+
+    // Add libraries
+    if (additionalLibraries.includes('tanstack-query')) {
+      dependencies['@tanstack/react-query'] = await fetchVersion('@tanstack/react-query');
+    }
+
+    if (additionalLibraries.includes('redux-toolkit')) {
+      const [reduxVer, reactReduxVer] = await Promise.all([
+        fetchVersion('@reduxjs/toolkit'),
+        fetchVersion('react-redux'),
+      ]);
+      dependencies['@reduxjs/toolkit'] = reduxVer;
+      dependencies['react-redux'] = reactReduxVer;
+    }
+
+    if (additionalLibraries.includes('zustand')) {
+      dependencies['zustand'] = await fetchVersion('zustand');
+    }
+
+    if (additionalLibraries.includes('jotai')) {
+      dependencies['jotai'] = await fetchVersion('jotai');
+    }
+
+    if (additionalLibraries.includes('axios')) {
+      dependencies['axios'] = await fetchVersion('axios');
+    }
+
+    if (additionalLibraries.includes('zod')) {
+      dependencies['zod'] = await fetchVersion('zod');
+    }
+
+    if (additionalLibraries.includes('react-hook-form')) {
+      const [formVer, resolversVer] = await Promise.all([
+        fetchVersion('react-hook-form'),
+        fetchVersion('@hookform/resolvers'),
+      ]);
+      dependencies['react-hook-form'] = formVer;
+      dependencies['@hookform/resolvers'] = resolversVer;
+    }
+
+    if (additionalLibraries.includes('framer-motion')) {
+      dependencies['framer-motion'] = await fetchVersion('framer-motion');
+    }
+
+    if (additionalLibraries.includes('react-icons')) {
+      dependencies['react-icons'] = await fetchVersion('react-icons');
+    }
+
+    if (additionalLibraries.includes('radix-ui')) {
+      const [dialogVer, dropdownVer, selectVer, slotVer] = await Promise.all([
+        fetchVersion('@radix-ui/react-dialog'),
+        fetchVersion('@radix-ui/react-dropdown-menu'),
+        fetchVersion('@radix-ui/react-select'),
+        fetchVersion('@radix-ui/react-slot'),
+      ]);
+      Object.assign(dependencies, {
+        '@radix-ui/react-dialog': dialogVer,
+        '@radix-ui/react-dropdown-menu': dropdownVer,
+        '@radix-ui/react-select': selectVer,
+        '@radix-ui/react-slot': slotVer,
+      });
+    }
+
+    spinner.succeed(chalk.green('Fetched latest versions'));
+
+    const packageJson = {
+      name: config.projectName,
+      version: '0.1.0',
+      private: true,
+      scripts: {
+        dev: 'next dev',
+        build: 'next build',
+        start: 'next start',
+        lint: 'next lint',
+      },
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+  } catch (error) {
+    spinner.fail(chalk.yellow('Could not fetch versions, using fallbacks'));
+
+    // Fallback with latest tag
+    const dependencies = { next: 'latest', react: 'latest', 'react-dom': 'latest' };
+    const devDependencies = isTypeScript
+      ? {
+          typescript: 'latest',
+          '@types/node': 'latest',
+          '@types/react': 'latest',
+          '@types/react-dom': 'latest',
+        }
+      : {};
+
+    if (styling === 'tailwind') devDependencies['tailwindcss'] = 'latest';
+    if (additionalLibraries.includes('tanstack-query'))
+      dependencies['@tanstack/react-query'] = 'latest';
+    if (additionalLibraries.includes('redux-toolkit')) {
+      dependencies['@reduxjs/toolkit'] = 'latest';
+      dependencies['react-redux'] = 'latest';
+    }
+    if (additionalLibraries.includes('zustand')) dependencies['zustand'] = 'latest';
+    if (additionalLibraries.includes('jotai')) dependencies['jotai'] = 'latest';
+    if (additionalLibraries.includes('axios')) dependencies['axios'] = 'latest';
+    if (additionalLibraries.includes('zod')) dependencies['zod'] = 'latest';
+    if (additionalLibraries.includes('react-hook-form')) {
+      dependencies['react-hook-form'] = 'latest';
+      dependencies['@hookform/resolvers'] = 'latest';
+    }
+    if (additionalLibraries.includes('framer-motion')) dependencies['framer-motion'] = 'latest';
+    if (additionalLibraries.includes('react-icons')) dependencies['react-icons'] = 'latest';
+    if (additionalLibraries.includes('radix-ui')) {
+      Object.assign(dependencies, {
+        '@radix-ui/react-dialog': 'latest',
+        '@radix-ui/react-dropdown-menu': 'latest',
+        '@radix-ui/react-select': 'latest',
+        '@radix-ui/react-slot': 'latest',
+      });
+    }
+
+    const packageJson = {
+      name: config.projectName,
+      version: '0.1.0',
+      private: true,
+      scripts: {
+        dev: 'next dev',
+        build: 'next build',
+        start: 'next start',
+        lint: 'next lint',
+      },
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
   }
-
-  // Add libraries
-  if (additionalLibraries.includes('tanstack-query')) {
-    dependencies['@tanstack/react-query'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('redux-toolkit')) {
-    dependencies['@reduxjs/toolkit'] = 'latest';
-    dependencies['react-redux'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('zustand')) {
-    dependencies['zustand'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('jotai')) {
-    dependencies['jotai'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('axios')) {
-    dependencies['axios'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('zod')) {
-    dependencies['zod'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('react-hook-form')) {
-    dependencies['react-hook-form'] = 'latest';
-    dependencies['@hookform/resolvers'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('framer-motion')) {
-    dependencies['framer-motion'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('react-icons')) {
-    dependencies['react-icons'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('radix-ui')) {
-    Object.assign(dependencies, {
-      '@radix-ui/react-dialog': 'latest',
-      '@radix-ui/react-dropdown-menu': 'latest',
-      '@radix-ui/react-select': 'latest',
-      '@radix-ui/react-slot': 'latest',
-    });
-  }
-
-  const packageJson = {
-    name: config.projectName,
-    version: '0.1.0',
-    private: true,
-    scripts: {
-      dev: 'next dev',
-      build: 'next build',
-      start: 'next start',
-      lint: 'next lint',
-    },
-    dependencies,
-    devDependencies,
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
 }
 
 async function generateNextjsEssentialFiles(projectPath, config) {
@@ -444,7 +533,7 @@ next-env.d.ts
           '@/*': ['./src/*'],
         },
       },
-      include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+      include: ['next-env.d.ts', 'src/**/*.ts', 'src/**/*.tsx', '.next/types/**/*.ts'],
       exclude: ['node_modules'],
     };
 

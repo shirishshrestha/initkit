@@ -17,21 +17,36 @@ Built with ES Modules | TypeScript Ready | Zero Config Required | Fully Document
 
 ---
 
+## Demo
+
+<div align="center">
+
+![InitKit Demo](https://raw.githubusercontent.com/shirishshrestha/initkit/main/assets/demo.gif)
+
+_Creating a full-stack Next.js + Express application with InitKit_
+
+</div>
+
+---
+
 ## Why InitKit?
 
 InitKit eliminates the tedious project setup process by providing intelligent scaffolding with modern best practices. Whether you're building a frontend app, backend API, or full-stack application, InitKit generates a production-ready structure in seconds.
 
 **Key Benefits:**
+
+- **Live Version Fetching** - Automatically fetches latest package versions from npm registry (no hardcoded versions!)
 - **Smart Validation** - Real-time npm package name validation with helpful suggestions and colored feedback
 - **Enhanced CLI UX** - Beautiful formatted help text with colors, boxes, and comprehensive examples
 - **Monorepo Support** - Full-stack monorepo architecture with Turborepo and shared packages
 - **Multiple Stacks** - MERN, PERN, T3 Stack, Next.js + Express, and more
-- **Flexible Architecture** - Feature-based, type-based, domain-driven, or flat structures
+- **Flexible Architecture** - Feature-based, type-based, domain-driven, clean architecture structures
 - **Docker Ready** - Complete Docker orchestration with multi-stage builds and docker-compose
 - **API Integration** - Seamless frontend-backend communication with axios interceptors
 - **Production Ready** - ESLint, Prettier, Git hooks, and CI/CD pipelines out of the box
 - **Automatic Rollback** - Failed installations clean up automatically with transaction-like safety
 - **Interactive Prompts** - Intelligent 13-question flow that adapts to your project type
+- **4 Package Managers** - Full support for npm, yarn, pnpm, and bun
 - **Fully Documented** - Comprehensive JSDoc comments, guides, and architecture documentation
 - **Test Coverage** - 44% coverage with unit and integration tests included
 
@@ -64,14 +79,14 @@ initkit my-app --yes
 
 Comprehensive documentation to help you get the most out of InitKit:
 
-| Document | Description | Lines |
-|----------|-------------|-------|
-| **[Quick Start Guide](./docs/QUICK_START.md)** | Get started in under 5 minutes with step-by-step tutorial | ~350 lines |
-| **[Advanced Configuration](./docs/ADVANCED_CONFIGURATION.md)** | Custom templates, Docker, CI/CD, monorepo, and advanced features | ~930 lines |
-| **[Architecture](./docs/ARCHITECTURE.md)** | System design, data flow, component architecture, and design decisions | ~800 lines |
-| **[Contributing Guide](./CONTRIBUTING.md)** | Code of conduct, workflow, code guidelines, and template creation | ~500 lines |
-| **[Question Flow](./QUESTION_FLOW.md)** | Interactive 13-question flow and decision tree visualization | Complete flow |
-| **[Documentation Summary](./docs/DOCUMENTATION_SUMMARY.md)** | Overview of all documentation and maintenance guide | ~670 lines |
+| Document                                                       | Description                                                            | Lines         |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------- |
+| **[Quick Start Guide](./docs/QUICK_START.md)**                 | Get started in under 5 minutes with step-by-step tutorial              | ~350 lines    |
+| **[Advanced Configuration](./docs/ADVANCED_CONFIGURATION.md)** | Custom templates, Docker, CI/CD, monorepo, and advanced features       | ~930 lines    |
+| **[Architecture](./docs/ARCHITECTURE.md)**                     | System design, data flow, component architecture, and design decisions | ~800 lines    |
+| **[Contributing Guide](./CONTRIBUTING.md)**                    | Code of conduct, workflow, code guidelines, and template creation      | ~500 lines    |
+| **[Question Flow](./QUESTION_FLOW.md)**                        | Interactive 13-question flow and decision tree visualization           | Complete flow |
+| **[Documentation Summary](./docs/DOCUMENTATION_SUMMARY.md)**   | Overview of all documentation and maintenance guide                    | ~670 lines    |
 
 ### 🚀 Getting Started
 
@@ -95,16 +110,17 @@ Want to contribute or add a custom template?
 
 ### 🎯 Project Types
 
-| Type | Description | Use Case |
-|------|-------------|----------|
-| **Frontend Only** | Single-page applications | React, Vue, Angular, Svelte apps |
-| **Backend Only** | REST APIs and services | Express, Fastify, NestJS servers |
-| **Full Stack** | Integrated client + server | Monorepo with frontend and backend |
-| **Node.js Library** | Publishable npm packages | Reusable modules and utilities |
+| Type                | Description                | Use Case                           |
+| ------------------- | -------------------------- | ---------------------------------- |
+| **Frontend Only**   | Single-page applications   | React, Vue, Angular, Svelte apps   |
+| **Backend Only**    | REST APIs and services     | Express, Fastify, NestJS servers   |
+| **Full Stack**      | Integrated client + server | Monorepo with frontend and backend |
+| **Node.js Library** | Publishable npm packages   | Reusable modules and utilities     |
 
 ### 🎨 Framework Support
 
 **Frontend Frameworks:**
+
 - React (with Create React App or Vite)
 - Vue.js (Vue CLI or Vite)
 - Angular (Angular CLI)
@@ -114,6 +130,7 @@ Want to contribute or add a custom template?
 - Vanilla JavaScript (Modern ES6+)
 
 **Backend Frameworks:**
+
 - Express.js (Minimalist & flexible)
 - Fastify (High performance)
 - Koa (Next-gen Express)
@@ -121,6 +138,7 @@ Want to contribute or add a custom template?
 - Hapi (Configuration-centric)
 
 **Databases:**
+
 - PostgreSQL (with connection pooling)
 - MySQL (with TypeORM/Prisma)
 - MongoDB (with Mongoose)
@@ -129,6 +147,7 @@ Want to contribute or add a custom template?
 ### 🛠 Development Tools
 
 **Code Quality:**
+
 - ESLint (with recommended rules)
 - Prettier (opinionated formatting)
 - Husky (Git hooks)
@@ -136,11 +155,13 @@ Want to contribute or add a custom template?
 - EditorConfig (consistent coding styles)
 
 **Testing:**
+
 - Jest (comprehensive testing framework)
 - Vitest (blazing fast unit tests)
 - Pre-configured test structure
 
 **DevOps:**
+
 - Docker (multi-stage builds)
 - Docker Compose (full-stack orchestration)
 - GitHub Actions (CI/CD pipelines)
@@ -150,18 +171,21 @@ Want to contribute or add a custom template?
 ### 🏗️ Full-Stack Architectures
 
 **Monorepo (Turborepo):**
+
 - Shared packages (types, UI components)
 - Unified workspace management
 - Optimized build pipeline
 - Consistent tooling across apps
 
 **Traditional Stack Options:**
+
 - **MERN** - MongoDB + Express + React + Node
-- **PERN** - PostgreSQL + Express + React + Node  
+- **PERN** - PostgreSQL + Express + React + Node
 - **Next.js + Express** - Full-stack React with API
 - **Laravel + React** - PHP backend with React frontend
 
 **Features:**
+
 - API integration (Vite proxy, Next.js rewrites)
 - Docker orchestration (frontend + backend + database)
 - Environment configuration
@@ -170,30 +194,45 @@ Want to contribute or add a custom template?
 
 ### 🎨 Styling Solutions
 
-| Solution | Description | Best For |
-|----------|-------------|----------|
-| **Tailwind CSS** | Utility-first CSS framework | Rapid prototyping, modern apps |
-| **CSS Modules** | Scoped CSS with local scope | Component isolation |
-| **Styled Components** | CSS-in-JS with tagged templates | React apps, dynamic styling |
-| **Emotion** | Performant CSS-in-JS | High-performance apps |
-| **Sass/SCSS** | CSS preprocessor | Complex stylesheets |
-| **Plain CSS** | Standard CSS files | Simple projects, full control |
+| Solution              | Description                     | Best For                       |
+| --------------------- | ------------------------------- | ------------------------------ |
+| **Tailwind CSS**      | Utility-first CSS framework     | Rapid prototyping, modern apps |
+| **CSS Modules**       | Scoped CSS with local scope     | Component isolation            |
+| **Styled Components** | CSS-in-JS with tagged templates | React apps, dynamic styling    |
+| **Emotion**           | Performant CSS-in-JS            | High-performance apps          |
+| **Sass/SCSS**         | CSS preprocessor                | Complex stylesheets            |
+| **Plain CSS**         | Standard CSS files              | Simple projects, full control  |
 
 ### 📦 Additional Libraries
 
-**Frontend:**
-- React Query (Data fetching & caching)
+**Frontend State Management:**
+
+- Redux Toolkit (Industry-standard state management)
 - Zustand (Lightweight state management)
+- Jotai (Atomic state management)
+
+**Frontend Routing & Data:**
+
+- React Router (Client-side routing)
+- TanStack Query (Data fetching & caching)
 - React Hook Form (Performant forms)
+
+**Frontend UI & Animation:**
+
+- Radix UI (Headless UI components)
+- React Icons (Popular icon library)
+- ShadCN UI (Beautiful component library)
 - Framer Motion (Smooth animations)
 
 **Backend:**
+
 - Prisma (Type-safe ORM)
 - JWT (Secure authentication)
 - Bcrypt (Password hashing)
 - Winston (Structured logging)
 
 **Common:**
+
 - Axios (HTTP client)
 - Lodash (Utility functions)
 - Date-fns (Date manipulation)
@@ -201,16 +240,17 @@ Want to contribute or add a custom template?
 
 ### 📁 Folder Structure Options
 
-| Structure | Organization | Best For |
-|-----------|-------------|----------|
-| **Feature-based** | Group by feature/module | Scalable applications |
-| **Type-based** | Group by file type | Small to medium projects |
-| **Domain-driven** | Group by business domain | Enterprise applications |
-| **Flat** | Minimal nesting | Simple projects, prototypes |
+| Structure         | Organization             | Best For                    |
+| ----------------- | ------------------------ | --------------------------- |
+| **Feature-based** | Group by feature/module  | Scalable applications       |
+| **Type-based**    | Group by file type       | Small to medium projects    |
+| **Domain-driven** | Group by business domain | Enterprise applications     |
+| **Flat**          | Minimal nesting          | Simple projects, prototypes |
 
 ### 📝 Code Quality & Documentation
 
 **InitKit Generated Projects Include:**
+
 - **JSDoc Comments** - Comprehensive function documentation with examples
 - **README.md** - Project-specific getting started guide
 - **Code Standards** - ESLint rules enforcing best practices
@@ -219,6 +259,7 @@ Want to contribute or add a custom template?
 - **Environment Examples** - `.env.example` files with all required variables
 
 **InitKit Codebase Quality:**
+
 - **200+ JSDoc Blocks** - All functions fully documented with types and examples
 - **44% Test Coverage** - Unit and integration tests with Jest
 - **Comprehensive Docs** - 2,400+ lines of guides and architecture documentation
@@ -232,6 +273,7 @@ Want to contribute or add a custom template?
 ### Enhanced CLI Experience
 
 InitKit features a beautiful, user-friendly CLI with:
+
 - **Colored Output** - Syntax highlighting and visual feedback
 - **Formatted Boxes** - Clean, organized information display
 - **Real-time Validation** - Instant feedback with ✓/✗ icons as you type
@@ -257,18 +299,18 @@ initkit --help
 
 ### Options
 
-| Option | Alias | Description | Default |
-|--------|-------|-------------|---------|
-| `--version` | `-v` | Output the current version | - |
-| `--template <name>` | `-t` | Specify template (react, vue, express) | Interactive prompt |
-| `--yes` | `-y` | Skip prompts, use defaults | false |
-| `--typescript` | `--ts` | Use TypeScript | true |
-| `--javascript` | `--js` | Use JavaScript instead | false |
-| `--no-git` | - | Skip Git initialization | false |
-| `--no-install` | - | Skip dependency installation | false |
-| `--package-manager <name>` | `-p` | Use npm, yarn, or pnpm | npm |
-| `--verbose` | - | Show detailed output | false |
-| `--help` | `-h` | Display help information | - |
+| Option                     | Alias  | Description                            | Default            |
+| -------------------------- | ------ | -------------------------------------- | ------------------ |
+| `--version`                | `-v`   | Output the current version             | -                  |
+| `--template <name>`        | `-t`   | Specify template (react, vue, express) | Interactive prompt |
+| `--yes`                    | `-y`   | Skip prompts, use defaults             | false              |
+| `--typescript`             | `--ts` | Use TypeScript                         | true               |
+| `--javascript`             | `--js` | Use JavaScript instead                 | false              |
+| `--no-git`                 | -      | Skip Git initialization                | false              |
+| `--no-install`             | -      | Skip dependency installation           | false              |
+| `--package-manager <name>` | `-p`   | Use npm, yarn, pnpm, or bun            | npm                |
+| `--verbose`                | -      | Show detailed output                   | false              |
+| `--help`                   | `-h`   | Display help information               | -                  |
 
 ---
 
@@ -282,6 +324,7 @@ initkit my-react-app
 ```
 
 **Generated Structure:**
+
 ```
 my-react-app/
 ├── src/
@@ -306,6 +349,7 @@ initkit fullstack-app
 ```
 
 **Generated Structure:**
+
 ```
 fullstack-app/
 ├── client/              # React + Vite frontend
@@ -334,6 +378,7 @@ initkit my-monorepo
 ```
 
 **Generated Structure:**
+
 ```
 my-monorepo/
 ├── apps/
@@ -355,6 +400,7 @@ initkit api-server
 ```
 
 **Features:**
+
 - RESTful API structure
 - MongoDB connection setup
 - Docker multi-stage build
@@ -398,6 +444,7 @@ See [QUESTION_FLOW.md](./QUESTION_FLOW.md) for the complete decision tree.
 
 Unlike other scaffolding tools, InitKit generates **truly production-ready** projects:
 
+- **Latest Dependencies** - Fetches actual latest versions from npm registry (not hardcoded)
 - **No Manual Setup Required** - Everything configured and ready to deploy
 - **Best Practices Built-in** - Error boundaries, loading states, proper TypeScript types
 - **Security First** - Environment variables, input validation, secure authentication patterns
@@ -423,16 +470,19 @@ Unlike other scaffolding tools, InitKit generates **truly production-ready** pro
 ### 📚 Documentation Excellence
 
 **For Users:**
+
 - Quick Start Guide (5-minute tutorial)
 - Advanced Configuration (Docker, CI/CD, monorepo)
 - Interactive Question Flow visualization
 
 **For Developers:**
+
 - Architecture Documentation (800+ lines)
 - Contributing Guide with template creation walkthrough
 - Comprehensive JSDoc on all functions
 
 **For Code:**
+
 - Generated README for every project
 - Environment variable documentation
 - API integration examples
@@ -506,6 +556,7 @@ initkit/
 ### Built With
 
 **Core Dependencies:**
+
 - **Commander.js** (12.0.0) - CLI framework with command routing
 - **Inquirer** (9.2.15) - Interactive prompts with validation
 - **Chalk** (5.3.0) - Terminal styling and colors
@@ -514,6 +565,7 @@ initkit/
 - **validate-npm-package-name** (5.0.0) - Package name validation
 
 **Development Dependencies:**
+
 - **Jest** (29.7.0) - Testing framework with ES module support
 - **ESLint** (9.17.0) - Code linting with modern rules
 - **Prettier** (3.4.2) - Code formatting
@@ -521,6 +573,7 @@ initkit/
 ### ES Modules Architecture
 
 InitKit is built entirely with modern ES Modules:
+
 - ✅ `"type": "module"` in package.json
 - ✅ All imports use `.js` file extensions
 - ✅ Native ESM support (no transpilation)
@@ -530,6 +583,7 @@ InitKit is built entirely with modern ES Modules:
 ### Error Handling System
 
 **Professional-Grade Error Management:**
+
 - **CLIError Class** - Custom error type with codes and context
 - **8 Error Codes** - Specific error types (VALIDATION_ERROR, DIRECTORY_EXISTS, etc.)
 - **Automatic Rollback** - Transaction-like cleanup on failure
@@ -543,8 +597,165 @@ InitKit is built entirely with modern ES Modules:
 ## Requirements
 
 - **Node.js**: >= 14.0.0
-- **npm**: >= 6.0.0 (or yarn >= 1.22.0, pnpm >= 6.0.0)
+- **Package Manager**: npm >= 6.0.0 (or yarn >= 1.22.0, pnpm >= 6.0.0, bun >= 1.0.0)
 - **Git**: >= 2.0.0 (for Git initialization feature)
+- **TypeScript**: Automatically installed per project (no global installation needed)
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. TypeScript Config Errors
+
+**Problem:** `No inputs were found in config file` error after project generation.
+
+**Solution:** This has been fixed in the latest version. Update InitKit:
+
+```bash
+npm update -g initkit
+```
+
+If you're on an older version, manually update your `tsconfig.json`:
+
+```json
+{
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
+```
+
+#### 2. Package Installation Fails
+
+**Problem:** Dependencies fail to install during project creation.
+
+**Solutions:**
+
+- Check your internet connection
+- Try a different package manager: `initkit my-app --package-manager pnpm`
+- Clear npm cache: `npm cache clean --force`
+- Use `--no-install` flag and install manually later:
+  ```bash
+  initkit my-app --no-install
+  cd my-app
+  npm install
+  ```
+
+#### 3. Directory Already Exists
+
+**Problem:** `DIRECTORY_EXISTS` error when creating a project.
+
+**Solution:** Choose a different project name or remove the existing directory:
+
+```bash
+rm -rf my-app  # On Unix/Mac
+rmdir /s my-app  # On Windows
+```
+
+#### 4. Permission Denied Errors
+
+**Problem:** `EACCES` or permission errors during installation.
+
+**Solutions:**
+
+- On Unix/Mac: Use sudo (not recommended) or fix npm permissions:
+  ```bash
+  mkdir ~/.npm-global
+  npm config set prefix '~/.npm-global'
+  export PATH=~/.npm-global/bin:$PATH
+  ```
+- On Windows: Run terminal as Administrator
+- Or install locally without `-g` flag
+
+#### 5. Backend Feature-Based Structure Errors
+
+**Problem:** `ENOENT: no such file or directory` when creating backend with feature-based structure.
+
+**Solution:** This has been fixed. Update InitKit to the latest version:
+
+```bash
+npm update -g initkit
+```
+
+#### 6. Git Initialization Fails
+
+**Problem:** Git repository not initialized or .gitignore missing.
+
+**Solutions:**
+
+- Ensure Git is installed: `git --version`
+- Manually initialize: `git init && git add . && git commit -m "Initial commit"`
+- Use `--no-git` flag if Git is not available
+
+#### 7. Outdated Package Versions
+
+**Problem:** Generated projects have old package versions.
+
+**Solution:** InitKit now fetches latest versions from npm automatically. Update to latest:
+
+```bash
+npm update -g initkit
+```
+
+For existing projects, update packages:
+
+```bash
+npm update  # Update to latest within semver range
+npm outdated  # Check for newer versions
+```
+
+### Getting Help
+
+If you encounter issues not listed here:
+
+1. **Check existing issues**: [GitHub Issues](https://github.com/shirishshrestha/initkit/issues)
+2. **Create a new issue**: Include:
+   - InitKit version: `initkit --version`
+   - Node version: `node --version`
+   - OS: Windows/Mac/Linux
+   - Full error message
+   - Steps to reproduce
+3. **Join discussions**: [GitHub Discussions](https://github.com/shirishshrestha/initkit/discussions)
+
+### Debug Mode
+
+Run InitKit with verbose output for debugging:
+
+```bash
+initkit my-app --verbose
+```
+
+---
+
+## Recent Updates
+
+### Version 1.1.0 (Latest)
+
+**🎉 Major Features:**
+
+- ✨ **Live NPM Version Fetching** - Automatically fetches latest package versions from npm registry
+- 🎯 **New Libraries Added**:
+  - Redux Toolkit & React Redux (state management)
+  - Jotai (atomic state)
+  - React Router (routing)
+  - React Icons (icon library)
+  - Radix UI (headless components)
+  - ShadCN UI (component library)
+- 📦 **Bun Support** - Added bun as a package manager option
+
+**🐛 Bug Fixes:**
+
+- Fixed TypeScript config errors (Next.js, Vue, Express)
+- Fixed Express backend feature-based structure directory errors
+- Fixed package manager selection for yarn, pnpm, and bun
+- Fixed Next.js tsconfig to properly include `src/**/*.ts` patterns
+
+**🔧 Improvements:**
+
+- All templates now fetch actual latest versions from npm (React 19+, Vite 7+, Next.js 16+)
+- Enhanced error messages with better troubleshooting suggestions
+- Improved directory structure handling across all architecture patterns
+- Better fallback handling when npm registry is unreachable
 
 ---
 
@@ -553,11 +764,13 @@ InitKit is built entirely with modern ES Modules:
 We welcome contributions! InitKit has comprehensive documentation to help you get started.
 
 **📖 Read First:**
+
 - [Contributing Guide](./CONTRIBUTING.md) - Code of conduct, workflow, and guidelines
 - [Architecture Documentation](./docs/ARCHITECTURE.md) - System design and patterns
 - [Adding Templates](./CONTRIBUTING.md#adding-new-templates) - 5-step guide for new frameworks
 
 **Quick Start:**
+
 1. Fork the repository
 2. Clone and setup: `git clone <your-fork> && cd initkit && npm install`
 3. Create feature branch: `git checkout -b feature/amazing-feature`
@@ -566,6 +779,7 @@ We welcome contributions! InitKit has comprehensive documentation to help you ge
 6. Push and create PR: `git push origin feature/amazing-feature`
 
 **Contribution Areas:**
+
 - 🎨 Add new framework templates (React, Vue, Next.js, etc.)
 - 🐛 Fix bugs and improve error messages
 - 📝 Improve documentation and examples
@@ -574,6 +788,7 @@ We welcome contributions! InitKit has comprehensive documentation to help you ge
 - 💡 Suggest new features and improvements
 
 **Code Standards:**
+
 - Follow ESLint rules (run `npm run lint`)
 - Add JSDoc comments to all functions
 - Write tests for new features
@@ -590,6 +805,7 @@ MIT © [Shirish Shrestha](https://github.com/shirishshrestha)
 ## Project Statistics
 
 ### Codebase Metrics
+
 - **Total Lines of Code**: ~4,000+ lines
 - **Documentation**: 2,400+ lines across 6 major docs
 - **JSDoc Comments**: 200+ function documentation blocks
@@ -599,6 +815,7 @@ MIT © [Shirish Shrestha](https://github.com/shirishshrestha)
 - **Template Files**: 10+ production-ready templates
 
 ### Documentation Coverage
+
 - ✅ Quick Start Guide (5-minute tutorial)
 - ✅ Advanced Configuration (930 lines)
 - ✅ Architecture Documentation (800 lines)

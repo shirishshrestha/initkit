@@ -1,9 +1,21 @@
 import fs from 'fs-extra';
 import path from 'path';
+import ora from 'ora';
+import chalk from 'chalk';
+import { getLatestVersion } from '../utils/versionFetcher.js';
+
+async function fetchVersion(packageName, fallback = 'latest') {
+  try {
+    const version = await getLatestVersion(packageName);
+    return `^${version}`;
+  } catch {
+    return fallback;
+  }
+}
 
 /**
  * Generate Express.js backend API project with organized architecture
- * 
+ *
  * Creates a production-ready Express.js server with:
  * - RESTful API structure
  * - Multiple architecture patterns (MVC, Clean Architecture, Domain-Driven Design)
@@ -12,7 +24,7 @@ import path from 'path';
  * - Authentication middleware setup
  * - Error handling and validation
  * - Environment configuration
- * 
+ *
  * Generated project includes:
  * - Organized folder structure based on pattern
  * - Server entry point with middleware configuration
@@ -21,7 +33,7 @@ import path from 'path';
  * - Package.json with Express and dependencies
  * - .env.example for environment variables
  * - README with API documentation
- * 
+ *
  * @param {string} projectPath - Absolute path to the project directory
  * @param {Object} config - User configuration object
  * @param {string} config.projectName - Name of the project
@@ -33,9 +45,9 @@ import path from 'path';
  *   - 'feature-based': Organize by features/modules
  * @param {string} [config.database='none'] - Database choice ('mongodb'|'postgresql'|'mysql'|'sqlite'|'none')
  * @param {string} config.packageManager - Package manager to use
- * 
+ *
  * @returns {Promise<void>}
- * 
+ *
  * @example
  * // Create Express API with PostgreSQL and MVC pattern
  * await generateExpressTemplate('/path/to/project', {
@@ -79,33 +91,28 @@ async function createExpressFolderStructure(projectPath, config) {
     await fs.ensureDir(path.join(srcPath, 'config'));
 
     // Routes index
-    await fs.writeFile(
-      path.join(srcPath, 'routes', 'index.ts'),
-      generateRoutesIndex()
-    );
-
+    await fs.writeFile(path.join(srcPath, 'routes', 'index.ts'), generateRoutesIndex());
   } else if (folderStructure === 'clean-architecture') {
     // Clean Architecture
     await fs.ensureDir(path.join(srcPath, 'domain', 'entities'));
     await fs.ensureDir(path.join(srcPath, 'domain', 'repositories'));
     await fs.ensureDir(path.join(srcPath, 'domain', 'use-cases'));
-    
+
     await fs.ensureDir(path.join(srcPath, 'application', 'dto'));
     await fs.ensureDir(path.join(srcPath, 'application', 'services'));
     await fs.ensureDir(path.join(srcPath, 'application', 'interfaces'));
-    
+
     await fs.ensureDir(path.join(srcPath, 'infrastructure', 'database'));
     await fs.ensureDir(path.join(srcPath, 'infrastructure', 'repositories'));
     await fs.ensureDir(path.join(srcPath, 'infrastructure', 'external-services'));
-    
+
     await fs.ensureDir(path.join(srcPath, 'presentation', 'controllers'));
     await fs.ensureDir(path.join(srcPath, 'presentation', 'middleware'));
     await fs.ensureDir(path.join(srcPath, 'presentation', 'routes'));
-
   } else if (folderStructure === 'feature-based') {
     // Feature-based structure
     const features = ['auth', 'users', 'posts'];
-    
+
     for (const feature of features) {
       await fs.ensureDir(path.join(srcPath, 'features', feature, 'controllers'));
       await fs.ensureDir(path.join(srcPath, 'features', feature, 'services'));
@@ -120,7 +127,6 @@ async function createExpressFolderStructure(projectPath, config) {
     await fs.ensureDir(path.join(srcPath, 'shared', 'utils'));
     await fs.ensureDir(path.join(srcPath, 'shared', 'types'));
     await fs.ensureDir(path.join(srcPath, 'shared', 'config'));
-
   } else if (folderStructure === 'layered') {
     // Layered Architecture
     await fs.ensureDir(path.join(srcPath, 'controllers'));
@@ -143,10 +149,7 @@ async function createExpressFolderStructure(projectPath, config) {
   if (database === 'prisma') {
     await fs.ensureDir(path.join(projectPath, 'prisma'));
     await fs.ensureDir(path.join(projectPath, 'prisma', 'migrations'));
-    await fs.writeFile(
-      path.join(projectPath, 'prisma', 'schema.prisma'),
-      generatePrismaSchema()
-    );
+    await fs.writeFile(path.join(projectPath, 'prisma', 'schema.prisma'), generatePrismaSchema());
   }
 }
 
@@ -154,13 +157,28 @@ async function generateExpressConfigFiles(projectPath, config) {
   const { language, database } = config;
   const srcPath = path.join(projectPath, 'src');
   const isTypeScript = language === 'typescript';
+  const folderStructure = config.folderStructure || 'mvc';
+
+  // Determine the correct paths based on folder structure
+  const configPath =
+    folderStructure === 'feature-based'
+      ? path.join(srcPath, 'shared', 'config')
+      : path.join(srcPath, 'config');
+
+  const middlewarePath =
+    folderStructure === 'feature-based'
+      ? path.join(srcPath, 'shared', 'middleware')
+      : folderStructure === 'clean-architecture'
+        ? path.join(srcPath, 'presentation', 'middleware')
+        : path.join(srcPath, 'middleware');
+
+  // Ensure directories exist
+  await fs.ensureDir(configPath);
+  await fs.ensureDir(middlewarePath);
 
   // TypeScript configuration
   if (isTypeScript) {
-    await fs.writeFile(
-      path.join(projectPath, 'tsconfig.json'),
-      generateTsConfig()
-    );
+    await fs.writeFile(path.join(projectPath, 'tsconfig.json'), generateTsConfig());
   }
 
   // ESLint configuration
@@ -170,10 +188,7 @@ async function generateExpressConfigFiles(projectPath, config) {
   );
 
   // Nodemon configuration
-  await fs.writeFile(
-    path.join(projectPath, 'nodemon.json'),
-    generateNodemonConfig(isTypeScript)
-  );
+  await fs.writeFile(path.join(projectPath, 'nodemon.json'), generateNodemonConfig(isTypeScript));
 
   // Main app file
   await fs.writeFile(
@@ -190,20 +205,20 @@ async function generateExpressConfigFiles(projectPath, config) {
   // Database configuration
   if (database !== 'none') {
     await fs.writeFile(
-      path.join(srcPath, 'config', isTypeScript ? 'database.ts' : 'database.js'),
+      path.join(configPath, isTypeScript ? 'database.ts' : 'database.js'),
       generateDatabaseConfig(database, isTypeScript)
     );
   }
 
   // Error handler middleware
   await fs.writeFile(
-    path.join(srcPath, 'middleware', isTypeScript ? 'errorHandler.ts' : 'errorHandler.js'),
+    path.join(middlewarePath, isTypeScript ? 'errorHandler.ts' : 'errorHandler.js'),
     generateErrorHandler(isTypeScript)
   );
 
   // CORS configuration
   await fs.writeFile(
-    path.join(srcPath, 'config', isTypeScript ? 'cors.ts' : 'cors.js'),
+    path.join(configPath, isTypeScript ? 'cors.ts' : 'cors.js'),
     generateCorsConfig(isTypeScript)
   );
 }
@@ -212,70 +227,157 @@ async function generateExpressPackageJson(projectPath, config) {
   const { language, database, projectName } = config;
   const isTypeScript = language === 'typescript';
 
-  const scripts = {
-    dev: isTypeScript ? 'nodemon' : 'nodemon src/server.js',
-    build: isTypeScript ? 'tsc' : 'echo "No build step for JavaScript"',
-    start: isTypeScript ? 'node dist/server.js' : 'node src/server.js',
-    lint: 'eslint .',
-    'lint:fix': 'eslint . --fix',
-  };
+  const spinner = ora('Fetching latest package versions...').start();
 
-  if (database === 'prisma') {
-    scripts['db:generate'] = 'prisma generate';
-    scripts['db:push'] = 'prisma db push';
-    scripts['db:migrate'] = 'prisma migrate dev';
-    scripts['db:studio'] = 'prisma studio';
-  }
+  try {
+    const scripts = {
+      dev: isTypeScript ? 'nodemon' : 'nodemon src/server.js',
+      build: isTypeScript ? 'tsc' : 'echo "No build step for JavaScript"',
+      start: isTypeScript ? 'node dist/server.js' : 'node src/server.js',
+      lint: 'eslint .',
+      'lint:fix': 'eslint . --fix',
+    };
 
-  const dependencies = {
-    express: '^4.21.2',
-    dotenv: '^16.4.7',
-    cors: '^2.8.5',
-    helmet: '^8.0.0',
-  };
-
-  const devDependencies = {
-    nodemon: '^3.1.9',
-    ...(isTypeScript && {
-      typescript: '^5.7.3',
-      '@types/express': '^5.0.0',
-      '@types/node': '^22.10.5',
-      '@types/cors': '^2.8.17',
-      'ts-node': '^10.9.2',
-    }),
-  };
-
-  // Database specific dependencies
-  if (database === 'prisma') {
-    dependencies['@prisma/client'] = '^6.2.0';
-    devDependencies['prisma'] = '^6.2.0';
-  } else if (database === 'mongodb') {
-    dependencies['mongoose'] = '^8.9.3';
-  } else if (database === 'postgresql' || database === 'mysql') {
-    dependencies['pg'] = '^8.13.1';
-    if (isTypeScript) {
-      devDependencies['@types/pg'] = '^8.11.10';
+    if (database === 'prisma') {
+      scripts['db:generate'] = 'prisma generate';
+      scripts['db:push'] = 'prisma db push';
+      scripts['db:migrate'] = 'prisma migrate dev';
+      scripts['db:studio'] = 'prisma studio';
     }
+
+    // Fetch core dependencies
+    const [expressVer, dotenvVer, corsVer, helmetVer, nodemonVer] = await Promise.all([
+      fetchVersion('express'),
+      fetchVersion('dotenv'),
+      fetchVersion('cors'),
+      fetchVersion('helmet'),
+      fetchVersion('nodemon'),
+    ]);
+
+    const dependencies = {
+      express: expressVer,
+      dotenv: dotenvVer,
+      cors: corsVer,
+      helmet: helmetVer,
+    };
+
+    const devDependencies = {
+      nodemon: nodemonVer,
+    };
+
+    // TypeScript dependencies
+    if (isTypeScript) {
+      const [tsVer, typesExpressVer, typesNodeVer, typesCorsVer, tsNodeVer] = await Promise.all([
+        fetchVersion('typescript'),
+        fetchVersion('@types/express'),
+        fetchVersion('@types/node'),
+        fetchVersion('@types/cors'),
+        fetchVersion('ts-node'),
+      ]);
+      devDependencies['typescript'] = tsVer;
+      devDependencies['@types/express'] = typesExpressVer;
+      devDependencies['@types/node'] = typesNodeVer;
+      devDependencies['@types/cors'] = typesCorsVer;
+      devDependencies['ts-node'] = tsNodeVer;
+    }
+
+    // Database specific dependencies
+    if (database === 'prisma') {
+      const [prismaClientVer, prismaVer] = await Promise.all([
+        fetchVersion('@prisma/client'),
+        fetchVersion('prisma'),
+      ]);
+      dependencies['@prisma/client'] = prismaClientVer;
+      devDependencies['prisma'] = prismaVer;
+    } else if (database === 'mongodb') {
+      dependencies['mongoose'] = await fetchVersion('mongoose');
+    } else if (database === 'postgresql' || database === 'mysql') {
+      dependencies['pg'] = await fetchVersion('pg');
+      if (isTypeScript) {
+        devDependencies['@types/pg'] = await fetchVersion('@types/pg');
+      }
+    }
+
+    spinner.succeed(chalk.green('Fetched latest versions'));
+
+    const packageJson = {
+      name: projectName || 'express-api',
+      version: '1.0.0',
+      description: 'Express.js API server',
+      main: isTypeScript ? 'dist/server.js' : 'src/server.js',
+      type: 'module',
+      scripts,
+      keywords: ['express', 'api', 'backend'],
+      author: '',
+      license: 'MIT',
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeFile(
+      path.join(projectPath, 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
+  } catch (error) {
+    spinner.fail(chalk.yellow('Could not fetch versions, using fallbacks'));
+
+    // Fallback with latest tag
+    const scripts = {
+      dev: isTypeScript ? 'nodemon' : 'nodemon src/server.js',
+      build: isTypeScript ? 'tsc' : 'echo "No build step for JavaScript"',
+      start: isTypeScript ? 'node dist/server.js' : 'node src/server.js',
+      lint: 'eslint .',
+      'lint:fix': 'eslint . --fix',
+    };
+
+    if (database === 'prisma') {
+      scripts['db:generate'] = 'prisma generate';
+      scripts['db:push'] = 'prisma db push';
+      scripts['db:migrate'] = 'prisma migrate dev';
+      scripts['db:studio'] = 'prisma studio';
+    }
+
+    const dependencies = { express: 'latest', dotenv: 'latest', cors: 'latest', helmet: 'latest' };
+    const devDependencies = {
+      nodemon: 'latest',
+      ...(isTypeScript && {
+        typescript: 'latest',
+        '@types/express': 'latest',
+        '@types/node': 'latest',
+        '@types/cors': 'latest',
+        'ts-node': 'latest',
+      }),
+    };
+
+    if (database === 'prisma') {
+      dependencies['@prisma/client'] = 'latest';
+      devDependencies['prisma'] = 'latest';
+    } else if (database === 'mongodb') {
+      dependencies['mongoose'] = 'latest';
+    } else if (database === 'postgresql' || database === 'mysql') {
+      dependencies['pg'] = 'latest';
+      if (isTypeScript) devDependencies['@types/pg'] = 'latest';
+    }
+
+    const packageJson = {
+      name: projectName || 'express-api',
+      version: '1.0.0',
+      description: 'Express.js API server',
+      main: isTypeScript ? 'dist/server.js' : 'src/server.js',
+      type: 'module',
+      scripts,
+      keywords: ['express', 'api', 'backend'],
+      author: '',
+      license: 'MIT',
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeFile(
+      path.join(projectPath, 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
   }
-
-  const packageJson = {
-    name: projectName || 'express-api',
-    version: '1.0.0',
-    description: 'Express.js API server',
-    main: isTypeScript ? 'dist/server.js' : 'src/server.js',
-    type: 'module',
-    scripts,
-    keywords: ['express', 'api', 'backend'],
-    author: '',
-    license: 'MIT',
-    dependencies,
-    devDependencies,
-  };
-
-  await fs.writeFile(
-    path.join(projectPath, 'package.json'),
-    JSON.stringify(packageJson, null, 2)
-  );
 }
 
 async function generateExpressReadme(projectPath, config) {
@@ -305,12 +407,16 @@ ${database !== 'none' ? `- ${database} database` : ''}
 # Install dependencies
 npm install
 
-${database === 'prisma' ? `# Generate Prisma Client
+${
+  database === 'prisma'
+    ? `# Generate Prisma Client
 npm run db:generate
 
 # Run database migrations
 npm run db:migrate
-` : ''}
+`
+    : ''
+}
 \`\`\`
 
 ### Environment Variables
@@ -328,7 +434,9 @@ cp .env.example .env
 npm run dev
 \`\`\`
 
-${isTypeScript ? `### Build
+${
+  isTypeScript
+    ? `### Build
 
 \`\`\`bash
 # Build TypeScript to JavaScript
@@ -337,7 +445,9 @@ npm run build
 # Start production server
 npm start
 \`\`\`
-` : ''}
+`
+    : ''
+}
 
 ## 🔧 Available Scripts
 
@@ -347,14 +457,18 @@ npm start
 - \`npm run lint\` - Lint code
 - \`npm run lint:fix\` - Fix linting issues
 
-${database === 'prisma' ? `
+${
+  database === 'prisma'
+    ? `
 ## 💾 Database Commands
 
 - \`npm run db:generate\` - Generate Prisma Client
 - \`npm run db:push\` - Push schema changes
 - \`npm run db:migrate\` - Run migrations
 - \`npm run db:studio\` - Open Prisma Studio
-` : ''}
+`
+    : ''
+}
 
 ## 📝 License
 
@@ -433,26 +547,30 @@ model User {
 }
 
 function generateTsConfig() {
-  return JSON.stringify({
-    compilerOptions: {
-      target: 'ES2022',
-      module: 'ESNext',
-      lib: ['ES2022'],
-      moduleResolution: 'node',
-      rootDir: './src',
-      outDir: './dist',
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      forceConsistentCasingInFileNames: true,
-      resolveJsonModule: true,
-      declaration: true,
-      sourceMap: true,
-      types: ['node'],
+  return JSON.stringify(
+    {
+      compilerOptions: {
+        target: 'ES2022',
+        module: 'ESNext',
+        lib: ['ES2022'],
+        moduleResolution: 'node',
+        rootDir: './src',
+        outDir: './dist',
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        forceConsistentCasingInFileNames: true,
+        resolveJsonModule: true,
+        declaration: true,
+        sourceMap: true,
+        types: ['node'],
+      },
+      include: ['src/**/*'],
+      exclude: ['node_modules', 'dist'],
     },
-    include: ['src/**/*'],
-    exclude: ['node_modules', 'dist'],
-  }, null, 2);
+    null,
+    2
+  );
 }
 
 function generateEslintConfig(isTypeScript) {
@@ -506,24 +624,32 @@ export default [
 
 function generateNodemonConfig(isTypeScript) {
   if (isTypeScript) {
-    return JSON.stringify({
+    return JSON.stringify(
+      {
+        watch: ['src'],
+        ext: 'ts',
+        exec: 'ts-node src/server.ts',
+        env: {
+          NODE_ENV: 'development',
+        },
+      },
+      null,
+      2
+    );
+  }
+
+  return JSON.stringify(
+    {
       watch: ['src'],
-      ext: 'ts',
-      exec: 'ts-node src/server.ts',
+      ext: 'js',
+      exec: 'node src/server.js',
       env: {
         NODE_ENV: 'development',
       },
-    }, null, 2);
-  }
-
-  return JSON.stringify({
-    watch: ['src'],
-    ext: 'js',
-    exec: 'node src/server.js',
-    env: {
-      NODE_ENV: 'development',
     },
-  }, null, 2);
+    null,
+    2
+  );
 }
 
 function generateAppFile(config) {

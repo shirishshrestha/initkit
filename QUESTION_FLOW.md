@@ -1,8 +1,10 @@
 # InitKit - Interactive Question Flow
 
-> **Complete decision tree and prompt flow for the InitKit CLI**
+> **Complete decision tree and prompt flow for the InitKit CLI (v1.1.0)**
 
 This document outlines the 13-question interactive flow that adapts based on your project type. The CLI uses intelligent conditional logic to show only relevant questions.
+
+**Latest Update (v1.1.0):** Live NPM version fetching, Redux Toolkit, Jotai, React Router, Radix UI, ShadCN UI, React Icons, and Bun package manager support.
 
 ---
 
@@ -26,21 +28,25 @@ START: $ initkit [project-name] [options]
          ├─ Q9: Styling Solution (if Frontend/Full Stack)
          ├─ Q10: Additional Libraries (context-aware)
          ├─ Q11: Development Features (ESLint, Prettier, etc.)
-         ├─ Q12: Package Manager (npm/yarn/pnpm)
+         ├─ Q12: Package Manager (npm/yarn/pnpm/bun)
          └─ Q13: Git Initialization
                  │
                  ▼
             PROCESSING
                  │
-         ┌───────┴───────┐
-         │ Success Flow  │
-         │               │
-         │ 1. Create dir │
-         │ 2. Generate   │
-         │ 3. Init git   │
-         │ 4. Install    │
-         │ 5. Summary    │
-         └───────────────┘
+         ┌───────┴───────────────┐
+         │ Success Flow          │
+         │                       │
+         │ 1. Fetch versions 🌐  │
+         │ 2. Create directory   │
+         │ 3. Generate files     │
+         │ 4. Init git           │
+         │ 5. Install deps       │
+         │ 6. Success summary    │
+         └───────────────────────┘
+         
+         Note: Step 1 queries npm registry
+         for latest package versions
 ```
 
 ---
@@ -340,9 +346,21 @@ Dynamic choices: Based on project type
 - `Zod` - Schema validation
 
 **Frontend-Specific Libraries:**
-- `React Query` - Data fetching & caching
+
+*State Management:*
+- `Redux Toolkit` - Industry-standard state management with React Redux
 - `Zustand` - Lightweight state management
+- `Jotai` - Atomic state management
+
+*Routing & Data:*
+- `React Router` - Client-side routing
+- `TanStack Query` - Data fetching & caching
 - `React Hook Form` - Performant form handling
+
+*UI & Animation:*
+- `Radix UI` - Headless accessible components
+- `ShadCN UI` - Beautiful component library
+- `React Icons` - Popular icon library
 - `Framer Motion` - Animation library
 
 **Backend-Specific Libraries:**
@@ -410,17 +428,19 @@ Default: 'npm'
 ```
 
 **Options:**
-| Manager | Value | Install Command | Run Script |
-|---------|-------|----------------|------------|
-| npm | `npm` | `npm install` | `npm run dev` |
-| yarn | `yarn` | `yarn` | `yarn dev` |
-| pnpm | `pnpm` | `pnpm install` | `pnpm dev` |
+| Manager | Value | Install Command | Run Script | Speed |
+|---------|-------|----------------|------------|-------|
+| npm | `npm` | `npm install` | `npm run dev` | Standard |
+| yarn | `yarn` | `yarn install` | `yarn dev` | Fast |
+| pnpm | `pnpm` | `pnpm install` | `pnpm dev` | Very Fast |
+| bun | `bun` | `bun install` | `bun run dev` | Blazing Fast ⚡ |
 
 **Impact:**
-- Lock file type (package-lock.json, yarn.lock, pnpm-lock.yaml)
-- Installation speed and disk usage
+- Lock file type (package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb)
+- Installation speed and disk usage (bun is fastest)
 - Workspaces configuration (if monorepo)
 - CI/CD pipeline commands
+- Runtime compatibility (bun can also run scripts)
 
 ---
 
@@ -476,6 +496,38 @@ coverage/
 ## Complete Flow Examples
 
 
+## Version Fetching (New in v1.1.0)
+
+InitKit now fetches **actual latest versions** from the npm registry:
+
+```bash
+⠹ Fetching latest package versions...
+✔ Fetched latest versions
+
+Results:
+- React: ^19.2.4 (not "latest" string)
+- Vite: ^7.3.1
+- Next.js: ^16.1.11
+- TypeScript: ^5.9.3
+- Redux Toolkit: ^2.11.2
+- Tailwind CSS: ^4.1.18
+```
+
+**How it works:**
+1. Queries `registry.npmjs.org/${package}/latest` via HTTPS
+2. Parses JSON response for version number
+3. Returns in `^x.y.z` semver format
+4. Falls back to safe defaults if network fails
+5. Shows spinner during fetch with success/error feedback
+
+**Benefits:**
+- Always get the latest stable versions
+- Professional package.json (no "latest" strings)
+- No manual version updates needed
+- Fallback ensures reliability
+
+---
+
 ## Complete Flow Examples
 
 ### Example 1: React + TypeScript + Tailwind (Frontend)
@@ -491,16 +543,18 @@ Q4: Language → "TypeScript"
 Q5: TS Strictness → "Strict"
 Q6: Folder Structure → "Feature-based"
 Q7: Styling → "Tailwind CSS"
-Q8: Libraries → [React Query, Zustand]
+Q8: Libraries → [Redux Toolkit, TanStack Query, Radix UI]
 Q9: Features → [ESLint, Prettier, Jest, EditorConfig, dotenv]
 Q10: Package Manager → "npm"
 Q11: Git → "Yes"
 
 ⏳ Creating project...
+⠹ Fetching latest package versions...
+✔ Found React ^19.2.4, Vite ^7.3.1, Redux Toolkit ^2.11.2
 ✓ Project structure created
 ✓ Files generated
 ✓ Git initialized
-✓ Dependencies installed
+✓ Dependencies installed (npm)
 ✨ Success!
 ```
 
@@ -525,12 +579,14 @@ my-react-app/
 ├── vite.config.ts
 └── package.json
 
-Dependencies:
-- react, react-dom
-- @tanstack/react-query
-- zustand
-- tailwindcss, postcss, autoprefixer
-- typescript, @types/react
+Dependencies (with actual latest versions):
+- react ^19.2.4, react-dom ^19.2.4
+- @reduxjs/toolkit ^2.11.2, react-redux ^9.2.0
+- @tanstack/react-query ^6.10.3
+- @radix-ui/react-* (multiple packages)
+- vite ^7.3.1
+- tailwindcss ^4.1.18, postcss, autoprefixer
+- typescript ^5.9.3, @types/react
 - eslint, prettier, jest
 ```
 

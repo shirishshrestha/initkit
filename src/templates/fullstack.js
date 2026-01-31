@@ -1,12 +1,24 @@
 import fs from 'fs-extra';
 import path from 'path';
+import ora from 'ora';
+import chalk from 'chalk';
+import { getLatestVersion } from '../utils/versionFetcher.js';
 import { generateNextjsTemplate } from './nextjs.js';
 import { generateReactTemplate } from './react.js';
-import generateExpressTemplate from './express.js';
+import { generateExpressTemplate } from './express.js';
+
+async function fetchVersion(packageName, fallback = 'latest') {
+  try {
+    const version = await getLatestVersion(packageName);
+    return `^${version}`;
+  } catch {
+    return fallback;
+  }
+}
 
 /**
  * Generate Full-Stack project with integrated frontend and backend
- * 
+ *
  * Creates a complete full-stack application supporting:
  * - **Monorepo Structure**: Turborepo with apps/ and packages/ workspaces
  * - **Traditional Structure**: Separate client/ and server/ directories
@@ -15,7 +27,7 @@ import generateExpressTemplate from './express.js';
  * - **API Integration**: Pre-configured frontend-backend communication
  * - **Database Setup**: Models, migrations, seeders
  * - **Docker Compose**: Complete orchestration for all services
- * 
+ *
  * Generated project includes:
  * - Frontend application (React, Next.js, Vue, etc.)
  * - Backend API (Express, NestJS, etc.)
@@ -24,7 +36,7 @@ import generateExpressTemplate from './express.js';
  * - Root configuration (Turborepo, Docker Compose, etc.)
  * - Environment configuration for all services
  * - Comprehensive README with setup instructions
- * 
+ *
  * @param {string} projectPath - Absolute path to the project directory
  * @param {Object} config - User configuration object
  * @param {string} config.projectName - Name of the project
@@ -42,9 +54,9 @@ import generateExpressTemplate from './express.js';
  * @param {string} [config.backend] - Backend framework (derived from stack)
  * @param {string} [config.database] - Database choice (derived from stack)
  * @param {string} config.packageManager - Package manager to use
- * 
+ *
  * @returns {Promise<void>}
- * 
+ *
  * @example
  * // Create MERN stack monorepo with Turborepo
  * await generateFullStackTemplate('/path/to/project', {
@@ -54,7 +66,7 @@ import generateExpressTemplate from './express.js';
  *   stack: 'MERN',
  *   packageManager: 'pnpm'
  * });
- * 
+ *
  * @example
  * // Create T3 Stack (Next.js + tRPC + Prisma)
  * await generateFullStackTemplate('/path/to/project', {
@@ -90,14 +102,11 @@ async function generateMonorepoStructure(projectPath, config) {
   // Generate root package.json with workspaces
   await fs.writeFile(
     path.join(projectPath, 'package.json'),
-    generateMonorepoPackageJson(config)
+    await generateMonorepoPackageJson(config)
   );
 
   // Generate turbo.json
-  await fs.writeFile(
-    path.join(projectPath, 'turbo.json'),
-    generateTurboConfig()
-  );
+  await fs.writeFile(path.join(projectPath, 'turbo.json'), generateTurboConfig());
 
   // Generate frontend in apps/frontend
   const frontendPath = path.join(projectPath, 'apps', 'frontend');
@@ -106,7 +115,7 @@ async function generateMonorepoStructure(projectPath, config) {
     projectName: 'frontend',
     frontend: stack.includes('Next.js') ? 'nextjs' : 'react',
   };
-  
+
   if (stack.includes('Next.js')) {
     await generateNextjsTemplate(frontendPath, frontendConfig);
   } else {
@@ -119,7 +128,11 @@ async function generateMonorepoStructure(projectPath, config) {
     ...config,
     projectName: 'backend',
     backend: 'express',
-    database: stack.includes('MongoDB') ? 'mongodb' : stack.includes('PostgreSQL') ? 'prisma' : 'none',
+    database: stack.includes('MongoDB')
+      ? 'mongodb'
+      : stack.includes('PostgreSQL')
+        ? 'prisma'
+        : 'none',
   };
   await generateExpressTemplate(backendPath, backendConfig);
 
@@ -184,7 +197,7 @@ async function generateMERNStack(projectPath, config) {
   // Generate root package.json
   await fs.writeFile(
     path.join(projectPath, 'package.json'),
-    generateRootPackageJson(config, 'MERN')
+    await generateRootPackageJson(config, 'MERN')
   );
 
   // Generate Docker setup
@@ -230,7 +243,7 @@ async function generatePERNStack(projectPath, config) {
   // Generate root package.json
   await fs.writeFile(
     path.join(projectPath, 'package.json'),
-    generateRootPackageJson(config, 'PERN')
+    await generateRootPackageJson(config, 'PERN')
   );
 
   // Generate Docker setup with PostgreSQL
@@ -275,7 +288,7 @@ async function generateNextExpressStack(projectPath, config) {
   // Generate root package.json
   await fs.writeFile(
     path.join(projectPath, 'package.json'),
-    generateRootPackageJson(config, 'Next.js + Express')
+    await generateRootPackageJson(config, 'Next.js + Express')
   );
 
   // Generate Docker setup
@@ -297,7 +310,7 @@ async function generateNextExpressStack(projectPath, config) {
 async function generateLaravelReactStack(projectPath, config) {
   // Create folder structure
   await fs.ensureDir(path.join(projectPath, 'client'));
-  
+
   // Generate React frontend
   const clientConfig = {
     ...config,
@@ -339,66 +352,100 @@ Add your API routes in \`routes/api.php\`
   );
 
   // Generate root README
-  await fs.writeFile(
-    path.join(projectPath, 'README.md'),
-    generateLaravelReactReadme(config)
-  );
+  await fs.writeFile(path.join(projectPath, 'README.md'), generateLaravelReactReadme(config));
 }
 
 // ==================== Helper Functions ====================
 
-function generateMonorepoPackageJson(config) {
-  return JSON.stringify({
-    name: config.projectName || 'my-monorepo',
-    version: '1.0.0',
-    private: true,
-    workspaces: [
-      'apps/*',
-      'packages/*',
-    ],
-    scripts: {
-      dev: 'turbo run dev',
-      build: 'turbo run build',
-      lint: 'turbo run lint',
-      clean: 'turbo run clean',
-      'dev:frontend': 'turbo run dev --filter=frontend',
-      'dev:backend': 'turbo run dev --filter=backend',
-    },
-    devDependencies: {
-      turbo: '^2.3.3',
-    },
-  }, null, 2);
+async function generateMonorepoPackageJson(config) {
+  const spinner = ora('Fetching latest package versions...').start();
+
+  try {
+    const turboVer = await fetchVersion('turbo');
+    spinner.succeed(chalk.green('Fetched latest versions'));
+
+    return JSON.stringify(
+      {
+        name: config.projectName || 'my-monorepo',
+        version: '1.0.0',
+        private: true,
+        workspaces: ['apps/*', 'packages/*'],
+        scripts: {
+          dev: 'turbo run dev',
+          build: 'turbo run build',
+          lint: 'turbo run lint',
+          clean: 'turbo run clean',
+          'dev:frontend': 'turbo run dev --filter=frontend',
+          'dev:backend': 'turbo run dev --filter=backend',
+        },
+        devDependencies: {
+          turbo: turboVer,
+        },
+      },
+      null,
+      2
+    );
+  } catch (error) {
+    spinner.fail(chalk.yellow('Could not fetch versions, using fallbacks'));
+    return JSON.stringify(
+      {
+        name: config.projectName || 'my-monorepo',
+        version: '1.0.0',
+        private: true,
+        workspaces: ['apps/*', 'packages/*'],
+        scripts: {
+          dev: 'turbo run dev',
+          build: 'turbo run build',
+          lint: 'turbo run lint',
+          clean: 'turbo run clean',
+          'dev:frontend': 'turbo run dev --filter=frontend',
+          'dev:backend': 'turbo run dev --filter=backend',
+        },
+        devDependencies: { turbo: 'latest' },
+      },
+      null,
+      2
+    );
+  }
 }
 
 function generateTurboConfig() {
-  return JSON.stringify({
-    $schema: 'https://turbo.build/schema.json',
-    pipeline: {
-      build: {
-        dependsOn: ['^build'],
-        outputs: ['dist/**', '.next/**'],
-      },
-      dev: {
-        cache: false,
-        persistent: true,
-      },
-      lint: {},
-      clean: {
-        cache: false,
+  return JSON.stringify(
+    {
+      $schema: 'https://turbo.build/schema.json',
+      pipeline: {
+        build: {
+          dependsOn: ['^build'],
+          outputs: ['dist/**', '.next/**'],
+        },
+        dev: {
+          cache: false,
+          persistent: true,
+        },
+        lint: {},
+        clean: {
+          cache: false,
+        },
       },
     },
-  }, null, 2);
+    null,
+    2
+  );
 }
 
 async function generateSharedTypes(typesPath) {
   await fs.writeFile(
     path.join(typesPath, 'package.json'),
-    JSON.stringify({
-      name: 'shared-types',
-      version: '1.0.0',
-      main: './src/index.ts',
-      types: './src/index.ts',
-    }, null, 2)
+    JSON.stringify(
+      {
+        name: 'shared-types',
+        version: '1.0.0',
+        main: './src/index.ts',
+        types: './src/index.ts',
+      },
+      null,
+      2
+    )
   );
 
   await fs.ensureDir(path.join(typesPath, 'src'));
@@ -426,18 +473,23 @@ export interface ApiResponse<T = any> {
 
   await fs.writeFile(
     path.join(typesPath, 'tsconfig.json'),
-    JSON.stringify({
-      compilerOptions: {
-        target: 'ES2020',
-        module: 'ESNext',
-        moduleResolution: 'node',
-        declaration: true,
-        outDir: './dist',
-        strict: true,
-        esModuleInterop: true,
+    JSON.stringify(
+      {
+        compilerOptions: {
+          target: 'ES2020',
+          module: 'ESNext',
+          moduleResolution: 'node',
+          declaration: true,
+          outDir: './dist',
+          strict: true,
+          esModuleInterop: true,
+        },
+        include: ['src/**/*'],
+        exclude: ['node_modules', 'dist'],
       },
-      include: ['src/**/*'],
-    }, null, 2)
+      null,
+      2
+    )
   );
 }
 
@@ -446,15 +498,19 @@ async function generateUIComponents(uiPath, config) {
 
   await fs.writeFile(
     path.join(uiPath, 'package.json'),
-    JSON.stringify({
-      name: 'ui-components',
-      version: '1.0.0',
-      main: './src/index.ts',
-      dependencies: {
-        react: '^19.0.0',
-        ...(isNextjs && { 'next': '^15.1.4' }),
+    JSON.stringify(
+      {
+        name: 'ui-components',
+        version: '1.0.0',
+        main: './src/index.ts',
+        dependencies: {
+          react: '^19.0.0',
+          ...(isNextjs && { next: '^15.1.4' }),
+        },
       },
-    }, null, 2)
+      null,
+      2
+    )
   );
 
   await fs.ensureDir(path.join(uiPath, 'src'));
@@ -578,14 +634,20 @@ services:
       - ./apps/backend:/app
       - /app/node_modules
 
-  ${config.stack?.includes('MongoDB') ? `mongo:
+  ${
+    config.stack?.includes('MongoDB')
+      ? `mongo:
     image: mongo:7
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db` : ''}
+      - mongo_data:/data/db`
+      : ''
+  }
 
-  ${config.stack?.includes('PostgreSQL') ? `postgres:
+  ${
+    config.stack?.includes('PostgreSQL')
+      ? `postgres:
     image: postgres:15-alpine
     ports:
       - "5432:5432"
@@ -594,11 +656,17 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=mydb
     volumes:
-      - postgres_data:/var/lib/postgresql/data` : ''}
+      - postgres_data:/var/lib/postgresql/data`
+      : ''
+  }
 
-${config.stack?.includes('MongoDB') || config.stack?.includes('PostgreSQL') ? `volumes:
+${
+  config.stack?.includes('MongoDB') || config.stack?.includes('PostgreSQL')
+    ? `volumes:
   ${config.stack?.includes('MongoDB') ? 'mongo_data:' : ''}
-  ${config.stack?.includes('PostgreSQL') ? 'postgres_data:' : ''}` : ''}
+  ${config.stack?.includes('PostgreSQL') ? 'postgres_data:' : ''}`
+    : ''
+}
 `
   );
 }
@@ -682,36 +750,89 @@ MIT
   );
 }
 
-function generateRootPackageJson(config, stackType) {
-  const scripts = {
-    'dev': 'concurrently "npm run dev:client" "npm run dev:server"',
-    'dev:client': stackType === 'Next.js + Express' 
-      ? 'cd frontend && npm run dev'
-      : 'cd client && npm run dev',
-    'dev:server': stackType === 'Next.js + Express'
-      ? 'cd backend && npm run dev'
-      : 'cd server && npm run dev',
-    'build': 'npm run build:client && npm run build:server',
-    'build:client': stackType === 'Next.js + Express'
-      ? 'cd frontend && npm run build'
-      : 'cd client && npm run build',
-    'build:server': stackType === 'Next.js + Express'
-      ? 'cd backend && npm run build'
-      : 'cd server && npm run build',
-    'install:all': stackType === 'Next.js + Express'
-      ? 'npm install && cd frontend && npm install && cd ../backend && npm install'
-      : 'npm install && cd client && npm install && cd ../server && npm install',
-  };
+async function generateRootPackageJson(config, stackType) {
+  const spinner = ora('Fetching latest package versions...').start();
 
-  return JSON.stringify({
-    name: config.projectName || 'my-fullstack-app',
-    version: '1.0.0',
-    description: `${stackType} full-stack application`,
-    scripts,
-    devDependencies: {
-      concurrently: '^9.1.0',
-    },
-  }, null, 2);
+  try {
+    const concurrentlyVer = await fetchVersion('concurrently');
+    spinner.succeed(chalk.green('Fetched latest versions'));
+
+    const scripts = {
+      dev: 'concurrently "npm run dev:client" "npm run dev:server"',
+      'dev:client':
+        stackType === 'Next.js + Express'
+          ? 'cd frontend && npm run dev'
+          : 'cd client && npm run dev',
+      'dev:server':
+        stackType === 'Next.js + Express'
+          ? 'cd backend && npm run dev'
+          : 'cd server && npm run dev',
+      build: 'npm run build:client && npm run build:server',
+      'build:client':
+        stackType === 'Next.js + Express'
+          ? 'cd frontend && npm run build'
+          : 'cd client && npm run build',
+      'build:server':
+        stackType === 'Next.js + Express'
+          ? 'cd backend && npm run build'
+          : 'cd server && npm run build',
+      'install:all':
+        stackType === 'Next.js + Express'
+          ? 'npm install && cd frontend && npm install && cd ../backend && npm install'
+          : 'npm install && cd client && npm install && cd ../server && npm install',
+    };
+
+    return JSON.stringify(
+      {
+        name: config.projectName || 'my-fullstack-app',
+        version: '1.0.0',
+        description: `${stackType} full-stack application`,
+        scripts,
+        devDependencies: {
+          concurrently: concurrentlyVer,
+        },
+      },
+      null,
+      2
+    );
+  } catch (error) {
+    spinner.fail(chalk.yellow('Could not fetch versions, using fallbacks'));
+    const scripts = {
+      dev: 'concurrently "npm run dev:client" "npm run dev:server"',
+      'dev:client':
+        stackType === 'Next.js + Express'
+          ? 'cd frontend && npm run dev'
+          : 'cd client && npm run dev',
+      'dev:server':
+        stackType === 'Next.js + Express'
+          ? 'cd backend && npm run dev'
+          : 'cd server && npm run dev',
+      build: 'npm run build:client && npm run build:server',
+      'build:client':
+        stackType === 'Next.js + Express'
+          ? 'cd frontend && npm run build'
+          : 'cd client && npm run build',
+      'build:server':
+        stackType === 'Next.js + Express'
+          ? 'cd backend && npm run build'
+          : 'cd server && npm run build',
+      'install:all':
+        stackType === 'Next.js + Express'
+          ? 'npm install && cd frontend && npm install && cd ../backend && npm install'
+          : 'npm install && cd client && npm install && cd ../server && npm install',
+    };
+    return JSON.stringify(
+      {
+        name: config.projectName || 'my-fullstack-app',
+        version: '1.0.0',
+        description: `${stackType} full-stack application`,
+        scripts,
+        devDependencies: { concurrently: 'latest' },
+      },
+      null,
+      2
+    );
+  }
 }
 
 async function generateDockerSetup(projectPath, config, stackType) {
@@ -719,8 +840,9 @@ async function generateDockerSetup(projectPath, config, stackType) {
   const backendDir = stackType === 'Next.js + Express' ? 'backend' : 'server';
 
   // Docker Compose
-  const dbService = stackType === 'MERN' 
-    ? `  mongo:
+  const dbService =
+    stackType === 'MERN'
+      ? `  mongo:
     image: mongo:7
     ports:
       - "27017:27017"
@@ -728,8 +850,8 @@ async function generateDockerSetup(projectPath, config, stackType) {
       - mongo_data:/data/db
     environment:
       - MONGO_INITDB_DATABASE=mydb`
-    : stackType === 'PERN' || stackType === 'Next.js + Express'
-    ? `  postgres:
+      : stackType === 'PERN' || stackType === 'Next.js + Express'
+        ? `  postgres:
     image: postgres:15-alpine
     ports:
       - "5432:5432"
@@ -739,7 +861,7 @@ async function generateDockerSetup(projectPath, config, stackType) {
       - POSTGRES_DB=mydb
     volumes:
       - postgres_data:/var/lib/postgresql/data`
-    : '';
+        : '';
 
   await fs.writeFile(
     path.join(projectPath, 'docker-compose.yml'),
@@ -779,8 +901,12 @@ services:
 
 ${dbService}
 
-${dbService ? `volumes:
-  ${stackType === 'MERN' ? 'mongo_data:' : 'postgres_data:'}` : ''}
+${
+  dbService
+    ? `volumes:
+  ${stackType === 'MERN' ? 'mongo_data:' : 'postgres_data:'}`
+    : ''
+}
 `
   );
 
@@ -816,10 +942,7 @@ COPY . .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host"]`;
 
-  await fs.writeFile(
-    path.join(projectPath, frontendDir, 'Dockerfile'),
-    frontendDockerfile
-  );
+  await fs.writeFile(path.join(projectPath, frontendDir, 'Dockerfile'), frontendDockerfile);
 
   // Backend Dockerfile
   await fs.writeFile(
@@ -837,7 +960,7 @@ CMD ["npm", "start"]`
 
 async function generateAPIConfig(projectPath, config, stackType) {
   const frontendDir = stackType === 'Next.js + Express' ? 'frontend' : 'client';
-  
+
   if (stackType.includes('Next.js')) {
     return; // Next.js uses rewrites in next.config.js
   }
@@ -859,10 +982,7 @@ export default defineConfig({
 });
 `;
 
-  await fs.writeFile(
-    path.join(projectPath, frontendDir, 'vite.config.js'),
-    viteConfig
-  );
+  await fs.writeFile(path.join(projectPath, frontendDir, 'vite.config.js'), viteConfig);
 
   // API client wrapper
   await fs.ensureDir(path.join(projectPath, frontendDir, 'src', 'lib'));
@@ -894,7 +1014,7 @@ export default api;
 async function generateNextjsProxyConfig(frontendPath) {
   // Add API rewrite to next.config.js
   const nextConfigPath = path.join(frontendPath, 'next.config.js');
-  
+
   // Read existing config or create new one
   let configContent = `/** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -941,7 +1061,8 @@ function generateFullStackReadme(projectPath, config, stackType) {
 
   const frontend = stackType.includes('Next.js') ? 'Next.js' : 'React';
   const backend = 'Express.js';
-  const database = stackType === 'MERN' ? 'MongoDB' : stackType === 'PERN' ? 'PostgreSQL' : 'PostgreSQL';
+  const database =
+    stackType === 'MERN' ? 'MongoDB' : stackType === 'PERN' ? 'PostgreSQL' : 'PostgreSQL';
 
   return fs.writeFile(
     path.join(projectPath, 'README.md'),

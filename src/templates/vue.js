@@ -112,60 +112,123 @@ async function generateVuePackageJson(projectPath, config) {
   const { language, styling, additionalLibraries = [] } = config;
   const useTypeScript = language === 'typescript';
 
-  const dependencies = {
-    vue: 'latest',
-    'vue-router': 'latest',
-    pinia: 'latest',
-  };
+  const spinner = ora('Fetching latest package versions...').start();
 
-  const devDependencies = {
-    '@vitejs/plugin-vue': 'latest',
-    vite: 'latest',
-    ...(useTypeScript && {
-      typescript: 'latest',
-      'vue-tsc': 'latest',
-    }),
-  };
+  try {
+    // Fetch core dependencies
+    const [vueVer, vueRouterVer, piniaVer, pluginVer, viteVer] = await Promise.all([
+      fetchVersion('vue'),
+      fetchVersion('vue-router'),
+      fetchVersion('pinia'),
+      fetchVersion('@vitejs/plugin-vue'),
+      fetchVersion('vite'),
+    ]);
 
-  // Add Tailwind
-  if (styling === 'tailwind') {
-    devDependencies['tailwindcss'] = 'latest';
+    const dependencies = {
+      vue: vueVer,
+      'vue-router': vueRouterVer,
+      pinia: piniaVer,
+    };
+
+    const devDependencies = {
+      '@vitejs/plugin-vue': pluginVer,
+      vite: viteVer,
+    };
+
+    // TypeScript dependencies
+    if (useTypeScript) {
+      const [tsVer, vueTscVer] = await Promise.all([
+        fetchVersion('typescript'),
+        fetchVersion('vue-tsc'),
+      ]);
+      devDependencies['typescript'] = tsVer;
+      devDependencies['vue-tsc'] = vueTscVer;
+    }
+
+    // Add Tailwind
+    if (styling === 'tailwind') {
+      devDependencies['tailwindcss'] = await fetchVersion('tailwindcss');
+    }
+
+    // Add libraries
+    if (additionalLibraries.includes('tanstack-query')) {
+      dependencies['@tanstack/vue-query'] = await fetchVersion('@tanstack/vue-query');
+    }
+
+    if (additionalLibraries.includes('axios')) {
+      dependencies['axios'] = await fetchVersion('axios');
+    }
+
+    if (additionalLibraries.includes('vueuse')) {
+      dependencies['@vueuse/core'] = await fetchVersion('@vueuse/core');
+    }
+
+    if (additionalLibraries.includes('vee-validate')) {
+      const [veeValidateVer, zodVer, veeZodVer] = await Promise.all([
+        fetchVersion('vee-validate'),
+        fetchVersion('zod'),
+        fetchVersion('@vee-validate/zod'),
+      ]);
+      dependencies['vee-validate'] = veeValidateVer;
+      dependencies['zod'] = zodVer;
+      dependencies['@vee-validate/zod'] = veeZodVer;
+    }
+
+    spinner.succeed(chalk.green('Fetched latest versions'));
+
+    const packageJson = {
+      name: config.projectName,
+      version: '0.0.0',
+      private: true,
+      type: 'module',
+      scripts: {
+        dev: 'vite',
+        build: useTypeScript ? 'vue-tsc && vite build' : 'vite build',
+        preview: 'vite preview',
+      },
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+  } catch (error) {
+    spinner.fail(chalk.yellow('Could not fetch versions, using fallbacks'));
+
+    // Fallback with latest tag
+    const dependencies = { vue: 'latest', 'vue-router': 'latest', pinia: 'latest' };
+    const devDependencies = {
+      '@vitejs/plugin-vue': 'latest',
+      vite: 'latest',
+      ...(useTypeScript && { typescript: 'latest', 'vue-tsc': 'latest' }),
+    };
+
+    if (styling === 'tailwind') devDependencies['tailwindcss'] = 'latest';
+    if (additionalLibraries.includes('tanstack-query'))
+      dependencies['@tanstack/vue-query'] = 'latest';
+    if (additionalLibraries.includes('axios')) dependencies['axios'] = 'latest';
+    if (additionalLibraries.includes('vueuse')) dependencies['@vueuse/core'] = 'latest';
+    if (additionalLibraries.includes('vee-validate')) {
+      dependencies['vee-validate'] = 'latest';
+      dependencies['zod'] = 'latest';
+      dependencies['@vee-validate/zod'] = 'latest';
+    }
+
+    const packageJson = {
+      name: config.projectName,
+      version: '0.0.0',
+      private: true,
+      type: 'module',
+      scripts: {
+        dev: 'vite',
+        build: useTypeScript ? 'vue-tsc && vite build' : 'vite build',
+        preview: 'vite preview',
+      },
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
   }
-
-  // Add libraries
-  if (additionalLibraries.includes('tanstack-query')) {
-    dependencies['@tanstack/vue-query'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('axios')) {
-    dependencies['axios'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('vueuse')) {
-    dependencies['@vueuse/core'] = 'latest';
-  }
-
-  if (additionalLibraries.includes('vee-validate')) {
-    dependencies['vee-validate'] = 'latest';
-    dependencies['zod'] = 'latest';
-    dependencies['@vee-validate/zod'] = 'latest';
-  }
-
-  const packageJson = {
-    name: config.projectName,
-    version: '0.0.0',
-    private: true,
-    type: 'module',
-    scripts: {
-      dev: 'vite',
-      build: useTypeScript ? 'vue-tsc && vite build' : 'vite build',
-      preview: 'vite preview',
-    },
-    dependencies,
-    devDependencies,
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
 }
 
 async function generateVueEssentialFiles(projectPath, config) {
@@ -395,6 +458,7 @@ coverage
         noFallthroughCasesInSwitch: true,
       },
       include: ['src/**/*.ts', 'src/**/*.tsx', 'src/**/*.vue'],
+      exclude: ['node_modules', 'dist'],
     };
 
     await fs.writeJSON(path.join(projectPath, 'tsconfig.json'), tsconfigContent, { spaces: 2 });
