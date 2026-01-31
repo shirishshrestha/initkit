@@ -5,6 +5,24 @@ All notable changes to InitKit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.2.2] - 2026-01-31
+
+### Fixed
+- Fixed Tailwind CSS initialization failing with pnpm, yarn, and bun package managers
+- Changed from hardcoded `npx` to package manager specific binary runners:
+  - npm: `npx`
+  - yarn: `yarn`
+  - pnpm: `pnpm exec`
+  - bun: `bunx`
+- Resolved "Command failed with exit code 1: npx tailwindcss init -p" error
+- Fixed shadcn/ui installation that requires Tailwind CSS as prerequisite
+
+### Added
+- Comprehensive testing guide (TESTING_GUIDE.md)
+- Test scripts for various framework and package manager combinations
+
 ## [1.1.0] - 2026-01-31
 
 ### Added
