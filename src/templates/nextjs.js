@@ -1,49 +1,69 @@
 import fs from 'fs-extra';
 import path from 'path';
+import ora from 'ora';
+import chalk from 'chalk';
+import { getLatestVersion } from '../utils/versionFetcher.js';
+
+async function fetchVersion(packageName, fallback = 'latest') {
+  try {
+    const version = await getLatestVersion(packageName);
+    return `^${version}`;
+  } catch {
+    return fallback;
+  }
+}
 
 /**
- * Generate Next.js project structure and files
+ * Generate Next.js project with App Router or Pages Router structure
+ *
+ * Creates a modern Next.js project with:
+ * - Folder structure based on user preference (feature-based, type-based, or pages-router)
+ * - TypeScript or JavaScript configuration
+ * - App Router (default) or Pages Router architecture
+ * - Package.json with Next.js 14+ dependencies
+ * - README with getting started instructions
+ *
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User configuration object
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.language - Programming language ('typescript'|'javascript')
+ * @param {string} [config.folderStructure='feature-based'] - Folder organization pattern
+ *   - 'feature-based': Organize by features/modules (recommended for large apps)
+ *   - 'type-based': Organize by file type (components, hooks, utils)
+ *   - 'pages-router': Use legacy Pages Router instead of App Router
+ * @param {string} config.packageManager - Package manager to use
+ *
+ * @returns {Promise<void>}
+ *
+ * @example
+ * // Create Next.js project with App Router and feature-based structure
+ * await generateNextjsTemplate('/path/to/project', {
+ *   projectName: 'my-nextjs-app',
+ *   language: 'typescript',
+ *   folderStructure: 'feature-based',
+ *   packageManager: 'npm'
+ * });
  */
 export async function generateNextjsTemplate(projectPath, config) {
-  const {
-    language = 'typescript',
-    folderStructure = 'feature-based',
-    styling = 'tailwind',
-    typescriptStrict = 'strict',
-    additionalLibraries = [],
-    features = [],
-  } = config;
+  // Create folder structure only
+  await createNextjsFolderStructure(projectPath, config);
 
-  const isTypeScript = language === 'typescript';
-  const ext = isTypeScript ? 'tsx' : 'jsx';
-  const configExt = isTypeScript ? 'ts' : 'js';
-
-  // Determine structure type
-  const useAppRouter = folderStructure !== 'pages-router';
-
-  // Create folder structure
-  await createNextjsFolderStructure(projectPath, folderStructure, useAppRouter);
-
-  // Generate configuration files
-  await generateNextjsConfig(projectPath, config);
-
-  // Generate minimal app files
-  await generateNextjsAppFiles(projectPath, ext, useAppRouter, styling);
-
-  // Generate package.json with dependencies
+  // Generate package.json
   await generateNextjsPackageJson(projectPath, config);
+
+  // Generate essential files (layout, page, etc.)
+  await generateNextjsEssentialFiles(projectPath, config);
 
   // Generate README
   await generateNextjsReadme(projectPath, config);
-
-  // Create .env.example
-  await generateNextjsEnvExample(projectPath, additionalLibraries);
 }
 
-async function createNextjsFolderStructure(projectPath, structure, useAppRouter) {
+async function createNextjsFolderStructure(projectPath, config) {
   const srcPath = path.join(projectPath, 'src');
+  const folderStructure = config.folderStructure || 'feature-based';
+  const useAppRouter = folderStructure !== 'pages-router';
 
-  if (structure === 'feature-based') {
+  if (folderStructure === 'feature-based') {
     // Feature-based structure
     const features = ['auth', 'dashboard', 'users'];
     for (const feature of features) {
@@ -65,24 +85,20 @@ async function createNextjsFolderStructure(projectPath, structure, useAppRouter)
     await fs.ensureDir(path.join(srcPath, 'shared', 'hooks'));
     await fs.ensureDir(path.join(srcPath, 'shared', 'utils'));
     await fs.ensureDir(path.join(srcPath, 'shared', 'types'));
-    await fs.ensureDir(path.join(srcPath, 'shared', 'constants'));
 
-    // Create shared barrel exports
     await fs.writeFile(
       path.join(srcPath, 'shared', 'components', 'index.ts'),
-      generateSharedComponentsExport()
+      `// Export shared components\n// TODO: Add your shared components here\n`
     );
-  } else if (structure === 'component-based') {
+  } else if (folderStructure === 'component-based') {
     // Component-based structure
     await fs.ensureDir(path.join(srcPath, 'components', 'ui'));
     await fs.ensureDir(path.join(srcPath, 'components', 'layout'));
     await fs.ensureDir(path.join(srcPath, 'components', 'forms'));
-    await fs.ensureDir(path.join(srcPath, 'components', 'common'));
     await fs.ensureDir(path.join(srcPath, 'hooks'));
     await fs.ensureDir(path.join(srcPath, 'services'));
     await fs.ensureDir(path.join(srcPath, 'utils'));
     await fs.ensureDir(path.join(srcPath, 'types'));
-    await fs.ensureDir(path.join(srcPath, 'store', 'slices'));
   }
 
   // App or pages directory
@@ -99,51 +115,407 @@ async function createNextjsFolderStructure(projectPath, structure, useAppRouter)
   await fs.ensureDir(path.join(projectPath, 'public'));
 }
 
-async function generateNextjsConfig(projectPath, config) {
-  const { language, typescriptStrict, styling, features } = config;
+async function generateNextjsPackageJson(projectPath, config) {
+  const { language, styling, additionalLibraries = [] } = config;
   const isTypeScript = language === 'typescript';
 
-  // next.config.js
-  const nextConfig = `/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
-  images: {
-    domains: [],
-  },
-};
+  const spinner = ora('Fetching latest package versions...').start();
 
-export default nextConfig;
-`;
-  await fs.writeFile(path.join(projectPath, 'next.config.js'), nextConfig);
+  try {
+    // Fetch core dependencies
+    const [nextVer, reactVer, reactDomVer] = await Promise.all([
+      fetchVersion('next'),
+      fetchVersion('react'),
+      fetchVersion('react-dom'),
+    ]);
 
-  // tsconfig.json (if TypeScript)
-  if (isTypeScript) {
-    const strictness = {
-      strict: {
-        strict: true,
-        noUnusedLocals: true,
-        noUnusedParameters: true,
-        noFallthroughCasesInSwitch: true,
-      },
-      moderate: {
-        strict: true,
-        noUnusedLocals: false,
-        noUnusedParameters: false,
-      },
-      relaxed: {
-        strict: false,
-        noImplicitAny: false,
-      },
+    const dependencies = {
+      next: nextVer,
+      react: reactVer,
+      'react-dom': reactDomVer,
     };
 
-    const tsConfig = {
+    const devDependencies = {};
+
+    // TypeScript dependencies
+    if (isTypeScript) {
+      const [tsVer, typesNodeVer, typesReactVer, typesReactDomVer] = await Promise.all([
+        fetchVersion('typescript'),
+        fetchVersion('@types/node'),
+        fetchVersion('@types/react'),
+        fetchVersion('@types/react-dom'),
+      ]);
+      devDependencies['typescript'] = tsVer;
+      devDependencies['@types/node'] = typesNodeVer;
+      devDependencies['@types/react'] = typesReactVer;
+      devDependencies['@types/react-dom'] = typesReactDomVer;
+    }
+
+    // Add Tailwind
+    if (styling === 'tailwind') {
+      devDependencies['tailwindcss'] = await fetchVersion('tailwindcss');
+    }
+
+    // Add libraries
+    if (additionalLibraries.includes('tanstack-query')) {
+      dependencies['@tanstack/react-query'] = await fetchVersion('@tanstack/react-query');
+    }
+
+    if (additionalLibraries.includes('redux-toolkit')) {
+      const [reduxVer, reactReduxVer] = await Promise.all([
+        fetchVersion('@reduxjs/toolkit'),
+        fetchVersion('react-redux'),
+      ]);
+      dependencies['@reduxjs/toolkit'] = reduxVer;
+      dependencies['react-redux'] = reactReduxVer;
+    }
+
+    if (additionalLibraries.includes('zustand')) {
+      dependencies['zustand'] = await fetchVersion('zustand');
+    }
+
+    if (additionalLibraries.includes('jotai')) {
+      dependencies['jotai'] = await fetchVersion('jotai');
+    }
+
+    if (additionalLibraries.includes('axios')) {
+      dependencies['axios'] = await fetchVersion('axios');
+    }
+
+    if (additionalLibraries.includes('zod')) {
+      dependencies['zod'] = await fetchVersion('zod');
+    }
+
+    if (additionalLibraries.includes('react-hook-form')) {
+      const [formVer, resolversVer] = await Promise.all([
+        fetchVersion('react-hook-form'),
+        fetchVersion('@hookform/resolvers'),
+      ]);
+      dependencies['react-hook-form'] = formVer;
+      dependencies['@hookform/resolvers'] = resolversVer;
+    }
+
+    if (additionalLibraries.includes('framer-motion')) {
+      dependencies['framer-motion'] = await fetchVersion('framer-motion');
+    }
+
+    if (additionalLibraries.includes('react-icons')) {
+      dependencies['react-icons'] = await fetchVersion('react-icons');
+    }
+
+    if (additionalLibraries.includes('radix-ui')) {
+      const [dialogVer, dropdownVer, selectVer, slotVer] = await Promise.all([
+        fetchVersion('@radix-ui/react-dialog'),
+        fetchVersion('@radix-ui/react-dropdown-menu'),
+        fetchVersion('@radix-ui/react-select'),
+        fetchVersion('@radix-ui/react-slot'),
+      ]);
+      Object.assign(dependencies, {
+        '@radix-ui/react-dialog': dialogVer,
+        '@radix-ui/react-dropdown-menu': dropdownVer,
+        '@radix-ui/react-select': selectVer,
+        '@radix-ui/react-slot': slotVer,
+      });
+    }
+
+    spinner.succeed(chalk.green('Fetched latest versions'));
+
+    const packageJson = {
+      name: config.projectName,
+      version: '0.1.0',
+      private: true,
+      scripts: {
+        dev: 'next dev',
+        build: 'next build',
+        start: 'next start',
+        lint: 'next lint',
+      },
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+  } catch (error) {
+    spinner.fail(chalk.yellow('Could not fetch versions, using fallbacks'));
+
+    // Fallback with latest tag
+    const dependencies = { next: 'latest', react: 'latest', 'react-dom': 'latest' };
+    const devDependencies = isTypeScript
+      ? {
+          typescript: 'latest',
+          '@types/node': 'latest',
+          '@types/react': 'latest',
+          '@types/react-dom': 'latest',
+        }
+      : {};
+
+    if (styling === 'tailwind') devDependencies['tailwindcss'] = 'latest';
+    if (additionalLibraries.includes('tanstack-query'))
+      dependencies['@tanstack/react-query'] = 'latest';
+    if (additionalLibraries.includes('redux-toolkit')) {
+      dependencies['@reduxjs/toolkit'] = 'latest';
+      dependencies['react-redux'] = 'latest';
+    }
+    if (additionalLibraries.includes('zustand')) dependencies['zustand'] = 'latest';
+    if (additionalLibraries.includes('jotai')) dependencies['jotai'] = 'latest';
+    if (additionalLibraries.includes('axios')) dependencies['axios'] = 'latest';
+    if (additionalLibraries.includes('zod')) dependencies['zod'] = 'latest';
+    if (additionalLibraries.includes('react-hook-form')) {
+      dependencies['react-hook-form'] = 'latest';
+      dependencies['@hookform/resolvers'] = 'latest';
+    }
+    if (additionalLibraries.includes('framer-motion')) dependencies['framer-motion'] = 'latest';
+    if (additionalLibraries.includes('react-icons')) dependencies['react-icons'] = 'latest';
+    if (additionalLibraries.includes('radix-ui')) {
+      Object.assign(dependencies, {
+        '@radix-ui/react-dialog': 'latest',
+        '@radix-ui/react-dropdown-menu': 'latest',
+        '@radix-ui/react-select': 'latest',
+        '@radix-ui/react-slot': 'latest',
+      });
+    }
+
+    const packageJson = {
+      name: config.projectName,
+      version: '0.1.0',
+      private: true,
+      scripts: {
+        dev: 'next dev',
+        build: 'next build',
+        start: 'next start',
+        lint: 'next lint',
+      },
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+  }
+}
+
+async function generateNextjsEssentialFiles(projectPath, config) {
+  const { language, folderStructure } = config;
+  const isTypeScript = language === 'typescript';
+  const ext = isTypeScript ? 'tsx' : 'jsx';
+  const useAppRouter = folderStructure !== 'pages-router';
+  const appPath = path.join(projectPath, 'src', useAppRouter ? 'app' : 'pages');
+
+  if (useAppRouter) {
+    // Create layout file for App Router
+    const layoutContent = `${isTypeScript ? "import type { Metadata } from 'next'\n" : ''}import './globals.css'
+
+${
+  isTypeScript
+    ? `export const metadata: Metadata = {
+  title: '${config.projectName}',
+  description: 'Generated by InitKit CLI',
+}
+
+`
+    : ''
+}export default function RootLayout(${
+      isTypeScript
+        ? `{
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>`
+        : '{ children }'
+    }) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
+`;
+
+    await fs.writeFile(path.join(appPath, `layout.${ext}`), layoutContent);
+
+    // Create page file for App Router
+    const pageContent = `export default function Home() {
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
+      <h1>Welcome to ${config.projectName}</h1>
+      <p>Get started by editing <code>src/app/page.${ext}</code></p>
+    </div>
+  )
+}
+`;
+
+    await fs.writeFile(path.join(appPath, `page.${ext}`), pageContent);
+
+    // Create globals.css
+    const globalsCssContent = `:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+`;
+
+    await fs.writeFile(path.join(appPath, 'globals.css'), globalsCssContent);
+  } else {
+    // Create _app file for Pages Router
+    const appPageContent = `${isTypeScript ? "import type { AppProps } from 'next/app'\n" : ''}import '../styles/globals.css'
+
+export default function App(${isTypeScript ? '{ Component, pageProps }: AppProps' : '{ Component, pageProps }'}) {
+  return <Component {...pageProps} />
+}
+`;
+
+    await fs.writeFile(path.join(appPath, `_app.${ext}`), appPageContent);
+
+    // Create index page for Pages Router
+    const indexPageContent = `export default function Home() {
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
+      <h1>Welcome to ${config.projectName}</h1>
+      <p>Get started by editing <code>src/pages/index.${ext}</code></p>
+    </div>
+  )
+}
+`;
+
+    await fs.writeFile(path.join(appPath, `index.${ext}`), indexPageContent);
+
+    // Create styles directory
+    const stylesPath = path.join(projectPath, 'src', 'styles');
+    await fs.ensureDir(stylesPath);
+    await fs.writeFile(
+      path.join(stylesPath, 'globals.css'),
+      `:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+`
+    );
+  }
+
+  // Create next.config file
+  const nextConfigContent = isTypeScript
+    ? `import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  /* config options here */
+}
+
+export default nextConfig
+`
+    : `/** @type {import('next').NextConfig} */
+const nextConfig = {
+  /* config options here */
+}
+
+export default nextConfig
+`;
+
+  await fs.writeFile(
+    path.join(projectPath, isTypeScript ? 'next.config.ts' : 'next.config.js'),
+    nextConfigContent
+  );
+
+  // Create .gitignore
+  const gitignoreContent = `# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+`;
+
+  await fs.writeFile(path.join(projectPath, '.gitignore'), gitignoreContent);
+
+  // Create tsconfig.json if TypeScript
+  if (isTypeScript) {
+    const tsconfigContent = {
       compilerOptions: {
-        target: 'ES2020',
+        target: 'ES2017',
         lib: ['dom', 'dom.iterable', 'esnext'],
         allowJs: true,
         skipLibCheck: true,
-        ...strictness[typescriptStrict],
+        strict: true,
         noEmit: true,
         esModuleInterop: true,
         module: 'esnext',
@@ -152,339 +524,21 @@ export default nextConfig;
         isolatedModules: true,
         jsx: 'preserve',
         incremental: true,
-        plugins: [{ name: 'next' }],
+        plugins: [
+          {
+            name: 'next',
+          },
+        ],
         paths: {
           '@/*': ['./src/*'],
-          '@/components/*': ['./src/components/*'],
-          '@/lib/*': ['./src/lib/*'],
-          '@/types/*': ['./src/types/*'],
         },
       },
-      include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+      include: ['next-env.d.ts', 'src/**/*.ts', 'src/**/*.tsx', '.next/types/**/*.ts'],
       exclude: ['node_modules'],
     };
 
-    await fs.writeJSON(path.join(projectPath, 'tsconfig.json'), tsConfig, { spaces: 2 });
+    await fs.writeJSON(path.join(projectPath, 'tsconfig.json'), tsconfigContent, { spaces: 2 });
   }
-
-  // .eslintrc.json
-  const eslintConfig = {
-    extends: [
-      'next/core-web-vitals',
-      'eslint:recommended',
-      ...(isTypeScript ? ['plugin:@typescript-eslint/recommended'] : []),
-      ...(features.includes('prettier') ? ['prettier'] : []),
-    ],
-    ...(isTypeScript && {
-      parser: '@typescript-eslint/parser',
-      plugins: ['@typescript-eslint'],
-    }),
-    rules: {
-      ...(isTypeScript && {
-        '@typescript-eslint/no-unused-vars': 'error',
-        '@typescript-eslint/no-explicit-any': 'warn',
-      }),
-      'prefer-const': 'error',
-      'no-console': 'warn',
-    },
-  };
-
-  await fs.writeJSON(path.join(projectPath, '.eslintrc.json'), eslintConfig, { spaces: 2 });
-
-  // .prettierrc (if selected)
-  if (features.includes('prettier')) {
-    const prettierConfig = {
-      semi: true,
-      trailingComma: 'es5',
-      singleQuote: true,
-      printWidth: 80,
-      tabWidth: 2,
-      useTabs: false,
-      arrowParens: 'always',
-      endOfLine: 'lf',
-    };
-    await fs.writeJSON(path.join(projectPath, '.prettierrc'), prettierConfig, { spaces: 2 });
-  }
-
-  // Tailwind config (if selected)
-  if (styling === 'tailwind') {
-    const tailwindConfig = `/** @type {import('tailwindcss').Config} */
-export default {
-  darkMode: ['class'],
-  content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
-  theme: {
-    extend: {
-      colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
-      },
-    },
-  },
-  plugins: [],
-};
-`;
-    await fs.writeFile(path.join(projectPath, 'tailwind.config.js'), tailwindConfig);
-
-    const postcssConfig = `export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-};
-`;
-    await fs.writeFile(path.join(projectPath, 'postcss.config.js'), postcssConfig);
-  }
-
-  // .editorconfig
-  if (features.includes('editorconfig')) {
-    const editorConfig = `root = true
-
-[*]
-charset = utf-8
-end_of_line = lf
-indent_size = 2
-indent_style = space
-insert_final_newline = true
-trim_trailing_whitespace = true
-
-[*.md]
-trim_trailing_whitespace = false
-`;
-    await fs.writeFile(path.join(projectPath, '.editorconfig'), editorConfig);
-  }
-}
-
-async function generateNextjsAppFiles(projectPath, ext, useAppRouter, styling) {
-  const srcPath = path.join(projectPath, 'src');
-
-  if (useAppRouter) {
-    // App Router files
-    const layoutContent = `import type { Metadata } from 'next';
-${styling === 'tailwind' ? "import './globals.css';" : ''}
-
-export const metadata: Metadata = {
-  title: 'My App',
-  description: 'Created with InitKit',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
-`;
-
-    const pageContent = `export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">Welcome to Your App</h1>
-      <p className="mt-4 text-lg text-gray-600">
-        Start building by editing files in the features folder
-      </p>
-    </main>
-  );
-}
-`;
-
-    await fs.writeFile(path.join(srcPath, 'app', `layout.${ext}`), layoutContent);
-    await fs.writeFile(path.join(srcPath, 'app', `page.${ext}`), pageContent);
-
-    // globals.css
-    if (styling === 'tailwind') {
-      const globalsCss = `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-`;
-      await fs.writeFile(path.join(srcPath, 'app', 'globals.css'), globalsCss);
-    }
-  } else {
-    // Pages Router files
-    const appContent = `import type { AppProps } from 'next/app';
-${styling === 'tailwind' ? "import '../styles/globals.css';" : ''}
-
-export default function App({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
-}
-`;
-
-    const indexContent = `export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">Welcome to Your App</h1>
-      <p className="mt-4 text-lg text-gray-600">
-        Start building by editing files in the features folder
-      </p>
-    </main>
-  );
-}
-`;
-
-    await fs.writeFile(path.join(srcPath, 'pages', `_app.${ext}`), appContent);
-    await fs.writeFile(path.join(srcPath, 'pages', `index.${ext}`), indexContent);
-  }
-
-  // lib/utils.ts (for Tailwind)
-  if (styling === 'tailwind') {
-    const utilsContent = `import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-`;
-    await fs.writeFile(path.join(srcPath, 'lib', 'utils.ts'), utilsContent);
-  }
-}
-
-async function generateNextjsPackageJson(projectPath, config) {
-  const { language, styling, additionalLibraries = [], features = [], packageManager } = config;
-  const isTypeScript = language === 'typescript';
-
-  const dependencies = {
-    next: '^14.2.0',
-    react: '^18.3.0',
-    'react-dom': '^18.3.0',
-  };
-
-  const devDependencies = {
-    ...(isTypeScript && {
-      '@types/node': '^20',
-      '@types/react': '^18',
-      '@types/react-dom': '^18',
-      typescript: '^5',
-    }),
-    eslint: '^8',
-    'eslint-config-next': '14.2.0',
-  };
-
-  // Add Tailwind dependencies
-  if (styling === 'tailwind') {
-    Object.assign(devDependencies, {
-      tailwindcss: '^3.4.0',
-      postcss: '^8',
-      autoprefixer: '^10.4.0',
-    });
-    Object.assign(dependencies, {
-      clsx: '^2.1.0',
-      'tailwind-merge': '^2.2.0',
-    });
-  }
-
-  // Add additional libraries
-  if (additionalLibraries.includes('react-query')) {
-    dependencies['@tanstack/react-query'] = '^5.28.0';
-    devDependencies['@tanstack/react-query-devtools'] = '^5.28.0';
-  }
-
-  if (additionalLibraries.includes('zustand')) {
-    dependencies['zustand'] = '^4.5.2';
-  }
-
-  if (additionalLibraries.includes('axios')) {
-    dependencies['axios'] = '^1.6.8';
-  }
-
-  if (additionalLibraries.includes('zod')) {
-    dependencies['zod'] = '^3.22.0';
-  }
-
-  if (additionalLibraries.includes('react-hook-form')) {
-    dependencies['react-hook-form'] = '^7.51.0';
-    dependencies['@hookform/resolvers'] = '^3.3.0';
-  }
-
-  // Add feature dependencies
-  if (features.includes('prettier')) {
-    devDependencies['prettier'] = '^3.2.0';
-    devDependencies['eslint-config-prettier'] = '^9.1.0';
-  }
-
-  if (isTypeScript && features.includes('eslint')) {
-    devDependencies['@typescript-eslint/eslint-plugin'] = '^7.0.0';
-    devDependencies['@typescript-eslint/parser'] = '^7.0.0';
-  }
-
-  const packageJson = {
-    name: config.projectName,
-    version: '0.1.0',
-    private: true,
-    scripts: {
-      dev: 'next dev',
-      build: 'next build',
-      start: 'next start',
-      lint: 'next lint',
-      ...(features.includes('prettier') && {
-        'format': 'prettier --write "**/*.{ts,tsx,js,jsx,json,css,md}"',
-        'format:check': 'prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"',
-      }),
-    },
-    dependencies,
-    devDependencies,
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
 }
 
 async function generateNextjsReadme(projectPath, config) {
@@ -494,64 +548,51 @@ async function generateNextjsReadme(projectPath, config) {
 
 Created with InitKit CLI
 
-## Project Structure
-
-This project uses a **${folderStructure}** folder structure.
-
-### Directory Layout
-
-\`\`\`
-src/
-${folderStructure === 'feature-based' ? `├── features/          # Feature modules
-│   ├── auth/          # Authentication feature
-│   ├── dashboard/     # Dashboard feature
-│   └── users/         # Users feature
-├── shared/            # Shared components and utilities
-│   ├── components/    # Reusable UI components
-│   ├── hooks/         # Custom React hooks
-│   └── utils/         # Utility functions` : `├── components/        # React components
-│   ├── ui/            # UI components
-│   └── layout/        # Layout components
-├── hooks/             # Custom React hooks
-├── services/          # API services
-└── utils/             # Utility functions`}
-├── app/               # Next.js App Router
-└── lib/               # Library code and utilities
-\`\`\`
-
-## Getting Started
+## Setup
 
 1. Install dependencies:
-   \`\`\`bash
-   ${packageManager} install
-   \`\`\`
+\`\`\`bash
+${packageManager} install
+\`\`\`
 
 2. Run the development server:
-   \`\`\`bash
-   ${packageManager} ${packageManager === 'npm' ? 'run ' : ''}dev
-   \`\`\`
+\`\`\`bash
+${packageManager} ${packageManager === 'npm' ? 'run ' : ''}dev
+\`\`\`
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
+3. Open [http://localhost:3000](http://localhost:3000)
 
 ## Tech Stack
 
-- Next.js 14
-- React 18
-${language === 'typescript' ? '- TypeScript' : '- JavaScript'}
-${styling === 'tailwind' ? '- Tailwind CSS' : ''}
+- **Next.js 15** - React framework
+- **React 19** - UI library${language === 'typescript' ? '\n- **TypeScript** - Type safety' : ''}${styling === 'tailwind' ? '\n- **Tailwind CSS v4** - Styling' : ''}
+
+## Folder Structure
+
+\`\`\`
+src/
+${
+  folderStructure === 'feature-based'
+    ? `├── features/       # Feature modules
+│   ├── auth/       # Authentication
+│   ├── dashboard/  # Dashboard
+│   └── users/      # Users
+├── shared/         # Shared code
+├── app/            # Next.js App Router`
+    : `├── components/     # React components
+├── hooks/          # Custom hooks
+├── services/       # API services
+├── app/            # Next.js App Router`
+}
+├── lib/            # Utilities
+└── public/         # Static files
+\`\`\`
 
 ## Next Steps
 
-- [ ] Add your features in \`src/features/\`
-- [ ] Build reusable components in \`src/shared/components/\`
-- [ ] Set up environment variables in \`.env.local\`
-- [ ] Configure database connection (if needed)
-
-## Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Documentation](https://react.dev)
-${styling === 'tailwind' ? '- [Tailwind CSS Documentation](https://tailwindcss.com/docs)' : ''}
+1. Run \`npx create-next-app@latest . --use-${packageManager}\` to initialize Next.js${styling === 'tailwind' ? '\n2. Install Tailwind v4: `' + packageManager + (packageManager === 'npm' ? ' install' : ' add') + ' tailwindcss@next`' : ''}
+3. Start building in \`src/features/\`
+4. Add environment variables in \`.env.local\`
 
 ---
 
@@ -561,52 +602,19 @@ Built with InitKit
   await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
-async function generateNextjsEnvExample(projectPath, libraries) {
-  let envContent = `# App Configuration
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-`;
-
-  if (libraries.includes('axios') || libraries.some(lib => lib.includes('api'))) {
-    envContent += `# API Configuration
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-
-`;
-  }
-
-  envContent += `# Add your environment variables here
-`;
-
-  await fs.writeFile(path.join(projectPath, '.env.example'), envContent);
-}
-
 function generateBarrelExport(featureName) {
-  return `// Export ${featureName} components
-// export { Component } from './components/Component';
+  return `// ${featureName.toUpperCase()} Feature
 
-// Export ${featureName} hooks
-// export { useHook } from './hooks/useHook';
+// TODO: Export your components
+// export { default as ${featureName.charAt(0).toUpperCase() + featureName.slice(1)}Component } from './components/${featureName.charAt(0).toUpperCase() + featureName.slice(1)}Component';
 
-// Export ${featureName} services
-// export { service } from './services/service';
+// TODO: Export your hooks
+// export { use${featureName.charAt(0).toUpperCase() + featureName.slice(1)} } from './hooks/use${featureName.charAt(0).toUpperCase() + featureName.slice(1)}';
 
-// Export ${featureName} types
+// TODO: Export your services
+// export * from './services/${featureName}Service';
+
+// TODO: Export your types
 // export type * from './types/${featureName}.types';
-
-// TODO: Implement ${featureName} feature
-`;
-}
-
-function generateSharedComponentsExport() {
-  return `// Export UI components
-// export { Button } from './ui/Button';
-// export { Input } from './ui/Input';
-// export { Card } from './ui/Card';
-
-// Export layout components
-// export { Header } from './layout/Header';
-// export { Footer } from './layout/Footer';
-
-// TODO: Add shared components
 `;
 }

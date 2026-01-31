@@ -1,49 +1,76 @@
 import fs from 'fs-extra';
 import path from 'path';
+import ora from 'ora';
+import chalk from 'chalk';
+import { getLatestVersion } from '../utils/versionFetcher.js';
 
 /**
- * Generate React + Vite project structure and files
+ * Fetch latest version with fallback
+ */
+async function fetchVersion(packageName, fallback = 'latest') {
+  try {
+    const version = await getLatestVersion(packageName);
+    return `^${version}`;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Generate React + Vite project with modern build tooling
+ *
+ * Creates a React single-page application using Vite for:
+ * - Fast HMR (Hot Module Replacement)
+ * - Optimized production builds
+ * - TypeScript or JavaScript support
+ * - Multiple folder structure patterns
+ *
+ * Generated project includes:
+ * - Vite configuration with React plugin
+ * - Folder structure based on preference
+ * - Package.json with React 18+ and Vite dependencies
+ * - README with getting started instructions
+ *
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User configuration object
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.language - Programming language ('typescript'|'javascript')
+ * @param {string} [config.folderStructure='feature-based'] - Folder organization pattern
+ *   - 'feature-based': Organize by features/modules (recommended)
+ *   - 'component-based': Organize by component types (pages, components, layouts)
+ *   - 'type-based': Organize by file type (components, hooks, utils, services)
+ * @param {string} config.packageManager - Package manager to use
+ *
+ * @returns {Promise<void>}
+ *
+ * @example
+ * // Create React + Vite project with feature-based structure
+ * await generateReactTemplate('/path/to/project', {
+ *   projectName: 'my-react-app',
+ *   language: 'typescript',
+ *   folderStructure: 'feature-based',
+ *   packageManager: 'npm'
+ * });
  */
 export async function generateReactTemplate(projectPath, config) {
-  const {
-    language = 'typescript',
-    folderStructure = 'feature-based',
-    styling = 'tailwind',
-    typescriptStrict = 'strict',
-    additionalLibraries = [],
-    features = [],
-  } = config;
-
-  const isTypeScript = language === 'typescript';
-  const ext = isTypeScript ? 'tsx' : 'jsx';
-  const configExt = isTypeScript ? 'ts' : 'js';
-
-  // Create folder structure
-  await createReactFolderStructure(projectPath, folderStructure);
-
-  // Generate configuration files
-  await generateReactConfig(projectPath, config);
-
-  // Generate app files
-  await generateReactAppFiles(projectPath, ext, styling);
+  // Create folder structure only
+  await createReactFolderStructure(projectPath, config);
 
   // Generate package.json
   await generateReactPackageJson(projectPath, config);
 
+  // Generate essential files (App.jsx, main.jsx, index.css, vite.config)
+  await generateReactEssentialFiles(projectPath, config);
+
   // Generate README
   await generateReactReadme(projectPath, config);
-
-  // Create index.html
-  await generateReactIndexHtml(projectPath, config);
-
-  // Create .env.example
-  await generateReactEnvExample(projectPath, additionalLibraries);
 }
 
-async function createReactFolderStructure(projectPath, structure) {
+async function createReactFolderStructure(projectPath, config) {
   const srcPath = path.join(projectPath, 'src');
+  const folderStructure = config.folderStructure || 'feature-based';
 
-  if (structure === 'feature-based') {
+  if (folderStructure === 'feature-based') {
     // Feature-based structure
     const features = ['auth', 'dashboard', 'users'];
     for (const feature of features) {
@@ -51,7 +78,6 @@ async function createReactFolderStructure(projectPath, structure) {
       await fs.ensureDir(path.join(srcPath, 'features', feature, 'hooks'));
       await fs.ensureDir(path.join(srcPath, 'features', feature, 'services'));
       await fs.ensureDir(path.join(srcPath, 'features', feature, 'types'));
-      await fs.ensureDir(path.join(srcPath, 'features', feature, 'store'));
 
       // Barrel export
       await fs.writeFile(
@@ -66,25 +92,21 @@ async function createReactFolderStructure(projectPath, structure) {
     await fs.ensureDir(path.join(srcPath, 'shared', 'hooks'));
     await fs.ensureDir(path.join(srcPath, 'shared', 'utils'));
     await fs.ensureDir(path.join(srcPath, 'shared', 'types'));
-    await fs.ensureDir(path.join(srcPath, 'shared', 'constants'));
 
     await fs.writeFile(
       path.join(srcPath, 'shared', 'components', 'index.ts'),
-      generateSharedExport()
+      `// Export shared components\n// TODO: Add your shared components here\n`
     );
-  } else if (structure === 'component-based') {
+  } else if (folderStructure === 'component-based') {
     // Component-based structure
     await fs.ensureDir(path.join(srcPath, 'components', 'ui'));
     await fs.ensureDir(path.join(srcPath, 'components', 'layout'));
     await fs.ensureDir(path.join(srcPath, 'components', 'forms'));
-    await fs.ensureDir(path.join(srcPath, 'components', 'common'));
     await fs.ensureDir(path.join(srcPath, 'hooks'));
     await fs.ensureDir(path.join(srcPath, 'services'));
     await fs.ensureDir(path.join(srcPath, 'utils'));
     await fs.ensureDir(path.join(srcPath, 'types'));
-    await fs.ensureDir(path.join(srcPath, 'store', 'slices'));
-    await fs.ensureDir(path.join(srcPath, 'pages'));
-  } else if (structure === 'atomic') {
+  } else if (folderStructure === 'atomic') {
     // Atomic design structure
     await fs.ensureDir(path.join(srcPath, 'components', 'atoms'));
     await fs.ensureDir(path.join(srcPath, 'components', 'molecules'));
@@ -93,8 +115,6 @@ async function createReactFolderStructure(projectPath, structure) {
     await fs.ensureDir(path.join(srcPath, 'pages'));
     await fs.ensureDir(path.join(srcPath, 'hooks'));
     await fs.ensureDir(path.join(srcPath, 'services'));
-    await fs.ensureDir(path.join(srcPath, 'store'));
-    await fs.ensureDir(path.join(srcPath, 'utils'));
   }
 
   // Common directories
@@ -103,274 +123,336 @@ async function createReactFolderStructure(projectPath, structure) {
   await fs.ensureDir(path.join(projectPath, 'public'));
 }
 
-async function generateReactConfig(projectPath, config) {
-  const { language, typescriptStrict, styling, features } = config;
+async function generateReactPackageJson(projectPath, config) {
+  const { language, styling, additionalLibraries = [] } = config;
   const isTypeScript = language === 'typescript';
 
-  // vite.config.ts
-  const viteConfig = `import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+  const spinner = ora('Fetching latest package versions...').start();
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@/components': path.resolve(__dirname, './src/components'),
-      '@/hooks': path.resolve(__dirname, './src/hooks'),
-      '@/lib': path.resolve(__dirname, './src/lib'),
-      '@/utils': path.resolve(__dirname, './src/utils'),
-      '@/types': path.resolve(__dirname, './src/types'),
-    },
-  },
-  server: {
-    port: 3000,
-    open: true,
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-  },
-});
-`;
-  await fs.writeFile(path.join(projectPath, 'vite.config.ts'), viteConfig);
+  try {
+    // Fetch core dependencies
+    const [reactVer, reactDomVer, viteVer, pluginVer] = await Promise.all([
+      fetchVersion('react'),
+      fetchVersion('react-dom'),
+      fetchVersion('vite'),
+      fetchVersion('@vitejs/plugin-react'),
+    ]);
 
-  // tsconfig.json (if TypeScript)
-  if (isTypeScript) {
-    const strictness = {
-      strict: {
-        strict: true,
-        noUnusedLocals: true,
-        noUnusedParameters: true,
-        noFallthroughCasesInSwitch: true,
-      },
-      moderate: {
-        strict: true,
-        noUnusedLocals: false,
-        noUnusedParameters: false,
-      },
-      relaxed: {
-        strict: false,
-        noImplicitAny: false,
-      },
+    const dependencies = {
+      react: reactVer,
+      'react-dom': reactDomVer,
     };
 
-    const tsConfig = {
-      compilerOptions: {
-        target: 'ES2020',
-        useDefineForClassFields: true,
-        lib: ['ES2020', 'DOM', 'DOM.Iterable'],
-        module: 'ESNext',
-        skipLibCheck: true,
-        moduleResolution: 'bundler',
-        allowImportingTsExtensions: true,
-        resolveJsonModule: true,
-        isolatedModules: true,
-        noEmit: true,
-        jsx: 'react-jsx',
-        ...strictness[typescriptStrict],
-        baseUrl: '.',
-        paths: {
-          '@/*': ['./src/*'],
-          '@/components/*': ['./src/components/*'],
-          '@/hooks/*': ['./src/hooks/*'],
-          '@/lib/*': ['./src/lib/*'],
-          '@/utils/*': ['./src/utils/*'],
-          '@/types/*': ['./src/types/*'],
-        },
+    const devDependencies = {
+      '@vitejs/plugin-react': pluginVer,
+      vite: viteVer,
+    };
+
+    // TypeScript dependencies
+    if (isTypeScript) {
+      const [tsVer, typesReactVer, typesReactDomVer] = await Promise.all([
+        fetchVersion('typescript'),
+        fetchVersion('@types/react'),
+        fetchVersion('@types/react-dom'),
+      ]);
+      devDependencies['typescript'] = tsVer;
+      devDependencies['@types/react'] = typesReactVer;
+      devDependencies['@types/react-dom'] = typesReactDomVer;
+    }
+
+    // Add router
+    if (additionalLibraries.includes('react-router')) {
+      dependencies['react-router-dom'] = await fetchVersion('react-router-dom');
+    }
+
+    // Add Tailwind
+    if (styling === 'tailwind') {
+      devDependencies['tailwindcss'] = await fetchVersion('tailwindcss');
+    }
+
+    // Add libraries
+    if (additionalLibraries.includes('tanstack-query')) {
+      dependencies['@tanstack/react-query'] = await fetchVersion('@tanstack/react-query');
+    }
+
+    if (additionalLibraries.includes('redux-toolkit')) {
+      const [reduxVer, reactReduxVer] = await Promise.all([
+        fetchVersion('@reduxjs/toolkit'),
+        fetchVersion('react-redux'),
+      ]);
+      dependencies['@reduxjs/toolkit'] = reduxVer;
+      dependencies['react-redux'] = reactReduxVer;
+    }
+
+    if (additionalLibraries.includes('zustand')) {
+      dependencies['zustand'] = await fetchVersion('zustand');
+    }
+
+    if (additionalLibraries.includes('jotai')) {
+      dependencies['jotai'] = await fetchVersion('jotai');
+    }
+
+    if (additionalLibraries.includes('axios')) {
+      dependencies['axios'] = await fetchVersion('axios');
+    }
+
+    if (additionalLibraries.includes('zod')) {
+      dependencies['zod'] = await fetchVersion('zod');
+    }
+
+    if (additionalLibraries.includes('react-hook-form')) {
+      const [formVer, resolversVer] = await Promise.all([
+        fetchVersion('react-hook-form'),
+        fetchVersion('@hookform/resolvers'),
+      ]);
+      dependencies['react-hook-form'] = formVer;
+      dependencies['@hookform/resolvers'] = resolversVer;
+    }
+
+    if (additionalLibraries.includes('framer-motion')) {
+      dependencies['framer-motion'] = await fetchVersion('framer-motion');
+    }
+
+    if (additionalLibraries.includes('react-icons')) {
+      dependencies['react-icons'] = await fetchVersion('react-icons');
+    }
+
+    if (additionalLibraries.includes('radix-ui')) {
+      const [dialogVer, dropdownVer, selectVer, slotVer] = await Promise.all([
+        fetchVersion('@radix-ui/react-dialog'),
+        fetchVersion('@radix-ui/react-dropdown-menu'),
+        fetchVersion('@radix-ui/react-select'),
+        fetchVersion('@radix-ui/react-slot'),
+      ]);
+      Object.assign(dependencies, {
+        '@radix-ui/react-dialog': dialogVer,
+        '@radix-ui/react-dropdown-menu': dropdownVer,
+        '@radix-ui/react-select': selectVer,
+        '@radix-ui/react-slot': slotVer,
+      });
+    }
+
+    spinner.succeed(chalk.green('Fetched latest versions'));
+
+    const packageJson = {
+      name: config.projectName,
+      private: true,
+      version: '0.1.0',
+      type: 'module',
+      scripts: {
+        dev: 'vite',
+        build: isTypeScript ? 'tsc && vite build' : 'vite build',
+        preview: 'vite preview',
       },
-      include: ['src'],
-      references: [{ path: './tsconfig.node.json' }],
+      dependencies,
+      devDependencies,
     };
 
-    await fs.writeJSON(path.join(projectPath, 'tsconfig.json'), tsConfig, { spaces: 2 });
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+  } catch (error) {
+    spinner.fail(chalk.yellow('Could not fetch versions, using fallbacks'));
 
-    // tsconfig.node.json
-    const tsConfigNode = {
-      compilerOptions: {
-        composite: true,
-        skipLibCheck: true,
-        module: 'ESNext',
-        moduleResolution: 'bundler',
-        allowSyntheticDefaultImports: true,
+    // Fallback with latest tag
+    const dependencies = { react: 'latest', 'react-dom': 'latest' };
+    const devDependencies = {
+      '@vitejs/plugin-react': 'latest',
+      vite: 'latest',
+      ...(isTypeScript && {
+        typescript: 'latest',
+        '@types/react': 'latest',
+        '@types/react-dom': 'latest',
+      }),
+    };
+
+    const packageJson = {
+      name: config.projectName,
+      private: true,
+      version: '0.1.0',
+      type: 'module',
+      scripts: {
+        dev: 'vite',
+        build: isTypeScript ? 'tsc && vite build' : 'vite build',
+        preview: 'vite preview',
       },
-      include: ['vite.config.ts'],
+      dependencies,
+      devDependencies,
     };
 
-    await fs.writeJSON(path.join(projectPath, 'tsconfig.node.json'), tsConfigNode, { spaces: 2 });
-  }
-
-  // .eslintrc.cjs
-  const eslintConfig = `module.exports = {
-  root: true,
-  env: { browser: true, es2020: true },
-  extends: [
-    'eslint:recommended',
-${isTypeScript ? `    'plugin:@typescript-eslint/recommended',` : ''}
-    'plugin:react-hooks/recommended',
-    'plugin:react/recommended',
-    'plugin:react/jsx-runtime',
-${features.includes('prettier') ? `    'prettier',` : ''}
-  ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
-${isTypeScript ? `  parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh', '@typescript-eslint'],` : `  plugins: ['react-refresh'],`}
-  rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
-${isTypeScript ? `    '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/no-explicit-any': 'warn',` : ''}
-    'react/prop-types': 'off',
-  },
-  settings: {
-    react: {
-      version: 'detect',
-    },
-  },
-};
-`;
-  await fs.writeFile(path.join(projectPath, '.eslintrc.cjs'), eslintConfig);
-
-  // .prettierrc (if selected)
-  if (features.includes('prettier')) {
-    const prettierConfig = {
-      semi: true,
-      trailingComma: 'es5',
-      singleQuote: true,
-      printWidth: 80,
-      tabWidth: 2,
-      useTabs: false,
-      arrowParens: 'always',
-      endOfLine: 'lf',
-    };
-    await fs.writeJSON(path.join(projectPath, '.prettierrc'), prettierConfig, { spaces: 2 });
-  }
-
-  // Tailwind config (if selected)
-  if (styling === 'tailwind') {
-    const tailwindConfig = `/** @type {import('tailwindcss').Config} */
-export default {
-  darkMode: ['class'],
-  content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
-`;
-    await fs.writeFile(path.join(projectPath, 'tailwind.config.js'), tailwindConfig);
-
-    const postcssConfig = `export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-};
-`;
-    await fs.writeFile(path.join(projectPath, 'postcss.config.js'), postcssConfig);
-  }
-
-  // .editorconfig
-  if (features.includes('editorconfig')) {
-    const editorConfig = `root = true
-
-[*]
-charset = utf-8
-end_of_line = lf
-indent_size = 2
-indent_style = space
-insert_final_newline = true
-trim_trailing_whitespace = true
-
-[*.md]
-trim_trailing_whitespace = false
-`;
-    await fs.writeFile(path.join(projectPath, '.editorconfig'), editorConfig);
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
   }
 }
 
-async function generateReactAppFiles(projectPath, ext, styling) {
+async function generateReactEssentialFiles(projectPath, config) {
+  const { language } = config;
+  const isTypeScript = language === 'typescript';
+  const ext = isTypeScript ? 'tsx' : 'jsx';
   const srcPath = path.join(projectPath, 'src');
 
-  // App.tsx
-  const appContent = `function App() {
+  // Create App component
+  const appContent = `import { useState } from 'react'
+import './App.css'
+
+function App() {
+  const [count, setCount] = useState(0)
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold">Welcome to Your React App</h1>
-      <p className="mt-4 text-lg text-gray-600">
-        Start building by editing files in the features folder
-      </p>
-    </div>
-  );
+    <>
+      <div>
+        <h1>Welcome to ${config.projectName}</h1>
+        <div className="card">
+          <button onClick={() => setCount((count) => count + 1)}>
+            count is {count}
+          </button>
+          <p>
+            Edit <code>src/App.${ext}</code> and save to test HMR
+          </p>
+        </div>
+        <p className="read-the-docs">
+          Click on the Vite and React logos to learn more
+        </p>
+      </div>
+    </>
+  )
 }
 
-export default App;
+export default App
 `;
 
   await fs.writeFile(path.join(srcPath, `App.${ext}`), appContent);
 
-  // main.tsx
-  const mainContent = `import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-${styling === 'tailwind' ? "import './index.css';" : ''}
+  // Create main entry point
+  const mainContent = `import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.${ext}'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+createRoot(document.getElementById('root')${isTypeScript ? '!' : ''}).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>
-);
+  </StrictMode>,
+)
 `;
 
   await fs.writeFile(path.join(srcPath, `main.${ext}`), mainContent);
 
-  // index.css (Tailwind)
-  if (styling === 'tailwind') {
-    const indexCss = `@tailwind base;
-@tailwind components;
-@tailwind utilities;
+  // Create index.css
+  const indexCssContent = `:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
 
-@layer base {
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    color: #213547;
+    background-color: #ffffff;
   }
-
-  body {
-    @apply bg-background text-foreground;
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
   }
 }
 `;
-    await fs.writeFile(path.join(srcPath, 'index.css'), indexCss);
-  }
 
-  // lib/utils.ts (for Tailwind)
-  if (styling === 'tailwind') {
-    const utilsContent = `import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+  await fs.writeFile(path.join(srcPath, 'index.css'), indexCssContent);
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-`;
-    await fs.writeFile(path.join(srcPath, 'lib', 'utils.ts'), utilsContent);
-  }
-
-  // vite-env.d.ts (TypeScript)
-  const viteEnvContent = `/// <reference types="vite/client" />
-`;
-  await fs.writeFile(path.join(srcPath, 'vite-env.d.ts'), viteEnvContent);
+  // Create App.css
+  const appCssContent = `#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 }
 
-async function generateReactIndexHtml(projectPath, config) {
-  const indexHtml = `<!doctype html>
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+`;
+
+  await fs.writeFile(path.join(srcPath, 'App.css'), appCssContent);
+
+  // Create vite.config
+  const viteConfigContent = isTypeScript
+    ? `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+`
+    : `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+`;
+
+  await fs.writeFile(
+    path.join(projectPath, `vite.config.${isTypeScript ? 'ts' : 'js'}`),
+    viteConfigContent
+  );
+
+  // Create index.html in project root
+  const indexHtmlContent = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -380,109 +462,41 @@ async function generateReactIndexHtml(projectPath, config) {
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.${config.language === 'typescript' ? 'tsx' : 'jsx'}"></script>
+    <script type="module" src="/src/main.${ext}"></script>
   </body>
 </html>
 `;
 
-  await fs.writeFile(path.join(projectPath, 'index.html'), indexHtml);
-}
+  await fs.writeFile(path.join(projectPath, 'index.html'), indexHtmlContent);
 
-async function generateReactPackageJson(projectPath, config) {
-  const { language, styling, additionalLibraries = [], features = [] } = config;
-  const isTypeScript = language === 'typescript';
+  // Create .gitignore
+  const gitignoreContent = `# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-  const dependencies = {
-    react: '^18.3.1',
-    'react-dom': '^18.3.1',
-  };
+node_modules
+dist
+dist-ssr
+*.local
 
-  const devDependencies = {
-    '@vitejs/plugin-react': '^4.2.1',
-    vite: '^5.2.0',
-    ...(isTypeScript && {
-      '@types/react': '^18.3.0',
-      '@types/react-dom': '^18.3.0',
-      typescript: '^5.4.3',
-    }),
-    eslint: '^8.57.0',
-    'eslint-plugin-react-hooks': '^4.6.0',
-    'eslint-plugin-react-refresh': '^0.4.6',
-  };
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+`;
 
-  // Add router
-  if (additionalLibraries.includes('react-router')) {
-    dependencies['react-router-dom'] = '^6.22.3';
-  }
-
-  // Add Tailwind
-  if (styling === 'tailwind') {
-    Object.assign(devDependencies, {
-      tailwindcss: '^3.4.1',
-      autoprefixer: '^10.4.19',
-      postcss: '^8.4.38',
-    });
-    Object.assign(dependencies, {
-      clsx: '^2.1.0',
-      'tailwind-merge': '^2.2.0',
-    });
-  }
-
-  // Add libraries
-  if (additionalLibraries.includes('react-query')) {
-    dependencies['@tanstack/react-query'] = '^5.28.0';
-  }
-
-  if (additionalLibraries.includes('zustand')) {
-    dependencies['zustand'] = '^4.5.2';
-  }
-
-  if (additionalLibraries.includes('axios')) {
-    dependencies['axios'] = '^1.6.8';
-  }
-
-  if (additionalLibraries.includes('zod')) {
-    dependencies['zod'] = '^3.22.0';
-  }
-
-  if (additionalLibraries.includes('react-hook-form')) {
-    dependencies['react-hook-form'] = '^7.51.0';
-    dependencies['@hookform/resolvers'] = '^3.3.0';
-  }
-
-  // Add features
-  if (features.includes('prettier')) {
-    devDependencies['prettier'] = '^3.2.5';
-    devDependencies['eslint-config-prettier'] = '^9.1.0';
-  }
-
-  if (isTypeScript) {
-    devDependencies['@typescript-eslint/eslint-plugin'] = '^7.2.0';
-    devDependencies['@typescript-eslint/parser'] = '^7.2.0';
-  }
-
-  const packageJson = {
-    name: config.projectName,
-    private: true,
-    version: '0.1.0',
-    type: 'module',
-    scripts: {
-      dev: 'vite',
-      build: isTypeScript ? 'tsc && vite build' : 'vite build',
-      preview: 'vite preview',
-      lint: 'eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0',
-      'lint:fix': 'eslint . --ext ts,tsx --fix',
-      ...(isTypeScript && { 'type-check': 'tsc --noEmit' }),
-      ...(features.includes('prettier') && {
-        format: 'prettier --write "src/**/*.{ts,tsx,json,css,md}"',
-        'format:check': 'prettier --check "src/**/*.{ts,tsx,json,css,md}"',
-      }),
-    },
-    dependencies,
-    devDependencies,
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+  await fs.writeFile(path.join(projectPath, '.gitignore'), gitignoreContent);
 }
 
 async function generateReactReadme(projectPath, config) {
@@ -492,63 +506,59 @@ async function generateReactReadme(projectPath, config) {
 
 Created with InitKit CLI
 
-## Project Structure
+## Setup
 
-This project uses a **${folderStructure}** folder structure.
+1. Install dependencies:
+\`\`\`bash
+${packageManager} install
+\`\`\`
 
-### Directory Layout
+2. Run the development server:
+\`\`\`bash
+${packageManager} ${packageManager === 'npm' ? 'run ' : ''}dev
+\`\`\`
+
+3. Open [http://localhost:3000](http://localhost:3000)
+
+## Tech Stack
+
+- **React 18** - UI library
+- **Vite 6** - Build tool${language === 'typescript' ? '\n- **TypeScript** - Type safety' : ''}${styling === 'tailwind' ? '\n- **Tailwind CSS v4** - Styling' : ''}
+
+## Folder Structure
 
 \`\`\`
 src/
 ${
   folderStructure === 'feature-based'
-    ? `├── features/          # Feature modules
-│   ├── auth/          # Authentication
-│   ├── dashboard/     # Dashboard
-│   └── users/         # Users
-├── shared/            # Shared code
-│   ├── components/    # Reusable components
-│   ├── hooks/         # Custom hooks
-│   └── utils/         # Utilities`
-    : `├── components/        # React components
-│   ├── ui/            # UI components
-│   └── layout/        # Layout components
-├── hooks/             # Custom hooks
-├── services/          # API services
-└── pages/             # Page components`
+    ? `├── features/       # Feature modules
+│   ├── auth/       # Authentication
+│   ├── dashboard/  # Dashboard
+│   └── users/      # Users
+├── shared/         # Shared code`
+    : folderStructure === 'atomic'
+      ? `├── components/     # Atomic design
+│   ├── atoms/      # Basic UI elements
+│   ├── molecules/  # Simple components
+│   ├── organisms/  # Complex components
+│   └── templates/  # Page templates
+├── pages/          # Page components`
+      : `├── components/     # React components
+│   ├── ui/         # UI components
+│   └── layout/     # Layout components
+├── hooks/          # Custom hooks
+├── services/       # API services`
 }
-├── routes/            # Routing configuration
-├── lib/               # Library code
-└── App.tsx            # Root component
+├── routes/         # Routing configuration
+├── lib/            # Utilities
+└── public/         # Static files
 \`\`\`
-
-## Getting Started
-
-1. Install dependencies:
-   \`\`\`bash
-   ${packageManager} install
-   \`\`\`
-
-2. Run the development server:
-   \`\`\`bash
-   ${packageManager} ${packageManager === 'npm' ? 'run ' : ''}dev
-   \`\`\`
-
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Tech Stack
-
-- React 18
-- Vite 5
-${language === 'typescript' ? '- TypeScript' : '- JavaScript'}
-${styling === 'tailwind' ? '- Tailwind CSS' : ''}
 
 ## Next Steps
 
-- [ ] Build your features in \`src/features/\`
-- [ ] Add shared components in \`src/shared/components/\`
-- [ ] Set up routing in \`src/routes/\`
-- [ ] Configure environment variables in \`.env\`
+1. Run \`npm create vite@latest . -- --template react${language === 'typescript' ? '-ts' : ''}\` to initialize Vite${styling === 'tailwind' ? '\n2. Install Tailwind v4: `' + packageManager + (packageManager === 'npm' ? ' install' : ' add') + ' tailwindcss@next`' : ''}
+3. Start building in \`src/features/\`
+4. Add environment variables in \`.env\`
 
 ---
 
@@ -558,42 +568,19 @@ Built with InitKit
   await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
-async function generateReactEnvExample(projectPath, libraries) {
-  let envContent = `# API Configuration
-VITE_API_URL=http://localhost:3001/api
-
-`;
-
-  envContent += `# Add your environment variables here
-# Note: Only variables prefixed with VITE_ are exposed to the client
-`;
-
-  await fs.writeFile(path.join(projectPath, '.env.example'), envContent);
-}
-
 function generateFeatureExport(featureName) {
-  return `// Export ${featureName} components
-// export { Component } from './components/Component';
+  return `// ${featureName.toUpperCase()} Feature
 
-// Export ${featureName} hooks
-// export { useHook } from './hooks/useHook';
+// TODO: Export your components
+// export { ${featureName.charAt(0).toUpperCase() + featureName.slice(1)}Component } from './components/${featureName.charAt(0).toUpperCase() + featureName.slice(1)}Component';
 
-// Export ${featureName} services
-// export { service } from './services/service';
+// TODO: Export your hooks
+// export { use${featureName.charAt(0).toUpperCase() + featureName.slice(1)} } from './hooks/use${featureName.charAt(0).toUpperCase() + featureName.slice(1)}';
 
-// Export ${featureName} types
+// TODO: Export your services
+// export * from './services/${featureName}Service';
+
+// TODO: Export your types
 // export type * from './types/${featureName}.types';
-
-// TODO: Implement ${featureName} feature
-`;
-}
-
-function generateSharedExport() {
-  return `// Export shared components
-// export { Button } from './ui/Button';
-// export { Input } from './ui/Input';
-// export { Header } from './layout/Header';
-
-// TODO: Add shared components
 `;
 }

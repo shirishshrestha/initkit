@@ -1,21 +1,24 @@
 # Development files
 .git/
 .gitignore
-.eslintrc.js
+.eslintrc.cjs
 .prettierrc
 *.test.js
 *.spec.js
 coverage/
+jest.config.js
+test-templates.js
 
 # IDE
 .vscode/
 .idea/
 
-# Documentation
+# Documentation (keep only essential)
 docs/
 examples/
 *.md
 !README.md
+!CHANGELOG.md
 
 # CI/CD
 .github/
@@ -26,6 +29,10 @@ examples/
 __tests__/
 __mocks__/
 test/
+test-output/
+
+# Generated test projects
+my-*/
 
 # Source maps
 *.map
@@ -33,3 +40,21 @@ test/
 # Environment
 .env
 .env.*
+
+# Node modules (shouldn't be in repo anyway)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,18 +1,21 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { generateNextjsTemplate } from '../templates/nextjs.js';
 import { generateReactTemplate } from '../templates/react.js';
 import { generateVueTemplate } from '../templates/vue.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { generateExpressTemplate } from '../templates/express.js';
+import { generateFullStackTemplate } from '../templates/fullstack.js';
 
 /**
- * Generate project files from templates
- * @param {string} projectPath - Path to the project directory
- * @param {Object} config - User's project configuration
+ * Generate project files from templates based on user configuration
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration object
+ * @param {string} config.projectType - Type of project ('frontend'|'backend'|'fullstack'|'library')
+ * @param {string} [config.frontend] - Frontend framework choice
+ * @param {string} [config.backend] - Backend framework choice
+ * @param {Array<string>} [config.features] - Additional features to enable
+ * @returns {Promise<void>}
+ * @throws {Error} If template generation fails
  */
 async function generateTemplate(projectPath, config) {
   // Generate .gitignore
@@ -40,6 +43,16 @@ async function generateTemplate(projectPath, config) {
   }
 }
 
+/**
+ * Generate frontend project files based on selected framework
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} config.frontend - Frontend framework ('react'|'vue'|'nextjs'|'angular'|'svelte'|'nuxt')
+ * @param {string} config.language - Language choice ('typescript'|'javascript')
+ * @param {string} config.folderStructure - Folder structure preference
+ * @returns {Promise<void>}
+ * @throws {Error} If framework template is not found or generation fails
+ */
 async function generateFrontendFiles(projectPath, config) {
   const framework = config.frontend;
 
@@ -53,195 +66,63 @@ async function generateFrontendFiles(projectPath, config) {
     case 'vue':
       await generateVueTemplate(projectPath, config);
       break;
-    case 'angular':
-      await generateAngularTemplate(projectPath, config);
-      break;
-    case 'svelte':
-      await generateSvelteTemplate(projectPath, config);
-      break;
-    case 'vanilla':
-      await generateVanillaTemplate(projectPath, config);
-      break;
     default:
-      // Fallback to basic structure
-      await generateBasicFrontend(projectPath, config);
+      throw new Error(
+        `Frontend framework "${framework}" is not yet implemented. Available: react, nextjs, vue`
+      );
   }
 }
 
-// Vue template is now imported from vue.js
-
-async function generateAngularTemplate(projectPath, config) {
-  // TODO: Implement Angular template
-  console.log('Angular template generation - coming soon');
-  await generateBasicFrontend(projectPath, config);
-}
-
-async function generateSvelteTemplate(projectPath, config) {
-  // TODO: Implement Svelte template
-  console.log('Svelte template generation - coming soon');
-  await generateBasicFrontend(projectPath, config);
-}
-
-async function generateVanillaTemplate(projectPath, config) {
-  // TODO: Implement Vanilla JS template
-  console.log('Vanilla JS template generation - coming soon');
-  await generateBasicFrontend(projectPath, config);
-}
-
-async function generateBasicFrontend(projectPath, config) {
-  // Basic fallback structure
-  await fs.ensureDir(path.join(projectPath, 'src'));
-  await fs.ensureDir(path.join(projectPath, 'public'));
-
-  const packageJson = {
-    name: config.projectName,
-    version: '1.0.0',
-    description: `${config.frontend} project`,
-    scripts: {
-      dev: 'echo "Configure your dev script"',
-      build: 'echo "Configure your build script"',
-    },
-    keywords: [],
-    author: '',
-    license: 'MIT',
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
-
-  const readme = `# ${config.projectName}
-
-Created with InitKit CLI
-
-## Getting Started
-
-\`\`\`bash
-${config.packageManager} install
-${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev
-\`\`\`
-
----
-
-Built with InitKit
-`;
-
-  await fs.writeFile(path.join(projectPath, 'README.md'), readme);
-}
-
+/**
+ * Generate backend project files based on selected framework
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} config.backend - Backend framework ('express'|'fastify'|'nestjs'|'koa'|'hapi')
+ * @param {string} [config.database] - Database choice ('mongodb'|'postgresql'|'mysql'|'sqlite')
+ * @param {string} config.language - Language choice ('typescript'|'javascript')
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.packageManager - Package manager to use
+ * @returns {Promise<void>}
+ * @throws {Error} If backend template generation fails
+ */
 async function generateBackendFiles(projectPath, config) {
-  // Create backend-specific files based on chosen framework
-  const srcPath = path.join(projectPath, 'src');
-  await fs.ensureDir(srcPath);
+  const backend = config.backend;
 
-  const ext = config.language === 'typescript' ? 'ts' : 'js';
-  const serverContent = `// ${config.backend} server\n\nconst PORT = process.env.PORT || 3000;\n\nconsole.log(\`Server starting on port \${PORT}\`);\n`;
-
-  await fs.writeFile(path.join(srcPath, `server.${ext}`), serverContent);
-
-  // Basic package.json
-  const packageJson = {
-    name: config.projectName,
-    version: '1.0.0',
-    description: `${config.backend} backend`,
-    main: `src/server.${ext}`,
-    scripts: {
-      dev: 'node src/server.js',
-      start: 'node src/server.js',
-    },
-    keywords: [],
-    author: '',
-    license: 'MIT',
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
-
-  const readme = `# ${config.projectName}
-
-Created with InitKit CLI
-
-## Getting Started
-
-\`\`\`bash
-${config.packageManager} install
-${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev
-\`\`\`
-
----
-
-Built with InitKit
-`;
-
-  await fs.writeFile(path.join(projectPath, 'README.md'), readme);
+  switch (backend) {
+    case 'express':
+      await generateExpressTemplate(projectPath, config);
+      break;
+    default:
+      throw new Error(`Backend framework "${backend}" is not yet implemented. Available: express`);
+  }
 }
 
+/**
+ * Generate full-stack project with both frontend and backend
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} [config.fullstackType] - Project structure type ('monorepo'|'traditional')
+ * @param {string} [config.stack] - Technology stack ('MERN'|'PERN'|'T3'|etc)
+ * @param {string} [config.frontend] - Frontend framework
+ * @param {string} [config.backend] - Backend framework
+ * @returns {Promise<void>}
+ * @throws {Error} If full-stack template generation fails
+ */
 async function generateFullStackFiles(projectPath, config) {
-  // Generate both frontend and backend in separate directories
-  const clientPath = path.join(projectPath, 'client');
-  const serverPath = path.join(projectPath, 'server');
-
-  await fs.ensureDir(clientPath);
-  await fs.ensureDir(serverPath);
-
-  // Frontend
-  await generateFrontendFiles(clientPath, {
-    ...config,
-    projectType: 'frontend',
-    projectName: `${config.projectName}-client`,
-  });
-
-  // Backend
-  await generateBackendFiles(serverPath, {
-    ...config,
-    projectType: 'backend',
-    projectName: `${config.projectName}-server`,
-  });
-
-  // Root package.json for monorepo
-  const rootPackageJson = {
-    name: config.projectName,
-    version: '1.0.0',
-    private: true,
-    description: 'Full stack application',
-    scripts: {
-      'dev:client': `cd client && ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev`,
-      'dev:server': `cd server && ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev`,
-      dev: 'echo "Run dev:client and dev:server in separate terminals"',
-    },
-    workspaces: ['client', 'server'],
-  };
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), rootPackageJson, { spaces: 2 });
-
-  // Root README
-  const readme = `# ${config.projectName}
-
-Full stack application created with InitKit CLI
-
-## Structure
-
-- \`client/\` - Frontend application (${config.frontend})
-- \`server/\` - Backend application (${config.backend})
-
-## Getting Started
-
-1. Install dependencies:
-   \`\`\`bash
-   ${config.packageManager} install
-   \`\`\`
-
-2. Run client and server:
-   \`\`\`bash
-   ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev:client
-   ${config.packageManager} ${config.packageManager === 'npm' ? 'run ' : ''}dev:server
-   \`\`\`
-
----
-
-Built with InitKit
-`;
-
-  await fs.writeFile(path.join(projectPath, 'README.md'), readme);
+  // Use the dedicated full-stack template generator
+  await generateFullStackTemplate(projectPath, config);
 }
 
+/**
+ * Generate Node.js library/package structure
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} config.projectName - Name of the library
+ * @param {string} config.language - Language choice ('typescript'|'javascript')
+ * @param {string} config.packageManager - Package manager to use
+ * @returns {Promise<void>}
+ * @throws {Error} If library template generation fails
+ */
 async function generateLibraryFiles(projectPath, config) {
   const srcPath = path.join(projectPath, 'src');
   await fs.ensureDir(srcPath);
@@ -304,7 +185,18 @@ Built with InitKit
   await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
-async function generateGitignore(projectPath, config) {
+/**
+ * Generate .gitignore file with framework-specific patterns
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {string} config.projectType - Type of project ('frontend'|'backend'|'fullstack'|'library')
+ * @param {string} [config.frontend] - Frontend framework name
+ * @param {string} [config.backend] - Backend framework name
+ * @param {boolean} [config.monorepo] - Whether project uses monorepo structure
+ * @returns {Promise<void>}
+ * @throws {Error} If file creation fails
+ */
+async function generateGitignore(projectPath, _config) {
   const gitignore = `# Dependencies
 node_modules/
 .pnp
@@ -351,6 +243,13 @@ next-env.d.ts
   await fs.writeFile(path.join(projectPath, '.gitignore'), gitignore);
 }
 
+/**
+ * Add additional features to the project (Docker, CI/CD, Git hooks)
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @param {Array<string>} config.features - List of features to add (e.g., ['docker', 'github-actions', 'husky'])
+ * @returns {Promise<void>}
+ */
 async function addFeatures(projectPath, config) {
   const features = config.features || [];
 
@@ -370,7 +269,13 @@ async function addFeatures(projectPath, config) {
   }
 }
 
-async function generateDockerFiles(projectPath, config) {
+/**
+ * Generate Docker configuration files (Dockerfile and .dockerignore)
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @returns {Promise<void>}
+ */
+async function generateDockerFiles(projectPath, _config) {
   const dockerfile = `FROM node:18-alpine
 
 WORKDIR /app
@@ -397,7 +302,13 @@ npm-debug.log
   await fs.writeFile(path.join(projectPath, '.dockerignore'), dockerignore);
 }
 
-async function generateGitHubActions(projectPath, config) {
+/**
+ * Generate GitHub Actions CI/CD workflow
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @returns {Promise<void>}
+ */
+async function generateGitHubActions(projectPath, _config) {
   await fs.ensureDir(path.join(projectPath, '.github', 'workflows'));
 
   const workflow = `name: CI
@@ -433,7 +344,13 @@ jobs:
   await fs.writeFile(path.join(projectPath, '.github', 'workflows', 'ci.yml'), workflow);
 }
 
-async function generateHuskyFiles(projectPath, config) {
+/**
+ * Generate Husky Git hooks for pre-commit linting
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User's project configuration
+ * @returns {Promise<void>}
+ */
+async function generateHuskyFiles(projectPath, _config) {
   await fs.ensureDir(path.join(projectPath, '.husky'));
 
   const preCommit = `#!/usr/bin/env sh

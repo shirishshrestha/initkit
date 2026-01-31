@@ -1,26 +1,64 @@
 import fs from 'fs-extra';
 import path from 'path';
+import ora from 'ora';
+import chalk from 'chalk';
+import { getLatestVersion } from '../utils/versionFetcher.js';
+
+async function fetchVersion(packageName, fallback = 'latest') {
+  try {
+    const version = await getLatestVersion(packageName);
+    return `^${version}`;
+  } catch {
+    return fallback;
+  }
+}
 
 /**
- * Generate Vue 3 + Vite template
- * @param {string} projectPath - Path to the project directory
- * @param {Object} config - User's project configuration
+ * Generate Vue 3 + Vite project with Composition API
+ *
+ * Creates a modern Vue 3 single-page application using:
+ * - Vue 3 with Composition API
+ * - Vite for fast development and optimized builds
+ * - TypeScript or JavaScript support
+ * - Vue Router for navigation
+ * - Pinia for state management (optional)
+ *
+ * Generated project includes:
+ * - Vite configuration with Vue plugin
+ * - Folder structure based on preference
+ * - Package.json with Vue 3 and Vite dependencies
+ * - README with getting started instructions
+ *
+ * @param {string} projectPath - Absolute path to the project directory
+ * @param {Object} config - User configuration object
+ * @param {string} config.projectName - Name of the project
+ * @param {string} config.language - Programming language ('typescript'|'javascript')
+ * @param {string} [config.folderStructure='feature-based'] - Folder organization pattern
+ *   - 'feature-based': Organize by features with composables (recommended)
+ *   - 'component-based': Organize by component types
+ *   - 'type-based': Organize by file type (components, composables, utils)
+ * @param {string} config.packageManager - Package manager to use
+ *
+ * @returns {Promise<void>}
+ *
+ * @example
+ * // Create Vue 3 + Vite project with TypeScript
+ * await generateVueTemplate('/path/to/project', {
+ *   projectName: 'my-vue-app',
+ *   language: 'typescript',
+ *   folderStructure: 'feature-based',
+ *   packageManager: 'npm'
+ * });
  */
-async function generateVueTemplate(projectPath, config) {
-  // Create folder structure
+export async function generateVueTemplate(projectPath, config) {
+  // Create folder structure only
   await createVueFolderStructure(projectPath, config);
-
-  // Generate configuration files
-  await generateVueConfig(projectPath, config);
-
-  // Generate app files
-  await generateVueAppFiles(projectPath, config);
-
-  // Generate index.html
-  await generateVueIndexHtml(projectPath, config);
 
   // Generate package.json
   await generateVuePackageJson(projectPath, config);
+
+  // Generate essential files (App.vue, main.js, etc.)
+  await generateVueEssentialFiles(projectPath, config);
 
   // Generate README
   await generateVueReadme(projectPath, config);
@@ -29,34 +67,34 @@ async function generateVueTemplate(projectPath, config) {
 async function createVueFolderStructure(projectPath, config) {
   const srcPath = path.join(projectPath, 'src');
   const publicPath = path.join(projectPath, 'public');
+  const folderStructure = config.folderStructure || 'feature-based';
 
   await fs.ensureDir(publicPath);
-
-  const folderStructure = config.folderStructure || 'feature-based';
 
   if (folderStructure === 'feature-based') {
     // Feature-based structure
     const features = ['auth', 'dashboard', 'profile'];
-    
+
     for (const feature of features) {
       const featurePath = path.join(srcPath, 'features', feature);
       await fs.ensureDir(path.join(featurePath, 'components'));
       await fs.ensureDir(path.join(featurePath, 'composables'));
       await fs.ensureDir(path.join(featurePath, 'types'));
-      
+
       // Create barrel export
-      await generateBarrelExport(path.join(featurePath, 'index.ts'), feature);
+      await fs.writeFile(path.join(featurePath, 'index.ts'), generateBarrelExport(feature));
     }
   } else if (folderStructure === 'component-based') {
     // Component-based structure
     await fs.ensureDir(path.join(srcPath, 'components', 'common'));
     await fs.ensureDir(path.join(srcPath, 'components', 'layout'));
     await fs.ensureDir(path.join(srcPath, 'components', 'forms'));
-    
+
     // Create barrel exports
-    await generateBarrelExport(path.join(srcPath, 'components', 'common', 'index.ts'), 'common');
-    await generateBarrelExport(path.join(srcPath, 'components', 'layout', 'index.ts'), 'layout');
-    await generateBarrelExport(path.join(srcPath, 'components', 'forms', 'index.ts'), 'forms');
+    await fs.writeFile(
+      path.join(srcPath, 'components', 'common', 'index.ts'),
+      `// Export common components\n// TODO: Add your components here\n`
+    );
   }
 
   // Common folders
@@ -70,47 +108,334 @@ async function createVueFolderStructure(projectPath, config) {
   await fs.ensureDir(path.join(srcPath, 'services'));
 }
 
-async function generateVueConfig(projectPath, config) {
-  const useTypeScript = config.language === 'typescript';
-  const styling = config.styling || 'tailwind';
+async function generateVuePackageJson(projectPath, config) {
+  const { language, styling, additionalLibraries = [] } = config;
+  const useTypeScript = language === 'typescript';
 
-  // vite.config.ts/js
-  const viteConfig = `import { defineConfig } from 'vite'
+  const spinner = ora('Fetching latest package versions...').start();
+
+  try {
+    // Fetch core dependencies
+    const [vueVer, vueRouterVer, piniaVer, pluginVer, viteVer] = await Promise.all([
+      fetchVersion('vue'),
+      fetchVersion('vue-router'),
+      fetchVersion('pinia'),
+      fetchVersion('@vitejs/plugin-vue'),
+      fetchVersion('vite'),
+    ]);
+
+    const dependencies = {
+      vue: vueVer,
+      'vue-router': vueRouterVer,
+      pinia: piniaVer,
+    };
+
+    const devDependencies = {
+      '@vitejs/plugin-vue': pluginVer,
+      vite: viteVer,
+    };
+
+    // TypeScript dependencies
+    if (useTypeScript) {
+      const [tsVer, vueTscVer] = await Promise.all([
+        fetchVersion('typescript'),
+        fetchVersion('vue-tsc'),
+      ]);
+      devDependencies['typescript'] = tsVer;
+      devDependencies['vue-tsc'] = vueTscVer;
+    }
+
+    // Add Tailwind
+    if (styling === 'tailwind') {
+      devDependencies['tailwindcss'] = await fetchVersion('tailwindcss');
+    }
+
+    // Add libraries
+    if (additionalLibraries.includes('tanstack-query')) {
+      dependencies['@tanstack/vue-query'] = await fetchVersion('@tanstack/vue-query');
+    }
+
+    if (additionalLibraries.includes('axios')) {
+      dependencies['axios'] = await fetchVersion('axios');
+    }
+
+    if (additionalLibraries.includes('vueuse')) {
+      dependencies['@vueuse/core'] = await fetchVersion('@vueuse/core');
+    }
+
+    if (additionalLibraries.includes('vee-validate')) {
+      const [veeValidateVer, zodVer, veeZodVer] = await Promise.all([
+        fetchVersion('vee-validate'),
+        fetchVersion('zod'),
+        fetchVersion('@vee-validate/zod'),
+      ]);
+      dependencies['vee-validate'] = veeValidateVer;
+      dependencies['zod'] = zodVer;
+      dependencies['@vee-validate/zod'] = veeZodVer;
+    }
+
+    spinner.succeed(chalk.green('Fetched latest versions'));
+
+    const packageJson = {
+      name: config.projectName,
+      version: '0.0.0',
+      private: true,
+      type: 'module',
+      scripts: {
+        dev: 'vite',
+        build: useTypeScript ? 'vue-tsc && vite build' : 'vite build',
+        preview: 'vite preview',
+      },
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+  } catch (error) {
+    spinner.fail(chalk.yellow('Could not fetch versions, using fallbacks'));
+
+    // Fallback with latest tag
+    const dependencies = { vue: 'latest', 'vue-router': 'latest', pinia: 'latest' };
+    const devDependencies = {
+      '@vitejs/plugin-vue': 'latest',
+      vite: 'latest',
+      ...(useTypeScript && { typescript: 'latest', 'vue-tsc': 'latest' }),
+    };
+
+    if (styling === 'tailwind') devDependencies['tailwindcss'] = 'latest';
+    if (additionalLibraries.includes('tanstack-query'))
+      dependencies['@tanstack/vue-query'] = 'latest';
+    if (additionalLibraries.includes('axios')) dependencies['axios'] = 'latest';
+    if (additionalLibraries.includes('vueuse')) dependencies['@vueuse/core'] = 'latest';
+    if (additionalLibraries.includes('vee-validate')) {
+      dependencies['vee-validate'] = 'latest';
+      dependencies['zod'] = 'latest';
+      dependencies['@vee-validate/zod'] = 'latest';
+    }
+
+    const packageJson = {
+      name: config.projectName,
+      version: '0.0.0',
+      private: true,
+      type: 'module',
+      scripts: {
+        dev: 'vite',
+        build: useTypeScript ? 'vue-tsc && vite build' : 'vite build',
+        preview: 'vite preview',
+      },
+      dependencies,
+      devDependencies,
+    };
+
+    await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
+  }
+}
+
+async function generateVueEssentialFiles(projectPath, config) {
+  const { language } = config;
+  const isTypeScript = language === 'typescript';
+  const srcPath = path.join(projectPath, 'src');
+
+  // Create App.vue
+  const appVueContent = `<script setup${isTypeScript ? ' lang="ts"' : ''}>
+import { ref } from 'vue'
+
+const count = ref(0)
+</script>
+
+<template>
+  <div id="app">
+    <h1>Welcome to ${config.projectName}</h1>
+    <div class="card">
+      <button type="button" @click="count++">count is {{ count }}</button>
+      <p>
+        Edit <code>src/App.vue</code> to test HMR
+      </p>
+    </div>
+    <p class="read-the-docs">
+      Click on the Vue logo to learn more
+    </p>
+  </div>
+</template>
+
+<style scoped>
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+</style>
+`;
+
+  await fs.writeFile(path.join(srcPath, 'App.vue'), appVueContent);
+
+  // Create main entry point
+  const mainContent = `import { createApp } from 'vue'
+import './style.css'
+import App from './App.vue'
+
+createApp(App).mount('#app')
+`;
+
+  await fs.writeFile(path.join(srcPath, isTypeScript ? 'main.ts' : 'main.js'), mainContent);
+
+  // Create style.css
+  const styleCssContent = `:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+`;
+
+  await fs.writeFile(path.join(srcPath, 'style.css'), styleCssContent);
+
+  // Create vite.config
+  const viteConfigContent = isTypeScript
+    ? `import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'path'
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@features': path.resolve(__dirname, './src/features'),
-      '@stores': path.resolve(__dirname, './src/stores'),
-      '@composables': path.resolve(__dirname, './src/composables'),
-      '@utils': path.resolve(__dirname, './src/utils'),
-      '@services': path.resolve(__dirname, './src/services'),
-      '@types': path.resolve(__dirname, './src/types'),
-    },
-  },
-  server: {
-    port: 3000,
-    open: true,
-  },
+})
+`
+    : `import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [vue()],
 })
 `;
 
   await fs.writeFile(
-    path.join(projectPath, `vite.config.${useTypeScript ? 'ts' : 'js'}`),
-    viteConfig
+    path.join(projectPath, `vite.config.${isTypeScript ? 'ts' : 'js'}`),
+    viteConfigContent
   );
 
-  // TypeScript configs if needed
-  if (useTypeScript) {
-    const strictness = config.typescript?.strictness || 'strict';
-    
-    const tsconfig = {
+  // Create index.html in project root
+  const indexHtmlContent = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${config.projectName}</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.${isTypeScript ? 'ts' : 'js'}"></script>
+  </body>
+</html>
+`;
+
+  await fs.writeFile(path.join(projectPath, 'index.html'), indexHtmlContent);
+
+  // Create .gitignore
+  const gitignoreContent = `# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+`;
+
+  await fs.writeFile(path.join(projectPath, '.gitignore'), gitignoreContent);
+
+  // Create tsconfig if TypeScript
+  if (isTypeScript) {
+    const tsconfigContent = {
       compilerOptions: {
         target: 'ES2020',
         useDefineForClassFields: true,
@@ -121,491 +446,100 @@ export default defineConfig({
         /* Bundler mode */
         moduleResolution: 'bundler',
         allowImportingTsExtensions: true,
-        resolveJsonModule: true,
         isolatedModules: true,
+        moduleDetection: 'force',
         noEmit: true,
         jsx: 'preserve',
 
         /* Linting */
-        strict: strictness === 'strict',
-        noUnusedLocals: strictness === 'strict',
-        noUnusedParameters: strictness === 'strict',
+        strict: true,
+        noUnusedLocals: true,
+        noUnusedParameters: true,
         noFallthroughCasesInSwitch: true,
-        
-        /* Path aliases */
-        baseUrl: '.',
-        paths: {
-          '@/*': ['./src/*'],
-          '@components/*': ['./src/components/*'],
-          '@features/*': ['./src/features/*'],
-          '@stores/*': ['./src/stores/*'],
-          '@composables/*': ['./src/composables/*'],
-          '@utils/*': ['./src/utils/*'],
-          '@services/*': ['./src/services/*'],
-          '@types/*': ['./src/types/*'],
-        },
       },
-      include: ['src/**/*.ts', 'src/**/*.d.ts', 'src/**/*.tsx', 'src/**/*.vue'],
-      references: [{ path: './tsconfig.node.json' }],
+      include: ['src/**/*.ts', 'src/**/*.tsx', 'src/**/*.vue'],
+      exclude: ['node_modules', 'dist'],
     };
 
-    await fs.writeJSON(path.join(projectPath, 'tsconfig.json'), tsconfig, { spaces: 2 });
-
-    // tsconfig.node.json
-    const tsconfigNode = {
-      compilerOptions: {
-        composite: true,
-        skipLibCheck: true,
-        module: 'ESNext',
-        moduleResolution: 'bundler',
-        allowSyntheticDefaultImports: true,
-      },
-      include: ['vite.config.ts'],
-    };
-
-    await fs.writeJSON(path.join(projectPath, 'tsconfig.node.json'), tsconfigNode, { spaces: 2 });
+    await fs.writeJSON(path.join(projectPath, 'tsconfig.json'), tsconfigContent, { spaces: 2 });
   }
-
-  // ESLint config
-  const eslintConfig = `module.exports = {
-  root: true,
-  env: {
-    browser: true,
-    es2021: true,
-    node: true,
-  },
-  extends: [
-    'eslint:recommended',
-    'plugin:vue/vue3-recommended',
-    ${useTypeScript ? "'plugin:@typescript-eslint/recommended'," : ''}
-    'prettier',
-  ],
-  parserOptions: {
-    ecmaVersion: 'latest',
-    ${useTypeScript ? "parser: '@typescript-eslint/parser'," : ''}
-    sourceType: 'module',
-  },
-  plugins: ['vue'${useTypeScript ? ", '@typescript-eslint'" : ''}],
-  rules: {
-    'vue/multi-word-component-names': 'off',
-  },
-}
-`;
-
-  await fs.writeFile(path.join(projectPath, '.eslintrc.cjs'), eslintConfig);
-
-  // Prettier config
-  const prettierConfig = {
-    semi: true,
-    trailingComma: 'es5',
-    singleQuote: true,
-    printWidth: 100,
-    tabWidth: 2,
-    useTabs: false,
-  };
-
-  await fs.writeJSON(path.join(projectPath, '.prettierrc'), prettierConfig, { spaces: 2 });
-
-  // Tailwind config if selected
-  if (styling === 'tailwind') {
-    const tailwindConfig = `/** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
-`;
-
-    await fs.writeFile(path.join(projectPath, 'tailwind.config.js'), tailwindConfig);
-
-    const postcssConfig = `export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
-`;
-
-    await fs.writeFile(path.join(projectPath, 'postcss.config.js'), postcssConfig);
-  }
-}
-
-async function generateVueAppFiles(projectPath, config) {
-  const srcPath = path.join(projectPath, 'src');
-  const useTypeScript = config.language === 'typescript';
-  const styling = config.styling || 'tailwind';
-
-  // main.ts/js
-  const mainContent = `import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import App from './App.vue'
-import router from './router'
-${styling === 'tailwind' ? "import './assets/styles/index.css'" : "import './assets/styles/main.css'"}
-
-const app = createApp(App)
-const pinia = createPinia()
-
-app.use(pinia)
-app.use(router)
-
-app.mount('#app')
-`;
-
-  await fs.writeFile(path.join(srcPath, `main.${useTypeScript ? 'ts' : 'js'}`), mainContent);
-
-  // App.vue
-  const appContent = `<template>
-  <div id="app">
-    <RouterView />
-  </div>
-</template>
-
-<script${useTypeScript ? ' lang="ts"' : ''} setup>
-// TODO: Add global app setup logic here
-</script>
-
-<style scoped>
-#app {
-  min-height: 100vh;
-}
-</style>
-`;
-
-  await fs.writeFile(path.join(srcPath, 'App.vue'), appContent);
-
-  // Router
-  const routerContent = `import { createRouter, createWebHistory${useTypeScript ? ', type RouteRecordRaw' : ''} } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-
-${useTypeScript ? 'const routes: RouteRecordRaw[] = [' : 'const routes = ['}
-  {
-    path: '/',
-    name: 'home',
-    component: HomeView,
-  },
-  {
-    path: '/about',
-    name: 'about',
-    // Route-level code-splitting
-    component: () => import('../views/AboutView.vue'),
-  },
-]
-
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
-})
-
-// TODO: Add navigation guards if needed
-// router.beforeEach((to, from, next) => {
-//   // Your logic here
-//   next()
-// })
-
-export default router
-`;
-
-  await fs.ensureDir(path.join(srcPath, 'router'));
-  await fs.writeFile(
-    path.join(srcPath, 'router', `index.${useTypeScript ? 'ts' : 'js'}`),
-    routerContent
-  );
-
-  // Create views
-  await fs.ensureDir(path.join(srcPath, 'views'));
-
-  const homeViewContent = `<template>
-  <div class="home">
-    <h1>Welcome to Vue 3</h1>
-    <p>Your project is ready!</p>
-    <!-- TODO: Add your home page content -->
-  </div>
-</template>
-
-<script${useTypeScript ? ' lang="ts"' : ''} setup>
-// TODO: Add home page logic
-</script>
-
-<style scoped>
-.home {
-  padding: 2rem;
-}
-</style>
-`;
-
-  await fs.writeFile(path.join(srcPath, 'views', 'HomeView.vue'), homeViewContent);
-
-  const aboutViewContent = `<template>
-  <div class="about">
-    <h1>About</h1>
-    <!-- TODO: Add your about page content -->
-  </div>
-</template>
-
-<script${useTypeScript ? ' lang="ts"' : ''} setup>
-// TODO: Add about page logic
-</script>
-
-<style scoped>
-.about {
-  padding: 2rem;
-}
-</style>
-`;
-
-  await fs.writeFile(path.join(srcPath, 'views', 'AboutView.vue'), aboutViewContent);
-
-  // Create a sample store with Pinia
-  const storeContent = `import { defineStore } from 'pinia'${useTypeScript ? "\nimport type { Ref } from 'vue'" : ''}
-
-${useTypeScript ? 'interface AppState {\n  count: number\n}\n\n' : ''}export const useAppStore = defineStore('app', {
-  state: ()${useTypeScript ? ': AppState' : ''} => ({
-    count: 0,
-  }),
-  getters: {
-    doubleCount${useTypeScript ? ': (state: AppState) => number' : ''} {
-      return this.count * 2
-    },
-  },
-  actions: {
-    increment() {
-      this.count++
-    },
-    decrement() {
-      this.count--
-    },
-  },
-})
-`;
-
-  await fs.writeFile(
-    path.join(srcPath, 'stores', `app.${useTypeScript ? 'ts' : 'js'}`),
-    storeContent
-  );
-
-  // CSS
-  const cssContent = styling === 'tailwind' 
-    ? `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Your custom styles here */
-`
-    : `* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Your custom styles here */
-`;
-
-  await fs.writeFile(
-    path.join(srcPath, 'assets', 'styles', styling === 'tailwind' ? 'index.css' : 'main.css'),
-    cssContent
-  );
-}
-
-async function generateVueIndexHtml(projectPath, config) {
-  const indexHtml = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${config.projectName}</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.${config.language === 'typescript' ? 'ts' : 'js'}"></script>
-  </body>
-</html>
-`;
-
-  await fs.writeFile(path.join(projectPath, 'index.html'), indexHtml);
-}
-
-async function generateVuePackageJson(projectPath, config) {
-  const useTypeScript = config.language === 'typescript';
-  const styling = config.styling || 'tailwind';
-  const packageManager = config.packageManager || 'npm';
-
-  const packageJson = {
-    name: config.projectName,
-    version: '0.0.0',
-    private: true,
-    type: 'module',
-    scripts: {
-      dev: 'vite',
-      build: useTypeScript ? 'vue-tsc && vite build' : 'vite build',
-      preview: 'vite preview',
-      lint: `eslint . --ext .vue,.js${useTypeScript ? ',.ts' : ''} --fix`,
-      format: 'prettier --write "src/**/*.{js,ts,vue,css,scss}"',
-    },
-    dependencies: {
-      vue: '^3.4.21',
-      'vue-router': '^4.3.0',
-      pinia: '^2.1.7',
-    },
-    devDependencies: {
-      '@vitejs/plugin-vue': '^5.0.4',
-      vite: '^5.2.0',
-      'eslint': '^8.57.0',
-      'eslint-plugin-vue': '^9.23.0',
-      'eslint-config-prettier': '^9.1.0',
-      'prettier': '^3.2.5',
-    },
-  };
-
-  // Add TypeScript dependencies
-  if (useTypeScript) {
-    packageJson.devDependencies['typescript'] = '^5.4.0';
-    packageJson.devDependencies['vue-tsc'] = '^2.0.6';
-    packageJson.devDependencies['@typescript-eslint/parser'] = '^7.4.0';
-    packageJson.devDependencies['@typescript-eslint/eslint-plugin'] = '^7.4.0';
-  }
-
-  // Add Tailwind CSS dependencies
-  if (styling === 'tailwind') {
-    packageJson.devDependencies['tailwindcss'] = '^3.4.1';
-    packageJson.devDependencies['postcss'] = '^8.4.38';
-    packageJson.devDependencies['autoprefixer'] = '^10.4.19';
-  }
-
-  // Add libraries based on config
-  if (config.libraries?.includes('tanstack-query')) {
-    packageJson.dependencies['@tanstack/vue-query'] = '^5.28.0';
-  }
-
-  if (config.libraries?.includes('axios')) {
-    packageJson.dependencies['axios'] = '^1.6.8';
-  }
-
-  if (config.libraries?.includes('vueuse')) {
-    packageJson.dependencies['@vueuse/core'] = '^10.9.0';
-  }
-
-  if (config.libraries?.includes('vee-validate')) {
-    packageJson.dependencies['vee-validate'] = '^4.12.6';
-    packageJson.dependencies['zod'] = '^3.22.4';
-    packageJson.dependencies['@vee-validate/zod'] = '^4.12.6';
-  }
-
-  await fs.writeJSON(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
 }
 
 async function generateVueReadme(projectPath, config) {
-  const packageManager = config.packageManager || 'npm';
-  const installCmd = packageManager === 'npm' ? 'npm install' : `${packageManager} install`;
-  const runCmd = packageManager === 'npm' ? 'npm run' : packageManager;
+  const { projectName, folderStructure, language, styling, packageManager } = config;
 
-  const readme = `# ${config.projectName}
+  const readme = `# ${projectName}
 
-A Vue 3 + Vite project created with InitKit CLI.
+Created with InitKit CLI
 
-## 🚀 Tech Stack
+## Setup
 
-- **Vue 3** - Progressive JavaScript framework
-- **Vite** - Next generation frontend tooling
-- **Vue Router** - Official router for Vue.js
-- **Pinia** - Intuitive, type safe store for Vue${config.language === 'typescript' ? '\n- **TypeScript** - Type-safe JavaScript' : ''}${config.styling === 'tailwind' ? '\n- **Tailwind CSS** - Utility-first CSS framework' : ''}
-
-## 📦 Installation
-
+1. Install dependencies:
 \`\`\`bash
-${installCmd}
+${packageManager} install
 \`\`\`
 
-## 🏃 Development
-
+2. Run the development server:
 \`\`\`bash
-${runCmd} dev
+${packageManager} ${packageManager === 'npm' ? 'run ' : ''}dev
 \`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+3. Open [http://localhost:3000](http://localhost:3000)
 
-## 🏗️ Build
+## Tech Stack
 
-\`\`\`bash
-${runCmd} build
-\`\`\`
+- **Vue 3** - Progressive framework
+- **Vite 6** - Build tool
+- **Vue Router** - Official router
+- **Pinia** - State management${language === 'typescript' ? '\n- **TypeScript** - Type safety' : ''}${styling === 'tailwind' ? '\n- **Tailwind CSS v4** - Styling' : ''}
 
-## 🔍 Lint & Format
-
-\`\`\`bash
-# Lint
-${runCmd} lint
-
-# Format
-${runCmd} format
-\`\`\`
-
-## 📁 Project Structure
+## Folder Structure
 
 \`\`\`
 src/
-├── assets/          # Static assets (images, styles)
-├── components/      # Reusable Vue components
-├── composables/     # Composition API composables
-├── router/          # Vue Router configuration
-├── stores/          # Pinia stores
-├── types/           # TypeScript type definitions
-├── utils/           # Utility functions
-├── views/           # Page components
-├── App.vue          # Root component
-└── main.${config.language === 'typescript' ? 'ts' : 'js'}           # Application entry point
+${
+  folderStructure === 'feature-based'
+    ? `├── features/       # Feature modules
+│   ├── auth/       # Authentication
+│   ├── dashboard/  # Dashboard
+│   └── profile/    # User profile
+├── shared/         # Shared code`
+    : `├── components/     # Vue components
+│   ├── common/     # Common components
+│   ├── layout/     # Layout components
+│   └── forms/      # Form components`
+}
+├── router/         # Vue Router configuration
+├── stores/         # Pinia stores
+├── composables/    # Composition API composables
+├── assets/         # Static assets
+└── public/         # Public files
 \`\`\`
 
-## 🎯 Next Steps
+## Next Steps
 
-1. **Configure routing**: Edit \`src/router/index.${config.language === 'typescript' ? 'ts' : 'js'}\` to add your routes
-2. **Add components**: Create reusable components in \`src/components/\`
-3. **Manage state**: Use Pinia stores in \`src/stores/\` for global state
-4. **Create pages**: Add new views in \`src/views/\`
-5. **Add utilities**: Place helper functions in \`src/utils/\`
-
-## 📚 Resources
-
-- [Vue 3 Documentation](https://vuejs.org/)
-- [Vite Documentation](https://vitejs.dev/)
-- [Vue Router Documentation](https://router.vuejs.org/)
-- [Pinia Documentation](https://pinia.vuejs.org/)${config.styling === 'tailwind' ? '\n- [Tailwind CSS Documentation](https://tailwindcss.com/)' : ''}
+1. Run \`npm create vue@latest . -- --${language === 'typescript' ? 'typescript' : 'javascript'}\` to initialize Vue${styling === 'tailwind' ? '\n2. Install Tailwind v4: `' + packageManager + (packageManager === 'npm' ? ' install' : ' add') + ' tailwindcss@next`' : ''}
+3. Start building in \`src/features/\`
+4. Add environment variables in \`.env\`
 
 ---
 
-Built with ❤️ using InitKit
+Built with InitKit
 `;
 
   await fs.writeFile(path.join(projectPath, 'README.md'), readme);
 }
 
-async function generateBarrelExport(filePath, featureName) {
-  const content = `/**
- * Barrel export for ${featureName}
- * 
- * TODO: Export your components, composables, and types here
- * 
- * Example:
- * export { default as ${featureName.charAt(0).toUpperCase() + featureName.slice(1)}Component } from './components/${featureName.charAt(0).toUpperCase() + featureName.slice(1)}Component.vue'
- * export { use${featureName.charAt(0).toUpperCase() + featureName.slice(1)} } from './composables/use${featureName.charAt(0).toUpperCase() + featureName.slice(1)}'
- * export type { ${featureName.charAt(0).toUpperCase() + featureName.slice(1)}State } from './types'
- */
+function generateBarrelExport(featureName) {
+  return `// ${featureName.toUpperCase()} Feature
 
-export {}
+// TODO: Export your components
+// export { default as ${featureName.charAt(0).toUpperCase() + featureName.slice(1)}Component } from './components/${featureName.charAt(0).toUpperCase() + featureName.slice(1)}Component.vue';
+
+// TODO: Export your composables
+// export { use${featureName.charAt(0).toUpperCase() + featureName.slice(1)} } from './composables/use${featureName.charAt(0).toUpperCase() + featureName.slice(1)}';
+
+// TODO: Export your types
+// export type * from './types/${featureName}.types';
 `;
-
-  await fs.writeFile(filePath, content);
 }
-
-export { generateVueTemplate };
