@@ -47,7 +47,7 @@
   "bugs": {
     "url": "https://github.com/shirishshrestha/initkit/issues"
   },
-  "homepage": "https://github.com/shirishshrestha/initkit#readme",
+  "homepage": "https://initkit.shirishshrestha.com.np/",
   "engines": {
     "node": ">=14.0.0"
   },

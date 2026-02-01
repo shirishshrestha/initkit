@@ -91,7 +91,7 @@ async function createFeatureBasedStructure(srcPath, config) {
 
     // Add barrel export
     const ext = config.language === 'typescript' ? 'ts' : 'js';
-    await fs.writeFile(
+    await fs.outputFile(
       path.join(srcPath, 'features', feature, `index.${ext}`),
       `// ${feature} feature exports\n// TODO: Export your components and hooks here\n`
     );
@@ -259,7 +259,7 @@ DATABASE_URL=
 API_KEY=
 `;
 
-  await fs.writeFile(path.join(projectPath, '.env.example'), envExample);
+  await fs.outputFile(path.join(projectPath, '.env.example'), envExample);
   console.log(chalk.gray('  ✓ Added .env.example'));
 }
 
@@ -311,7 +311,7 @@ EXPOSE 3000
 CMD ["npm", "start"]
 `;
 
-  await fs.writeFile(path.join(projectPath, 'Dockerfile'), dockerfile);
+  await fs.outputFile(path.join(projectPath, 'Dockerfile'), dockerfile);
 
   const dockerignore = `node_modules
 .git
@@ -319,7 +319,7 @@ CMD ["npm", "start"]
 npm-debug.log
 `;
 
-  await fs.writeFile(path.join(projectPath, '.dockerignore'), dockerignore);
+  await fs.outputFile(path.join(projectPath, '.dockerignore'), dockerignore);
 }
 
 /**
@@ -361,7 +361,7 @@ jobs:
       run: npm test
 `;
 
-  await fs.writeFile(path.join(projectPath, '.github', 'workflows', 'ci.yml'), workflow);
+  await fs.outputFile(path.join(projectPath, '.github', 'workflows', 'ci.yml'), workflow);
 }
 
 /**
@@ -379,7 +379,7 @@ async function generateHuskyFiles(projectPath, _config) {
 npm run lint
 `;
 
-  await fs.writeFile(path.join(projectPath, '.husky', 'pre-commit'), preCommit);
+  await fs.outputFile(path.join(projectPath, '.husky', 'pre-commit'), preCommit);
 }
 
 export { generateTemplate };
