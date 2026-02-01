@@ -1,6 +1,6 @@
 {
   "name": "initkit",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "type": "module",
   "description": "A modern CLI tool for scaffolding production-ready web projects with live npm version fetching, multiple frameworks, and best practices built-in",
   "main": "src/index.js",
