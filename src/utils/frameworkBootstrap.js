@@ -23,6 +23,9 @@ export async function bootstrapWithOfficialCLI(projectPath, config) {
     case 'backend':
       return bootstrapBackend(projectPath, config);
 
+    case 'library':
+      return bootstrapLibrary(projectPath, config);
+
     default:
       throw new Error(`Unsupported project type: ${projectType}`);
   }
@@ -301,4 +304,135 @@ export async function bootstrapFastify(projectPath, config) {
   console.log(chalk.dim(`   Command: ${command}\n`));
 
   await execCommand(command, { cwd: parentDir });
+}
+
+/**
+ * Bootstrap Library/Package project
+ * Creates a basic npm package structure with TypeScript/JavaScript support
+ *
+ * @param {string} projectPath - Absolute path to project
+ * @param {Object} config - Configuration object
+ */
+export async function bootstrapLibrary(projectPath, config) {
+  const { language = 'typescript', packageManager = 'npm' } = config;
+  const projectName = path.basename(projectPath);
+
+  console.log(chalk.cyan(`\n📦 Creating Library/Package project...`));
+  console.log(
+    chalk.gray(`   Language: ${language === 'typescript' ? 'TypeScript' : 'JavaScript'}`)
+  );
+  console.log(chalk.gray(`   Package Manager: ${packageManager}\n`));
+
+  // Create basic directory structure
+  const fsExtra = await import('fs-extra');
+  const fs = fsExtra.default;
+
+  // Create project directory
+  await fs.ensureDir(projectPath);
+
+  // Create src directory
+  await fs.ensureDir(path.join(projectPath, 'src'));
+
+  // Create package.json
+  const packageJson = {
+    name: projectName,
+    version: '0.1.0',
+    description: 'A new library/package',
+    main: language === 'typescript' ? 'dist/index.js' : 'src/index.js',
+    types: language === 'typescript' ? 'dist/index.d.ts' : undefined,
+    scripts: {
+      ...(language === 'typescript' && {
+        build: 'tsc',
+        'build:watch': 'tsc --watch',
+        prepublishOnly: 'npm run build',
+      }),
+      test: 'echo "Error: no test specified" && exit 1',
+    },
+    keywords: [],
+    author: '',
+    license: 'MIT',
+  };
+
+  await fs.outputFile(path.join(projectPath, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+  // Create basic entry file
+  const ext = language === 'typescript' ? 'ts' : 'js';
+  const indexContent =
+    language === 'typescript'
+      ? `/**
+ * Main entry point for the library
+ */
+
+export function hello(name: string): string {
+  return \`Hello, \${name}!\`;
+}
+
+export default {
+  hello,
+};
+`
+      : `/**
+ * Main entry point for the library
+ */
+
+export function hello(name) {
+  return \`Hello, \${name}!\`;
+}
+
+export default {
+  hello,
+};
+`;
+
+  await fs.outputFile(path.join(projectPath, 'src', `index.${ext}`), indexContent);
+
+  // Create TypeScript config if needed
+  if (language === 'typescript') {
+    const tsconfig = {
+      compilerOptions: {
+        target: 'ES2020',
+        module: 'ESNext',
+        moduleResolution: 'node',
+        declaration: true,
+        outDir: './dist',
+        rootDir: './src',
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        forceConsistentCasingInFileNames: true,
+      },
+      include: ['src/**/*'],
+      exclude: ['node_modules', 'dist'],
+    };
+
+    await fs.outputFile(path.join(projectPath, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2));
+  }
+
+  // Create README
+  const readme = `# ${projectName}
+
+A new library/package
+
+## Installation
+
+\`\`\`bash
+npm install ${projectName}
+\`\`\`
+
+## Usage
+
+\`\`\`${language === 'typescript' ? 'typescript' : 'javascript'}
+import { hello } from '${projectName}';
+
+console.log(hello('World')); // Hello, World!
+\`\`\`
+
+## License
+
+MIT
+`;
+
+  await fs.outputFile(path.join(projectPath, 'README.md'), readme);
+
+  console.log(chalk.green('✓ Library project structure created'));
 }
