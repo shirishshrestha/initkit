@@ -132,8 +132,10 @@ async function installStyling(projectPath, styling, config) {
 
       // Create Tailwind config files directly (more reliable than running init command)
       console.log(chalk.dim('  Initializing Tailwind configuration...'));
-      const fs = await import('fs-extra');
-      const path = await import('path');
+      const fsExtra = await import('fs-extra');
+      const fs = fsExtra.default;
+      const pathModule = await import('path');
+      const path = pathModule.default;
 
       // Create tailwind.config.js with proper content paths
       const tailwindConfigPath = path.join(projectPath, 'tailwind.config.js');
@@ -219,8 +221,10 @@ async function installUILibrary(projectPath, library, config) {
       console.log(chalk.dim('  Running shadcn-ui init...'));
 
       // Ensure tsconfig has path aliases for shadcn
-      const fs = await import('fs-extra');
-      const path = await import('path');
+      const fsExtra = await import('fs-extra');
+      const fs = fsExtra.default;
+      const pathModule = await import('path');
+      const path = pathModule.default;
       const tsconfigPath = path.join(projectPath, 'tsconfig.json');
 
       if (await fs.pathExists(tsconfigPath)) {
