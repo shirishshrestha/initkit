@@ -21,9 +21,9 @@ Built with ES Modules | TypeScript Ready | Zero Config Required | Fully Document
 
 <div align="center">
 
-![InitKit Demo](https://raw.githubusercontent.com/shirishshrestha/initkit/main/assets/demo.gif)
+![InitKit Demo](https://raw.githubusercontent.com/shirishshrestha/initkit/main/assets/initkit.gif)
 
-_Creating a production-ready React application with InitKit_
+_Creating a production-ready application with InitKit_
 
 </div>
 
