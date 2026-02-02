@@ -23,7 +23,7 @@ Built with ES Modules | TypeScript Ready | Zero Config Required | Fully Document
 
 ![InitKit Demo](https://github.com/shirishshrestha/initkit/blob/main/assests/initkit.gif)
 
-_Creating a production-ready application with InitKit_
+_Creating a production-ready NextJS application with InitKit_
 
 </div>
 
